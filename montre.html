@@ -1,0 +1,410 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
+  LayoutDashboard, Search, ArrowUpRight, ArrowDownRight, Clock, AlertCircle
+} from 'lucide-react';
+
+// --- Composants Utilitaires ---
+
+const Card = ({ children, className = "" }) => (
+  <div className={`bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden ${className}`}>
+    {children}
+  </div>
+);
+
+const Badge = ({ status }) => {
+  const styles = {
+    collection: "bg-blue-100 text-blue-700 border-blue-200",
+    forsale: "bg-amber-100 text-amber-700 border-amber-200",
+    sold: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  };
+  
+  const labels = {
+    collection: "Collection",
+    forsale: "En vente",
+    sold: "Vendue",
+  };
+
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${styles[status] || styles.collection}`}>
+      {labels[status]}
+    </span>
+  );
+};
+
+const formatPrice = (price) => {
+  if (!price) return '0 €';
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(price);
+};
+
+// Fonction pour compresser l'image
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800; // On réduit la largeur max à 800px
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // On compresse en JPEG qualité 0.7
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+    };
+  });
+};
+
+// --- Application Principale ---
+
+export default function App() {
+  const [watches, setWatches] = useState(() => {
+    try {
+      const saved = localStorage.getItem('chronoManager_data_v2');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Erreur de chargement", e);
+      return [];
+    }
+  });
+
+  const [view, setView] = useState('dashboard');
+  const [filter, setFilter] = useState('all');
+  const [editingId, setEditingId] = useState(null);
+  const [error, setError] = useState(null); // Pour afficher les erreurs de stockage
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('chronoManager_data_v2', JSON.stringify(watches));
+      setError(null);
+    } catch (e) {
+      setError("Mémoire pleine ! La photo est peut-être encore trop lourde ou vous avez trop de montres avec photos. Essayez de supprimer quelques photos.");
+    }
+  }, [watches]);
+
+  const [formData, setFormData] = useState({
+    brand: '',
+    model: '',
+    reference: '',
+    purchasePrice: '',
+    sellingPrice: '',
+    status: 'collection',
+    notes: '',
+    image: null
+  });
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const compressedBase64 = await compressImage(file);
+        setFormData(prev => ({ ...prev, image: compressedBase64 }));
+      } catch (err) {
+        alert("Erreur lors du traitement de l'image");
+      }
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newWatch = {
+      id: editingId || Date.now().toString(),
+      ...formData,
+      purchasePrice: parseFloat(formData.purchasePrice) || 0,
+      sellingPrice: parseFloat(formData.sellingPrice) || 0,
+      dateAdded: new Date().toISOString(),
+    };
+
+    if (editingId) {
+      setWatches(watches.map(w => w.id === editingId ? newWatch : w));
+    } else {
+      setWatches([...watches, newWatch]);
+    }
+    
+    // Réinitialisation importante pour voir l'ajout
+    setFilter('all'); 
+    setView('list');
+    setEditingId(null);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setFormData({
+      brand: '',
+      model: '',
+      reference: '',
+      purchasePrice: '',
+      sellingPrice: '',
+      status: 'collection',
+      notes: '',
+      image: null
+    });
+  };
+
+  const handleEdit = (watch) => {
+    setFormData(watch);
+    setEditingId(watch.id);
+    setView('add');
+  };
+
+  const handleDelete = (id) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette montre ?')) {
+      setWatches(watches.filter(w => w.id !== id));
+    }
+  };
+
+  const stats = {
+    totalCount: watches.filter(w => w.status !== 'sold').length,
+    invested: watches.filter(w => w.status !== 'sold').reduce((acc, curr) => acc + curr.purchasePrice, 0),
+    potentialValue: watches.filter(w => w.status !== 'sold').reduce((acc, curr) => acc + (curr.sellingPrice || curr.purchasePrice), 0),
+    soldTotal: watches.filter(w => w.status === 'sold').reduce((acc, curr) => acc + curr.sellingPrice, 0),
+    soldProfit: watches.filter(w => w.status === 'sold').reduce((acc, curr) => acc + (curr.sellingPrice - curr.purchasePrice), 0),
+  };
+
+  const renderDashboard = () => (
+    <div className="space-y-4 pb-20">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-800">Tableau de Bord</h1>
+        <p className="text-slate-500 text-sm">Aperçu de votre patrimoine horloger</p>
+      </header>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start mb-4">
+          <AlertCircle size={16} className="mt-0.5 mr-2 flex-shrink-0" />
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="p-4 bg-gradient-to-br from-slate-800 to-slate-900 text-white border-none">
+          <div className="flex items-center space-x-2 text-slate-300 mb-1">
+            <Clock size={16} />
+            <span className="text-xs font-medium uppercase tracking-wider">Investi</span>
+          </div>
+          <div className="text-lg font-bold">{formatPrice(stats.invested)}</div>
+          <div className="text-xs text-slate-400 mt-1">{stats.totalCount} montres</div>
+        </Card>
+
+        <Card className="p-4 bg-white">
+          <div className="flex items-center space-x-2 text-emerald-600 mb-1">
+            <TrendingUp size={16} />
+            <span className="text-xs font-medium uppercase tracking-wider">Estimation</span>
+          </div>
+          <div className="text-lg font-bold text-slate-800">{formatPrice(stats.potentialValue)}</div>
+          <div className="text-xs text-emerald-600 mt-1">
+            {stats.potentialValue - stats.invested > 0 ? '+' : ''}
+            {formatPrice(stats.potentialValue - stats.invested)} latents
+          </div>
+        </Card>
+      </div>
+
+      <Card className="p-4">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3 border-b pb-2">Historique des Ventes</h3>
+        <div className="flex justify-between items-center">
+          <div>
+            <div className="text-xs text-slate-500">Total Vendu</div>
+            <div className="font-bold text-slate-800">{formatPrice(stats.soldTotal)}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-slate-500">Bénéfice Réalisé</div>
+            <div className={`font-bold ${stats.soldProfit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+              {stats.soldProfit > 0 ? '+' : ''}{formatPrice(stats.soldProfit)}
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+
+  const renderList = () => {
+    const filteredWatches = watches.filter(w => {
+      if (filter === 'all') return true;
+      if (filter === 'collection') return w.status === 'collection';
+      if (filter === 'forsale') return w.status === 'forsale';
+      if (filter === 'sold') return w.status === 'sold';
+      return true;
+    });
+
+    return (
+      <div className="pb-20">
+        <header className="mb-4 sticky top-0 bg-slate-50 pt-2 pb-2 z-10">
+          <h1 className="text-2xl font-bold text-slate-800 mb-4">Collection</h1>
+          <div className="flex space-x-2 overflow-x-auto pb-2 no-scrollbar">
+            {['all', 'collection', 'forsale', 'sold'].map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                  filter === f 
+                    ? 'bg-slate-800 text-white' 
+                    : 'bg-white text-slate-600 border border-slate-200'
+                }`}
+              >
+                {f === 'all' && 'Tout'}
+                {f === 'collection' && 'Ma Collection'}
+                {f === 'forsale' && 'En Vente'}
+                {f === 'sold' && 'Vendu'}
+              </button>
+            ))}
+          </div>
+        </header>
+
+        <div className="space-y-4">
+          {filteredWatches.map(watch => (
+            <Card key={watch.id} className="flex flex-col">
+              <div className="relative h-48 bg-slate-100">
+                {watch.image ? (
+                  <img src={watch.image} alt={watch.model} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                    <Camera size={32} className="mb-2" />
+                    <span className="text-xs">Pas de photo</span>
+                  </div>
+                )}
+                <div className="absolute top-2 right-2">
+                  <Badge status={watch.status} />
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-800 leading-tight">{watch.brand}</h3>
+                    <p className="text-slate-600 font-medium">{watch.model}</p>
+                    {watch.reference && <p className="text-xs text-slate-400 mt-1">Ref. {watch.reference}</p>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 my-4 py-3 border-t border-b border-slate-100">
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Achat</p>
+                    <p className="font-semibold text-slate-700">{formatPrice(watch.purchasePrice)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-slate-400 mb-1">
+                      {watch.status === 'sold' ? 'Vendu' : 'Estimation'}
+                    </p>
+                    <p className={`font-semibold ${watch.status === 'sold' ? 'text-emerald-600' : 'text-slate-700'}`}>
+                      {formatPrice(watch.sellingPrice || watch.purchasePrice)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                   <div className="text-xs text-slate-400">
+                      {new Date(watch.dateAdded).toLocaleDateString()}
+                   </div>
+                  <div className="flex space-x-3 ml-auto">
+                    <button onClick={() => handleEdit(watch)} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200">
+                      <Edit2 size={16} />
+                    </button>
+                    <button onClick={() => handleDelete(watch.id)} className="p-2 bg-red-50 text-red-600 rounded-full hover:bg-red-100">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {filteredWatches.length === 0 && (
+            <div className="text-center py-12 text-slate-400">
+              <Search size={48} className="mx-auto mb-3 opacity-20" />
+              <p>Aucune montre trouvée avec ce filtre.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderForm = () => (
+    <div className="pb-20">
+      <header className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-800">
+          {editingId ? 'Modifier' : 'Nouvelle montre'}
+        </h1>
+        {editingId && (
+          <button onClick={() => { setEditingId(null); resetForm(); setView('list'); }} className="text-slate-400">
+            <X size={24} />
+          </button>
+        )}
+      </header>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="flex justify-center">
+          <label className="relative w-full h-48 bg-slate-100 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer overflow-hidden hover:bg-slate-50 transition-colors">
+            {formData.image ? (
+              <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+            ) : (
+              <>
+                <Camera size={32} className="text-slate-400 mb-2" />
+                <span className="text-sm text-slate-500">Ajouter photo (auto-compressée)</span>
+              </>
+            )}
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          </label>
+        </div>
+
+        <Card className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Marque *</label>
+            <input required type="text" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} className="w-full p-2 rounded-lg border border-slate-300 outline-none focus:border-slate-800" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Modèle *</label>
+            <input required type="text" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} className="w-full p-2 rounded-lg border border-slate-300 outline-none focus:border-slate-800" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Référence</label>
+            <input type="text" value={formData.reference} onChange={e => setFormData({...formData, reference: e.target.value})} className="w-full p-2 rounded-lg border border-slate-300 outline-none focus:border-slate-800" />
+          </div>
+        </Card>
+
+        <Card className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Statut</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[{ id: 'collection', label: 'Collection' }, { id: 'forsale', label: 'En vente' }, { id: 'sold', label: 'Vendue' }].map(status => (
+                <button key={status.id} type="button" onClick={() => setFormData({...formData, status: status.id})} className={`py-2 text-xs font-medium rounded-lg border ${formData.status === status.id ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>{status.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Prix d'achat</label>
+              <div className="relative"><span className="absolute left-3 top-2 text-slate-400">€</span><input type="number" value={formData.purchasePrice} onChange={e => setFormData({...formData, purchasePrice: e.target.value})} className="w-full pl-7 p-2 rounded-lg border border-slate-300 outline-none focus:border-slate-800" placeholder="0" /></div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{formData.status === 'sold' ? 'Prix de vente' : 'Estimation'}</label>
+              <div className="relative"><span className="absolute left-3 top-2 text-slate-400">€</span><input type="number" value={formData.sellingPrice} onChange={e => setFormData({...formData, sellingPrice: e.target.value})} className="w-full pl-7 p-2 rounded-lg border border-slate-300 outline-none focus:border-slate-800" placeholder="0" /></div>
+            </div>
+          </div>
+        </Card>
+
+        <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold shadow-lg shadow-slate-300 hover:bg-slate-800 transition-transform active:scale-95">
+          {editingId ? 'Sauvegarder' : 'Ajouter à la collection'}
+        </button>
+      </form>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl overflow-hidden relative">
+        <div className="h-full overflow-y-auto p-4 scrollbar-hide">
+          {view === 'dashboard' && renderDashboard()}
+          {view === 'list' && renderList()}
+          {view === 'add' && renderForm()}
+        </div>
+        <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-3 flex justify-between items-center z-50">
+          <button onClick={() => setView('dashboard')} className={`flex flex-col items-center space-y-1 ${view === 'dashboard' ? 'text-slate-900' : 'text-slate-400'}`}><LayoutDashboard size={24} strokeWidth={view === 'dashboard' ? 2.5 : 2} /><span className="text-[10px] font-medium">Accueil</span></button>
+          <button onClick={() => { resetForm(); setEditingId(null); setView('add'); }} className="flex items-center justify-center w-14 h-14 bg-slate-900 text-white rounded-full shadow-lg shadow-slate-300 -mt-8 hover:scale-105 transition-transform"><Plus size={28} /></button>
+          <button onClick={() => setView('list')} className={`flex flex-col items-center space-y-1 ${view === 'list' ? 'text-slate-900' : 'text-slate-400'}`}><Watch size={24} strokeWidth={view === 'list' ? 2.5 : 2} /><span className="text-[10px] font-medium">Collection</span></button>
+        </nav>
+      </div>
+    </div>
+  );
+}
