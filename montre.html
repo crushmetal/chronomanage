@@ -23,19 +23,18 @@ const productionConfig = {
   appId: "APP_ID"
 };
 
-// --- INITIALISATION ROBUSTE ---
+// --- INITIALISATION ROBUSTE (Cloud + Local) ---
 let app, auth, db;
-let useLocalStorage = false;
+let useLocalStorage = false; // Par défaut on tente le cloud
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-demo';
 
 try {
-  // Tentative de chargement de la config de l'environnement
+  // 1. On essaie de charger la config de l'environnement (ici)
   let config;
   if (typeof __firebase_config !== 'undefined') {
     config = JSON.parse(__firebase_config);
   } else {
-    // Si on est en local sans config, on force le mode démo (localStorage) pour éviter l'écran blanc
-    // Note: Pour Vercel, remplacez la ligne ci-dessous par: config = productionConfig;
+    // Pas de config trouvée => Mode Local
     throw new Error("Pas de config Firebase"); 
   }
 
@@ -43,11 +42,12 @@ try {
   auth = getAuth(app);
   db = getFirestore(app);
 } catch (e) {
-  console.warn("Firebase non détecté ou erreur config. Passage en mode LocalStorage (Démo).", e);
+  // Si erreur (ou pas de config), on passe en mode local sans planter
+  console.warn("Passage en mode LocalStorage (Démo).", e);
   useLocalStorage = true;
 }
 
-// --- LOGO SVG ---
+// --- LOGO SVG (Boîte à Montres) ---
 const WatchBoxLogo = () => (
   <svg viewBox="0 0 200 160" className="w-full h-full drop-shadow-xl" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -139,7 +139,7 @@ export default function App() {
   const [user, setUser] = useState(useLocalStorage ? { uid: 'local-user' } : null);
   const [watches, setWatches] = useState([]);
   const [loading, setLoading] = useState(!useLocalStorage);
-  const [view, setView] = useState('box'); 
+  const [view, setView] = useState('box'); // box, list, detail, finance, add, summary
   const [filter, setFilter] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [selectedWatch, setSelectedWatch] = useState(null);
@@ -157,8 +157,8 @@ export default function App() {
            await signInAnonymously(auth);
         }
       } catch (err) {
-        console.error("Erreur Auth:", err);
-        setError("Mode hors-ligne activé (Erreur Auth)");
+        console.error("Erreur Auth (Passage en local):", err);
+        setError("Mode hors-ligne activé");
         useLocalStorage = true;
         setUser({ uid: 'local-user' });
         setLoading(false);
@@ -193,14 +193,18 @@ export default function App() {
           setWatches(docs.sort((a,b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0)));
           setLoading(false);
         }, (err) => {
-          console.error(err);
+          console.error("Erreur Firestore (Passage en local):", err);
           // Fallback silencieux vers local si erreur de droits
           useLocalStorage = true;
+          // On essaie de charger le local quand même
+          const localData = localStorage.getItem('chronoManager_local_v8');
+          if (localData) setWatches(JSON.parse(localData));
           setLoading(false);
         });
         return () => unsubscribe();
       } catch (e) {
         console.error("Erreur Query", e);
+        useLocalStorage = true;
         setLoading(false);
       }
     }
