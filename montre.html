@@ -8,10 +8,14 @@ import {
 
 // --- Firebase Imports ---
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } from 'firebase/firestore';
 
-// --- CONFIGURATION ---
+// ==========================================================================
+// ZONE DE CONFIGURATION (A REMPLIR AVANT MISE EN LIGNE)
+// ==========================================================================
+// Copiez ici les valeurs données par la console Firebase.
+// Si vous laissez "VOTRE_...", l'application fonctionnera en mode HORS-LIGNE (Démo).
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
@@ -22,31 +26,31 @@ const firebaseConfig = {
   appId: "1:449745267926:web:f218d0a1ece65b9dc7ad77"
 };
 
-// --- INITIALISATION ROBUSTE (Cloud + Local) ---
+// ==========================================================================
+// INITIALISATION INTELLIGENTE
+// ==========================================================================
 let app, auth, db;
-let useLocalStorage = false; // Par défaut on tente le cloud
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-demo';
+let forceLocalMode = false;
 
-try {
-  // 1. On essaie de charger la config de l'environnement (ici)
-  let config;
-  if (typeof __firebase_config !== 'undefined') {
-    config = JSON.parse(__firebase_config);
-  } else {
-    // Pas de config trouvée => Mode Local
-    throw new Error("Pas de config Firebase"); 
+// Détection : Si les clés sont encore les placeholders, on force le mode local pour éviter les erreurs
+if (firebaseConfig.apiKey === "VOTRE_API_KEY" || firebaseConfig.apiKey.includes("API_KEY")) {
+  console.log("⚠️ Clés Firebase non configurées. Passage automatique en mode LocalStorage.");
+  forceLocalMode = true;
+} else {
+  try {
+    // Tentative d'initialisation Firebase
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+  } catch (e) {
+    console.error("Erreur init Firebase:", e);
+    forceLocalMode = true;
   }
-
-  app = initializeApp(config);
-  auth = getAuth(app);
-  db = getFirestore(app);
-} catch (e) {
-  // Si erreur (ou pas de config), on passe en mode local sans planter
-  console.warn("Passage en mode LocalStorage (Démo).", e);
-  useLocalStorage = true;
 }
 
-// --- LOGO SVG (Boîte à Montres) ---
+const appId = 'chrono-manager-v1'; // Identifiant de l'application
+
+// --- Composants Graphiques (Logo) ---
 const WatchBoxLogo = () => (
   <svg viewBox="0 0 200 160" className="w-full h-full drop-shadow-xl" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -84,7 +88,7 @@ const WatchBoxLogo = () => (
   </svg>
 );
 
-// --- COMPOSANTS UI ---
+// --- Composants Utilitaires ---
 
 const Card = ({ children, className = "", onClick }) => (
   <div onClick={onClick} className={`bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden ${className} ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}>
@@ -132,33 +136,28 @@ const compressImage = (file) => {
   });
 };
 
-// --- APP PRINCIPALE ---
+// --- Application Principale ---
 
 export default function App() {
-  const [user, setUser] = useState(useLocalStorage ? { uid: 'local-user' } : null);
+  const [user, setUser] = useState(forceLocalMode ? { uid: 'local-user' } : null);
   const [watches, setWatches] = useState([]);
-  const [loading, setLoading] = useState(!useLocalStorage);
-  const [view, setView] = useState('box'); // box, list, detail, finance, add, summary
+  const [loading, setLoading] = useState(!forceLocalMode);
+  const [view, setView] = useState('box'); 
   const [filter, setFilter] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [selectedWatch, setSelectedWatch] = useState(null);
-  const [error, setError] = useState(null);
+  const [useLocalStorage, setUseLocalStorage] = useState(forceLocalMode);
 
-  // AUTHENTIFICATION
+  // 1. Authentification (Seulement si Firebase est activé)
   useEffect(() => {
-    if (useLocalStorage) return; // Pas d'auth en mode local
+    if (useLocalStorage) return;
 
     const initAuth = async () => {
       try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-           await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-           await signInAnonymously(auth);
-        }
+        await signInAnonymously(auth);
       } catch (err) {
-        console.error("Erreur Auth (Passage en local):", err);
-        setError("Mode hors-ligne activé");
-        useLocalStorage = true;
+        console.error("Erreur Auth (Basculement Local):", err);
+        setUseLocalStorage(true);
         setUser({ uid: 'local-user' });
         setLoading(false);
       }
@@ -170,21 +169,22 @@ export default function App() {
       if (!u && !useLocalStorage) setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [useLocalStorage]);
 
-  // SYNCHRONISATION DONNEES
+  // 2. Synchronisation des Données
   useEffect(() => {
+    // Si pas d'utilisateur et pas en mode local, on attend
     if (!user && !useLocalStorage) return;
 
     if (useLocalStorage) {
-      // Chargement depuis LocalStorage
+      // --- MODE LOCAL (Chargement) ---
       try {
-        const localData = localStorage.getItem('chronoManager_local_v8');
+        const localData = localStorage.getItem('chronoManager_prod_v1');
         if (localData) setWatches(JSON.parse(localData));
       } catch(e) { console.error(e); }
       setLoading(false);
     } else {
-      // Chargement depuis Firebase
+      // --- MODE CLOUD (Chargement) ---
       try {
         const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'watches'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -192,31 +192,26 @@ export default function App() {
           setWatches(docs.sort((a,b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0)));
           setLoading(false);
         }, (err) => {
-          console.error("Erreur Firestore (Passage en local):", err);
-          // Fallback silencieux vers local si erreur de droits
-          useLocalStorage = true;
-          // On essaie de charger le local quand même
-          const localData = localStorage.getItem('chronoManager_local_v8');
-          if (localData) setWatches(JSON.parse(localData));
+          console.error("Erreur Firestore, passage en local:", err);
+          setUseLocalStorage(true); // Fallback si erreur droits/quota
           setLoading(false);
         });
         return () => unsubscribe();
       } catch (e) {
-        console.error("Erreur Query", e);
-        useLocalStorage = true;
+        setUseLocalStorage(true);
         setLoading(false);
       }
     }
-  }, [user]);
+  }, [user, useLocalStorage]);
 
-  // SAUVEGARDE LOCALE (Effet de bord pour le mode localStorage)
+  // Sauvegarde locale automatique (si mode local actif)
   useEffect(() => {
     if (useLocalStorage) {
-      localStorage.setItem('chronoManager_local_v8', JSON.stringify(watches));
+      localStorage.setItem('chronoManager_prod_v1', JSON.stringify(watches));
     }
-  }, [watches]);
+  }, [watches, useLocalStorage]);
 
-  // --- ACTIONS ---
+  // --- Actions ---
 
   const [formData, setFormData] = useState({
     brand: '', model: '', reference: '', purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', image: null
@@ -231,6 +226,7 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     const watchId = editingId || Date.now().toString();
     const newWatch = { 
       id: watchId, 
@@ -247,18 +243,18 @@ export default function App() {
       });
       finalizeSubmit(newWatch);
     } else {
-      // Firebase Save
+      if (!user) return;
       try {
         await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'watches', watchId), newWatch);
         finalizeSubmit(newWatch);
       } catch (err) {
-        alert("Erreur de sauvegarde : " + err.message);
+        alert("Erreur sauvegarde Cloud : " + err.message);
       }
     }
   };
 
   const finalizeSubmit = (newWatch) => {
-    if (selectedWatch) setSelectedWatch(newWatch);
+    if (selectedWatch) setSelectedWatch(newWatch); 
     setFilter('all'); setView('list'); setEditingId(null); resetForm();
   };
 
@@ -274,6 +270,7 @@ export default function App() {
         setWatches(prev => prev.filter(w => w.id !== id));
         setView('list');
       } else {
+        if (!user) return;
         try {
           await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'watches', id));
           setView('list'); 
@@ -284,7 +281,7 @@ export default function App() {
 
   const openDetail = (watch) => { setSelectedWatch(watch); setView('detail'); };
 
-  // --- RENDUS ---
+  // --- Vues (Identiques à avant) ---
 
   const renderBox = () => (
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-8">
@@ -294,7 +291,7 @@ export default function App() {
           <p className="text-slate-800 font-medium text-sm">{watches.length} montre{watches.length > 1 ? 's' : ''} en collection</p>
           <div className={`flex items-center justify-center text-xs font-light italic gap-1 ${useLocalStorage ? 'text-amber-600' : 'text-emerald-600'}`}>
               {useLocalStorage ? <CloudOff size={12} /> : <Cloud size={12} />}
-              <span>{useLocalStorage ? 'Mode Démo (Local)' : 'Sauvegarde Cloud Active'}</span>
+              <span>{useLocalStorage ? 'Mode Local (Sans clé)' : 'Sauvegarde Cloud Active'}</span>
           </div>
       </div>
       <button onClick={() => setView('list')} className="mt-8 px-6 py-2 bg-slate-900 text-white text-xs uppercase tracking-widest rounded-full shadow-lg hover:bg-slate-800 transition-colors">Entrer</button>
@@ -443,4 +440,3 @@ export default function App() {
     </div>
   );
 }
-
