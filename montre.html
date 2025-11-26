@@ -12,15 +12,10 @@ import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } from 'firebase/firestore';
 
 // ==========================================================================
-// ZONE DE CONFIGURATION
+// CONFIGURATION
 // ==========================================================================
-// LAISSEZ CES VALEURS TELLES QUELLES pour que l'app fonctionne en MODE LOCAL immédiatement.
-// Pour activer le Cloud plus tard :
-// 1. Remplacez par vos vraies clés Firebase.
-// 2. Ajoutez "chronomanage-b9wyk88ix-crushmetals-projects.vercel.app" dans 
-//    Firebase Console > Authentication > Settings > Authorized Domains
-const firebaseConfig = {
-  apiKey: "VOTRE_API_KEY_ICI", 
+const productionConfig = {
+  apiKey: "VOTRE_API_KEY_ICI", // Remplacez par vos vraies clés pour activer le Cloud
   authDomain: "VOTRE_PROJET.firebaseapp.com",
   projectId: "VOTRE_PROJET",
   storageBucket: "VOTRE_BUCKET.firebasestorage.app",
@@ -29,24 +24,43 @@ const firebaseConfig = {
 };
 
 // ==========================================================================
-// INITIALISATION INTELLIGENTE (AUTO-DÉTECTION)
+// INITIALISATION SÉCURISÉE (MODE "INSUBMERSIBLE")
 // ==========================================================================
 let app, auth, db;
-let forceLocalMode = false;
+let firebaseInitialized = false;
+let initError = null;
 
-// Si on détecte les placeholders, on force le mode local pour éviter tout bug
-if (firebaseConfig.apiKey === "VOTRE_API_KEY_ICI" || firebaseConfig.apiKey.includes("VOTRE_API_KEY")) {
-  console.log("⚠️ Mode Local Forcé (Clés non configurées).");
-  forceLocalMode = true;
-} else {
-  try {
-    app = initializeApp(firebaseConfig);
+// Fonction pour vérifier si la config est réelle
+const isValidConfig = (conf) => {
+  return conf && conf.apiKey && !conf.apiKey.includes("VOTRE_API_KEY") && conf.apiKey.length > 10;
+};
+
+try {
+  // 1. Détection de l'environnement
+  let configToUse = productionConfig;
+  
+  // Si on est dans l'aperçu (ici), on tente d'utiliser la config interne
+  if (typeof __firebase_config !== 'undefined') {
+    try {
+      configToUse = JSON.parse(__firebase_config);
+    } catch(e) {
+      console.log("Pas de config interne");
+    }
+  }
+
+  // 2. Tentative d'initialisation SEULEMENT si la config semble valide
+  if (isValidConfig(configToUse)) {
+    app = initializeApp(configToUse);
     auth = getAuth(app);
     db = getFirestore(app);
-  } catch (e) {
-    console.error("Erreur init Firebase:", e);
-    forceLocalMode = true;
+    firebaseInitialized = true;
+  } else {
+    console.log("⚠️ Configuration Firebase par défaut détectée. Mode LOCAL activé.");
   }
+} catch (e) {
+  console.error("Erreur critique initialisation Firebase:", e);
+  initError = e.message;
+  firebaseInitialized = false;
 }
 
 const appId = 'chrono-manager-v1'; 
@@ -140,27 +154,28 @@ const compressImage = (file) => {
 // --- Application Principale ---
 
 export default function App() {
-  const [user, setUser] = useState(forceLocalMode ? { uid: 'local-user' } : null);
   const [watches, setWatches] = useState([]);
-  const [loading, setLoading] = useState(!forceLocalMode);
+  // Si Firebase n'est pas init, on force le mode local tout de suite
+  const [useLocalStorage, setUseLocalStorage] = useState(!firebaseInitialized);
+  const [user, setUser] = useState(useLocalStorage ? { uid: 'local-user' } : null);
+  const [loading, setLoading] = useState(firebaseInitialized); // Si Firebase est là, on charge. Sinon, non.
   const [view, setView] = useState('box'); 
   const [filter, setFilter] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [selectedWatch, setSelectedWatch] = useState(null);
-  const [useLocalStorage, setUseLocalStorage] = useState(forceLocalMode);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(initError);
 
-  // 1. Authentification
+  // 1. Authentification (Uniquement si Firebase est activé)
   useEffect(() => {
-    if (useLocalStorage) return;
+    if (!firebaseInitialized) return;
 
     const initAuth = async () => {
       try {
         await signInAnonymously(auth);
       } catch (err) {
-        console.error("Erreur Auth (Basculement Local):", err);
-        setError("Mode hors-ligne activé");
-        setUseLocalStorage(true); 
+        console.error("Erreur Auth:", err);
+        setError("Erreur Auth Cloud: " + err.message);
+        setUseLocalStorage(true);
         setUser({ uid: 'local-user' });
         setLoading(false);
       }
@@ -169,24 +184,25 @@ export default function App() {
     
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      if (!u && !useLocalStorage) setLoading(false);
+      if (!u) setLoading(false); // Arrête le chargement si pas d'user
     });
     return () => unsubscribe();
-  }, [useLocalStorage]);
+  }, []);
 
   // 2. Synchronisation des Données
   useEffect(() => {
-    if (!user && !useLocalStorage) return;
-
+    // Si on est en mode local ou fallback
     if (useLocalStorage) {
-      // --- MODE LOCAL ---
       try {
-        const localData = localStorage.getItem('chronoManager_prod_v1');
+        const localData = localStorage.getItem('chronoManager_v9');
         if (localData) setWatches(JSON.parse(localData));
       } catch(e) { console.error(e); }
       setLoading(false);
-    } else {
-      // --- MODE CLOUD ---
+      return;
+    }
+
+    // Si on est en mode Cloud et qu'on a un user
+    if (firebaseInitialized && user && !useLocalStorage) {
       try {
         const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'watches'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -194,23 +210,24 @@ export default function App() {
           setWatches(docs.sort((a,b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0)));
           setLoading(false);
         }, (err) => {
-          console.error("Erreur Firestore, passage en local:", err);
-          setUseLocalStorage(true); 
+          console.error("Erreur Firestore:", err);
+          // En cas d'erreur Cloud (ex: règles de sécu), on bascule en local pour sauver l'utilisateur
+          setUseLocalStorage(true);
           setLoading(false);
         });
         return () => unsubscribe();
       } catch (e) {
-        console.error("Erreur générale:", e);
-        setUseLocalStorage(true); 
+        console.error("Erreur générale Cloud:", e);
+        setUseLocalStorage(true);
         setLoading(false);
       }
     }
   }, [user, useLocalStorage]);
 
-  // Sauvegarde locale automatique (mode local)
+  // Sauvegarde locale automatique (si mode local actif)
   useEffect(() => {
     if (useLocalStorage) {
-      localStorage.setItem('chronoManager_prod_v1', JSON.stringify(watches));
+      localStorage.setItem('chronoManager_v9', JSON.stringify(watches));
     }
   }, [watches, useLocalStorage]);
 
@@ -251,6 +268,7 @@ export default function App() {
         finalizeSubmit(newWatch);
       } catch (err) {
         alert("Erreur sauvegarde Cloud : " + err.message);
+        // Optionnel : Basculer en local si le cloud échoue à l'écriture
       }
     }
   };
@@ -293,9 +311,9 @@ export default function App() {
           <p className="text-slate-800 font-medium text-sm">{watches.length} montre{watches.length > 1 ? 's' : ''} en collection</p>
           <div className={`flex items-center justify-center text-xs font-light italic gap-1 ${useLocalStorage ? 'text-amber-600' : 'text-emerald-600'}`}>
               {useLocalStorage ? <CloudOff size={12} /> : <Cloud size={12} />}
-              <span>{useLocalStorage ? 'Mode Local (Hors-ligne)' : 'Sauvegarde Cloud Active'}</span>
+              <span>{useLocalStorage ? 'Stockage Local (Téléphone)' : 'Sauvegarde Cloud Active'}</span>
           </div>
-          {error && <p className="text-[10px] text-red-400">{error}</p>}
+          {error && <div className="mt-2 p-2 bg-red-50 text-red-500 text-[10px] rounded border border-red-100 max-w-xs mx-auto">Info : {error}</div>}
       </div>
       <button onClick={() => setView('list')} className="mt-8 px-6 py-2 bg-slate-900 text-white text-xs uppercase tracking-widest rounded-full shadow-lg hover:bg-slate-800 transition-colors">Entrer</button>
     </div>
