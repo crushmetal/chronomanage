@@ -14,24 +14,29 @@ import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } f
 // ==========================================================================
 // ZONE DE CONFIGURATION
 // ==========================================================================
+// LAISSEZ CES VALEURS TELLES QUELLES pour que l'app fonctionne en MODE LOCAL immédiatement.
+// Pour activer le Cloud plus tard :
+// 1. Remplacez par vos vraies clés Firebase.
+// 2. Ajoutez "chronomanage-b9wyk88ix-crushmetals-projects.vercel.app" dans 
+//    Firebase Console > Authentication > Settings > Authorized Domains
 const firebaseConfig = {
-  apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
-  authDomain: "chronomanage-cfe36.firebaseapp.com",
-  projectId: "chronomanage-cfe36",
-  storageBucket: "chronomanage-cfe36.firebasestorage.app",
-  messagingSenderId: "449745267926",
-  appId: "1:449745267926:web:f218d0a1ece65b9dc7ad77"
+  apiKey: "VOTRE_API_KEY_ICI", 
+  authDomain: "VOTRE_PROJET.firebaseapp.com",
+  projectId: "VOTRE_PROJET",
+  storageBucket: "VOTRE_BUCKET.firebasestorage.app",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
 };
 
 // ==========================================================================
-// INITIALISATION INTELLIGENTE
+// INITIALISATION INTELLIGENTE (AUTO-DÉTECTION)
 // ==========================================================================
 let app, auth, db;
 let forceLocalMode = false;
 
-// On vérifie si les clés semblent valides avant d'essayer Firebase
-if (firebaseConfig.apiKey.includes("VOTRE_API_KEY")) {
-  console.log("⚠️ Clés non configurées. Mode Local forcé.");
+// Si on détecte les placeholders, on force le mode local pour éviter tout bug
+if (firebaseConfig.apiKey === "VOTRE_API_KEY_ICI" || firebaseConfig.apiKey.includes("VOTRE_API_KEY")) {
+  console.log("⚠️ Mode Local Forcé (Clés non configurées).");
   forceLocalMode = true;
 } else {
   try {
@@ -154,8 +159,8 @@ export default function App() {
         await signInAnonymously(auth);
       } catch (err) {
         console.error("Erreur Auth (Basculement Local):", err);
-        setError("Mode hors-ligne activé (Clé API restreinte ou invalide)");
-        setUseLocalStorage(true); // CORRECTION ICI
+        setError("Mode hors-ligne activé");
+        setUseLocalStorage(true); 
         setUser({ uid: 'local-user' });
         setLoading(false);
       }
@@ -190,13 +195,13 @@ export default function App() {
           setLoading(false);
         }, (err) => {
           console.error("Erreur Firestore, passage en local:", err);
-          setUseLocalStorage(true); // CORRECTION ICI
+          setUseLocalStorage(true); 
           setLoading(false);
         });
         return () => unsubscribe();
       } catch (e) {
         console.error("Erreur générale:", e);
-        setUseLocalStorage(true); // CORRECTION ICI
+        setUseLocalStorage(true); 
         setLoading(false);
       }
     }
@@ -415,7 +420,6 @@ export default function App() {
           {loading ? (
             <div className="absolute inset-0 z-50 bg-white/80 flex flex-col items-center justify-center">
               <Loader2 className="animate-spin text-slate-800 mb-2" size={32} /><p className="text-xs text-slate-500 font-medium uppercase tracking-widest">Chargement...</p>
-              {/* Bouton de secours si le chargement reste bloqué */}
               <button onClick={() => setLoading(false)} className="mt-4 text-[10px] text-slate-400 underline">Forcer l'affichage</button>
             </div>
           ) : (
