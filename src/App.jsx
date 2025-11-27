@@ -3,19 +3,18 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   LayoutDashboard, Search, ArrowUpRight, ArrowDownRight, Clock, AlertCircle,
   Package, DollarSign, FileText, Box, Cloud, CloudOff, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, Activity, LogIn, LogOut, User
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench
 } from 'lucide-react';
 
-// --- Firebase Imports ---
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } from 'firebase/firestore';
 
 // ==========================================================================
-// CONFIGURATION (A REMPLIR POUR ACTIVER LE CLOUD)
+// CONFIGURATION
 // ==========================================================================
 const productionConfig = {
- apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
+apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
   authDomain: "chronomanage-cfe36.firebaseapp.com",
   projectId: "chronomanage-cfe36",
   storageBucket: "chronomanage-cfe36.firebasestorage.app",
@@ -100,6 +99,10 @@ const WatchBoxLogo = () => (
       <linearGradient id="leatherGrad" x1="0%" y1="0%" x2="0%" y2="100%">
         <stop offset="0%" stopColor="#5D4037" />
         <stop offset="100%" stopColor="#3E2723" />
+      </linearGradient>
+      <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#8D6E63" />
+        <stop offset="100%" stopColor="#6D4C41" />
       </linearGradient>
       <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
@@ -220,7 +223,7 @@ export default function App() {
   const [formData, setFormData] = useState({
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
-    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', box: '', warrantyDate: '',
+    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', box: '', warrantyDate: '', revision: '', // Ajout revision
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', image: null
   });
 
@@ -254,7 +257,7 @@ export default function App() {
   const resetForm = () => setFormData({ 
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
-    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', box: '', warrantyDate: '',
+    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', image: null 
   });
   const handleEdit = (w) => { setFormData(w); setEditingId(w.id); setView('add'); };
@@ -432,10 +435,11 @@ export default function App() {
           </div>
 
           <div>
-              <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Origine & Garantie</h3>
+              <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Origine & Entretien</h3>
               <div className="grid grid-cols-2 gap-3">
                  <DetailItem icon={Package} label="Boîte" value={w.box} />
                  <DetailItem icon={ShieldCheck} label="Garantie" value={w.warrantyDate} />
+                 <DetailItem icon={Wrench} label="Révision" value={w.revision} />
               </div>
           </div>
 
@@ -484,13 +488,16 @@ export default function App() {
         </div>
 
         <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Origine</h3>
+            <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Origine & Entretien</h3>
             <div className="grid grid-cols-3 gap-3">
                 <input className="p-3 border rounded-lg text-sm" placeholder="Pays" value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} />
                 <input className="p-3 border rounded-lg text-sm" placeholder="Année" type="number" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
                 <input className="p-3 border rounded-lg text-sm" placeholder="Boîte" value={formData.box} onChange={e => setFormData({...formData, box: e.target.value})} />
             </div>
-            <input className="w-full p-3 border rounded-lg text-sm" placeholder="Garantie (ex: 2 ans, 12/2026, Non...)" type="text" value={formData.warrantyDate} onChange={e => setFormData({...formData, warrantyDate: e.target.value})} />
+            <div className="grid grid-cols-2 gap-3">
+                <input className="p-3 border rounded-lg text-sm" placeholder="Garantie (ex: 2 ans, Non...)" type="text" value={formData.warrantyDate} onChange={e => setFormData({...formData, warrantyDate: e.target.value})} />
+                <input className="p-3 border rounded-lg text-sm" placeholder="Révision (ex: 2022, à faire...)" type="text" value={formData.revision} onChange={e => setFormData({...formData, revision: e.target.value})} />
+            </div>
         </div>
 
         <div className="space-y-3">
