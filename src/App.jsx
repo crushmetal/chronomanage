@@ -28,9 +28,17 @@ apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
 let app, auth, db;
 let firebaseReady = false;
 
-// NOMS DE STOCKAGE FIXES (POUR NE PLUS PERDRE LES DONNEES)
+// NOMS DE STOCKAGE FIXES
 const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const APP_ID_STABLE = 'chrono-manager-universal'; 
+
+// Structure par défaut d'une montre (Pour garantir que tous les champs existent)
+const DEFAULT_WATCH_STATE = {
+    brand: '', model: '', reference: '', 
+    diameter: '', year: '', movement: '',
+    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', box: '', warrantyDate: '', revision: '',
+    purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', image: null
+};
 
 const hasValidKeys = productionConfig.apiKey && !productionConfig.apiKey.includes("VOTRE_API_KEY");
 let configToUse = productionConfig;
@@ -178,12 +186,9 @@ export default function App() {
     if (useLocalStorage) {
       try {
         let local = localStorage.getItem(LOCAL_STORAGE_KEY);
-        
-        // --- RESTAURATION DES DONNEES PERDUES ---
-        // Si la base principale est vide, on cherche dans TOUTES les anciennes versions
         if (!local || local === '[]') {
            const rescueKeys = [
-             'chrono_v16_data', 'chrono_v15_data', 'chrono_v14_data', 'chrono_v10_data', 
+             'chrono_v17_data', 'chrono_v16_data', 'chrono_v15_data', 'chrono_v14_data', 'chrono_v10_data', 
              'chrono_v9_local', 'chrono_manager_v9', 'chronoManager_prod_v1', 
              'chronoManager_local_v8'
            ];
@@ -191,18 +196,15 @@ export default function App() {
              const oldData = localStorage.getItem(key);
              if (oldData && oldData !== '[]' && oldData.length > 5) { 
                 local = oldData; 
-                // On sauvegarde immédiatement dans la nouvelle clé stable
                 localStorage.setItem(LOCAL_STORAGE_KEY, local);
                 break; 
              }
            }
         }
-        
         if (local) setWatches(JSON.parse(local));
       } catch(e){}
       setLoading(false);
     } else {
-      // Mode Cloud
       try {
         const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches'));
         const unsub = onSnapshot(q, (snap) => {
@@ -220,12 +222,7 @@ export default function App() {
   }, [watches, useLocalStorage]);
 
   // --- ACTIONS ---
-  const [formData, setFormData] = useState({
-    brand: '', model: '', reference: '', 
-    diameter: '', year: '', movement: '',
-    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', box: '', warrantyDate: '', revision: '', // Ajout revision
-    purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', image: null
-  });
+  const [formData, setFormData] = useState(DEFAULT_WATCH_STATE);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -238,7 +235,8 @@ export default function App() {
     e.preventDefault();
     const id = editingId || Date.now().toString();
     const newWatch = { 
-      id, ...formData, 
+      ...formData,
+      id, 
       purchasePrice: Number(formData.purchasePrice), 
       sellingPrice: Number(formData.sellingPrice), 
       dateAdded: new Date().toISOString() 
@@ -254,13 +252,15 @@ export default function App() {
   };
 
   const closeForm = (w) => { if(selectedWatch) setSelectedWatch(w); setFilter('all'); setView('list'); setEditingId(null); resetForm(); };
-  const resetForm = () => setFormData({ 
-    brand: '', model: '', reference: '', 
-    diameter: '', year: '', movement: '',
-    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', box: '', warrantyDate: '', revision: '',
-    purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', image: null 
-  });
-  const handleEdit = (w) => { setFormData(w); setEditingId(w.id); setView('add'); };
+  const resetForm = () => setFormData(DEFAULT_WATCH_STATE);
+  
+  // FIX CRITIQUE: Fusion des anciennes données avec la nouvelle structure
+  const handleEdit = (w) => { 
+      setFormData({ ...DEFAULT_WATCH_STATE, ...w }); 
+      setEditingId(w.id); 
+      setView('add'); 
+  };
+  
   const handleDelete = async (id) => {
     if(!confirm("Supprimer ?")) return;
     if(useLocalStorage) { setWatches(prev => prev.filter(w => w.id !== id)); setView('list'); }
