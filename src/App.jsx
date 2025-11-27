@@ -14,7 +14,7 @@ import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } f
 // CONFIGURATION
 // ==========================================================================
 const productionConfig = {
-   apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
+apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
   authDomain: "chronomanage-cfe36.firebaseapp.com",
   projectId: "chronomanage-cfe36",
   storageBucket: "chronomanage-cfe36.firebasestorage.app",
