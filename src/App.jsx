@@ -29,6 +29,10 @@ const productionConfig = {
 let app, auth, db;
 let firebaseReady = false;
 
+// NOMS DE STOCKAGE FIXES (POUR NE PLUS PERDRE LES DONNEES)
+const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
+const APP_ID_STABLE = 'chrono-manager-universal'; 
+
 const hasValidKeys = productionConfig.apiKey && !productionConfig.apiKey.includes("VOTRE_API_KEY");
 let configToUse = productionConfig;
 
@@ -48,8 +52,6 @@ if (firebaseReady) {
     firebaseReady = false;
   }
 }
-
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-v16';
 
 // --- UTILS ---
 const Card = ({ children, className = "", onClick }) => (
@@ -82,9 +84,6 @@ const compressImage = (file) => {
   });
 };
 
-// --- ICONES PERSONNALISÉES ---
-
-// Icône Rotor / Mouvement Automatique
 const MovementIcon = ({ size = 24, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <circle cx="12" cy="12" r="10" />
@@ -101,10 +100,6 @@ const WatchBoxLogo = () => (
       <linearGradient id="leatherGrad" x1="0%" y1="0%" x2="0%" y2="100%">
         <stop offset="0%" stopColor="#5D4037" />
         <stop offset="100%" stopColor="#3E2723" />
-      </linearGradient>
-      <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#8D6E63" />
-        <stop offset="100%" stopColor="#6D4C41" />
       </linearGradient>
       <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
@@ -166,11 +161,6 @@ export default function App() {
       if (currentUser) { setUser(currentUser); setLoading(false); setError(null); } 
       else {
         signInAnonymously(auth).catch((err) => {
-          console.error("Erreur Auth:", err);
-          if (err.code === 'auth/api-key-not-valid') setError("Clés API invalides.");
-          else if (err.code === 'auth/operation-not-allowed') setError("Auth Anonyme non activée.");
-          else if (err.message && err.message.includes("domain")) setError("Domaine non autorisé.");
-          else setError("Erreur connexion: " + err.message);
           setUseLocalStorage(true); setUser({ uid: 'local-user' }); setLoading(false);
         });
       }
@@ -178,46 +168,52 @@ export default function App() {
     return () => unsubscribe();
   }, [useLocalStorage]);
 
-  // --- CHARGEMENT DONNÉES ---
+  // --- CHARGEMENT ET MIGRATION ---
   useEffect(() => {
     if (!user && !useLocalStorage) return;
+
     if (useLocalStorage) {
       try {
-        let local = localStorage.getItem('chrono_v16_data');
-        // Migration auto : On regarde si des données existent dans les versions précédentes
+        let local = localStorage.getItem(LOCAL_STORAGE_KEY);
+        
+        // --- RESTAURATION DES DONNEES PERDUES ---
+        // Si la base principale est vide, on cherche dans TOUTES les anciennes versions
         if (!local || local === '[]') {
-           const oldKeys = [
-             'chrono_v15_data', // Version précédente
-             'chrono_v14_data', // Celle qui contenait vos données
-             'chrono_v10_data', 
-             'chrono_v9_local', 
-             'chrono_manager_v9', 
-             'chronoManager_prod_v1', 
+           const rescueKeys = [
+             'chrono_v16_data', 'chrono_v15_data', 'chrono_v14_data', 'chrono_v10_data', 
+             'chrono_v9_local', 'chrono_manager_v9', 'chronoManager_prod_v1', 
              'chronoManager_local_v8'
            ];
-           for (const key of oldKeys) {
+           for (const key of rescueKeys) {
              const oldData = localStorage.getItem(key);
-             if (oldData && oldData !== '[]') { local = oldData; break; }
+             if (oldData && oldData !== '[]' && oldData.length > 5) { 
+                local = oldData; 
+                // On sauvegarde immédiatement dans la nouvelle clé stable
+                localStorage.setItem(LOCAL_STORAGE_KEY, local);
+                break; 
+             }
            }
         }
+        
         if (local) setWatches(JSON.parse(local));
       } catch(e){}
       setLoading(false);
     } else {
+      // Mode Cloud
       try {
-        const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'watches'));
+        const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches'));
         const unsub = onSnapshot(q, (snap) => {
           setWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.dateAdded)-new Date(a.dateAdded)));
           setLoading(false);
-        }, (err) => { console.error("Erreur Firestore:", err); setError("Erreur lecture DB"); setUseLocalStorage(true); setLoading(false); });
+        }, (err) => { setError("Erreur lecture DB"); setUseLocalStorage(true); setLoading(false); });
         return () => unsub();
       } catch(e) { setUseLocalStorage(true); setLoading(false); }
     }
   }, [user, useLocalStorage]);
 
-  // SAVE LOCAL
+  // SAVE LOCAL (Stable)
   useEffect(() => {
-    if (useLocalStorage) localStorage.setItem('chrono_v16_data', JSON.stringify(watches));
+    if (useLocalStorage) localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(watches));
   }, [watches, useLocalStorage]);
 
   // --- ACTIONS ---
@@ -249,7 +245,7 @@ export default function App() {
       setWatches(prev => editingId ? prev.map(w => w.id === id ? newWatch : w) : [newWatch, ...prev]);
       closeForm(newWatch);
     } else {
-      try { await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'watches', id), newWatch); closeForm(newWatch); }
+      try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', id), newWatch); closeForm(newWatch); }
       catch(e) { alert("Erreur Cloud: " + e.message); }
     }
   };
@@ -265,7 +261,7 @@ export default function App() {
   const handleDelete = async (id) => {
     if(!confirm("Supprimer ?")) return;
     if(useLocalStorage) { setWatches(prev => prev.filter(w => w.id !== id)); setView('list'); }
-    else { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'watches', id)); setView('list'); }
+    else { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', id)); setView('list'); }
   };
 
   const getFilteredWatches = () => {
@@ -410,7 +406,6 @@ export default function App() {
         </div>
         
         <div className="p-4 space-y-6">
-          {/* Header Image + Titre */}
           <div className="space-y-4">
               <div className="aspect-square bg-slate-100 rounded-2xl overflow-hidden shadow-sm border">
                 {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className="text-slate-300"/></div>}
@@ -422,7 +417,6 @@ export default function App() {
               </div>
           </div>
 
-          {/* Caractéristiques Techniques */}
           <div>
               <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Spécifications</h3>
               <div className="grid grid-cols-2 gap-3">
@@ -437,7 +431,6 @@ export default function App() {
               </div>
           </div>
 
-          {/* Garantie & Boite */}
           <div>
               <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Origine & Garantie</h3>
               <div className="grid grid-cols-2 gap-3">
@@ -446,13 +439,11 @@ export default function App() {
               </div>
           </div>
 
-          {/* Prix */}
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
             <div className="p-3 bg-slate-50 rounded-lg border"><div className="text-xs text-slate-400 uppercase">Achat</div><div className="text-lg font-bold">{formatPrice(w.purchasePrice)}</div></div>
             <div className="p-3 bg-slate-50 rounded-lg border"><div className="text-xs text-slate-400 uppercase">{w.status === 'sold' ? 'Vente' : 'Estim.'}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice)}</div>{w.status === 'sold' && <div className="text-xs text-emerald-600 mt-1">Profit: {formatPrice(w.sellingPrice - w.purchasePrice)}</div>}</div>
           </div>
 
-          {/* Notes */}
           {w.conditionNotes && <div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> Notes</div>{w.conditionNotes}</div>}
           
           <div className="text-center pt-4 text-xs text-slate-300">Ajouté le {new Date(w.dateAdded).toLocaleDateString()}</div>
@@ -466,13 +457,11 @@ export default function App() {
       <div className="flex justify-between items-center mb-6 mt-2"><h1 className="text-2xl font-bold">{editingId ? 'Modifier' : 'Ajouter'}</h1><button onClick={() => { setEditingId(null); resetForm(); setView(selectedWatch ? 'detail' : 'list'); }}><X/></button></div>
       <form onSubmit={handleSubmit} className="space-y-6">
         
-        {/* Photo */}
         <label className="block w-full aspect-video bg-slate-100 rounded-xl flex items-center justify-center border-2 border-dashed cursor-pointer overflow-hidden hover:bg-slate-50">
           {formData.image ? <img src={formData.image} className="w-full h-full object-cover"/> : <div className="text-center text-slate-400"><Camera className="mx-auto mb-2"/><span className="text-xs">Ajouter Photo</span></div>}
           <input type="file" onChange={handleImageUpload} className="hidden"/>
         </label>
 
-        {/* Identité */}
         <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Identité</h3>
             <input className="w-full p-3 border rounded-lg" placeholder="Marque (ex: Rolex)" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} required />
@@ -480,7 +469,6 @@ export default function App() {
             <input className="w-full p-3 border rounded-lg" placeholder="Référence" value={formData.reference} onChange={e => setFormData({...formData, reference: e.target.value})} />
         </div>
 
-        {/* Technique */}
         <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Technique</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -495,7 +483,6 @@ export default function App() {
             </div>
         </div>
 
-        {/* Origine */}
         <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Origine</h3>
             <div className="grid grid-cols-3 gap-3">
@@ -503,11 +490,9 @@ export default function App() {
                 <input className="p-3 border rounded-lg text-sm" placeholder="Année" type="number" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
                 <input className="p-3 border rounded-lg text-sm" placeholder="Boîte" value={formData.box} onChange={e => setFormData({...formData, box: e.target.value})} />
             </div>
-            {/* Champ Garantie modifié en texte libre */}
             <input className="w-full p-3 border rounded-lg text-sm" placeholder="Garantie (ex: 2 ans, 12/2026, Non...)" type="text" value={formData.warrantyDate} onChange={e => setFormData({...formData, warrantyDate: e.target.value})} />
         </div>
 
-        {/* Prix & Statut */}
         <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Finances</h3>
             <div className="grid grid-cols-2 gap-4">
