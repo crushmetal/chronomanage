@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
-  LayoutDashboard, Search, ArrowUpRight, ArrowDownRight, Clock, AlertCircle,
-  Package, DollarSign, FileText, Box, Cloud, CloudOff, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Lock, Shuffle, Save, Info, Copy
+  Search, Clock, AlertCircle,
+  Package, DollarSign, FileText, Box, Loader2,
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v39.4"; 
+const APP_VERSION = "v39.5"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -215,7 +215,98 @@ const LiveClock = () => {
   );
 };
 
-// --- COMPOSANT MODAL DE CONFIGURATION FIREBASE ---
+// --- COMPOSANTS EXTERNALISÉS ---
+
+const FinanceDetailList = ({ title, items, onClose }) => {
+    const [localSort, setLocalSort] = useState('date'); 
+
+    const sortedItems = useMemo(() => {
+        let sorted = [...items];
+        if (localSort === 'alpha') {
+            sorted.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
+        } else {
+            sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+        }
+        return sorted;
+    }, [items, localSort]);
+
+    return (
+        <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-bottom-10">
+          <div className="p-4 border-b flex items-center justify-between bg-slate-50">
+            <h2 className="font-bold text-lg text-slate-800">{title}</h2>
+            <div className="flex gap-2">
+                <button 
+                    onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50"
+                >
+                    <ArrowUpDown size={14} />
+                    {localSort === 'date' ? 'Date' : 'A-Z'}
+                </button>
+                <button onClick={onClose} className="p-2 bg-white rounded-full shadow-sm border border-slate-200"><X size={20}/></button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+             {sortedItems.map(w => {
+               const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
+               return (
+                 <div key={w.id} className="flex items-center p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
+                     <div className="w-12 h-12 bg-slate-100 rounded overflow-hidden flex-shrink-0 mr-3 border border-slate-200">{w.image && <img src={w.image} className="w-full h-full object-cover"/>}</div>
+                     <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm truncate text-slate-800">{w.brand} {w.model}</div>
+                        <div className="text-xs text-slate-500">Achat: {formatPrice(w.purchasePrice)}</div>
+                     </div>
+                     <div className="text-right">
+                        <div className="font-bold text-sm text-slate-800">{formatPrice(w.sellingPrice || w.purchasePrice)}</div>
+                        <div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div>
+                     </div>
+                 </div>
+               )
+             })}
+             {sortedItems.length === 0 && <div className="text-center text-slate-400 py-10 text-sm">Aucune montre dans cette catégorie.</div>}
+          </div>
+        </div>
+    );
+};
+
+const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor }) => {
+    const isWhite = type === 'total';
+    const txtMain = isWhite ? 'text-slate-800' : 'text-white';
+    const txtSub = isWhite ? 'text-slate-400' : 'text-white/70';
+    const borderClass = isWhite ? 'border border-slate-200' : 'border border-transparent';
+    const bgIcon = isWhite ? 'bg-slate-100 text-slate-600' : 'bg-white/20 text-white';
+
+    return (
+        <div onClick={onClick} className={`${bgColor} ${borderClass} p-4 rounded-xl shadow-md mb-3 cursor-pointer hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden relative`}>
+            <div className="flex justify-between items-center mb-4 relative z-10">
+                <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${bgIcon}`}>
+                        <Icon size={18} />
+                    </div>
+                    <span className={`font-bold text-lg ${txtMain}`}>{title}</span>
+                </div>
+                {type !== 'total' && <div className={`bg-white/20 p-1 rounded-full ${txtMain}`}><ChevronLeft className="rotate-180" size={16}/></div>}
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center relative z-10">
+                <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div>
+                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div>
+                </div>
+                <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div>
+                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div>
+                </div>
+                <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div>
+                    <div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>
+                        {stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}
+                    </div>
+                </div>
+            </div>
+            {!isWhite && <Icon size={120} className="absolute -bottom-4 -right-4 opacity-10 text-white transform rotate-12 pointer-events-none" />}
+        </div>
+    );
+};
+
 const ConfigModal = ({ onClose, currentError }) => {
     const [jsonConfig, setJsonConfig] = useState('');
     const [parseError, setParseError] = useState(null);
@@ -596,57 +687,6 @@ export default function App() {
     );
   };
 
-  const FinanceDetailList = ({ title, items, onClose }) => {
-    const [localSort, setLocalSort] = useState('date'); 
-
-    const sortedItems = useMemo(() => {
-        let sorted = [...items];
-        if (localSort === 'alpha') {
-            sorted.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
-        } else {
-            sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-        }
-        return sorted;
-    }, [items, localSort]);
-
-    return (
-        <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-bottom-10">
-          <div className="p-4 border-b flex items-center justify-between bg-slate-50">
-            <h2 className="font-bold text-lg text-slate-800">{title}</h2>
-            <div className="flex gap-2">
-                <button 
-                    onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50"
-                >
-                    <ArrowUpDown size={14} />
-                    {localSort === 'date' ? 'Date' : 'A-Z'}
-                </button>
-                <button onClick={onClose} className="p-2 bg-white rounded-full shadow-sm border border-slate-200"><X size={20}/></button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-             {sortedItems.map(w => {
-               const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
-               return (
-                 <div key={w.id} className="flex items-center p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
-                     <div className="w-12 h-12 bg-slate-100 rounded overflow-hidden flex-shrink-0 mr-3 border border-slate-200">{w.image && <img src={w.image} className="w-full h-full object-cover"/>}</div>
-                     <div className="flex-1 min-w-0">
-                        <div className="font-bold text-sm truncate text-slate-800">{w.brand} {w.model}</div>
-                        <div className="text-xs text-slate-500">Achat: {formatPrice(w.purchasePrice)}</div>
-                     </div>
-                     <div className="text-right">
-                        <div className="font-bold text-sm text-slate-800">{formatPrice(w.sellingPrice || w.purchasePrice)}</div>
-                        <div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div>
-                     </div>
-                 </div>
-               )
-             })}
-             {sortedItems.length === 0 && <div className="text-center text-slate-400 py-10 text-sm">Aucune montre dans cette catégorie.</div>}
-          </div>
-        </div>
-    );
-  };
-
   const renderFinance = () => {
     const collectionWatches = watches.filter(w => w.status === 'collection');
     const forSaleWatches = watches.filter(w => w.status === 'forsale');
@@ -666,45 +706,6 @@ export default function App() {
         buy: sCol.buy + sSale.buy + sSold.buy,
         val: sCol.val + sSale.val + sSold.val,
         profit: sCol.profit + sSale.profit + sSold.profit
-    };
-
-    const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor }) => {
-        const isWhite = type === 'total';
-        const txtMain = isWhite ? 'text-slate-800' : 'text-white';
-        const txtSub = isWhite ? 'text-slate-400' : 'text-white/70';
-        const borderClass = isWhite ? 'border border-slate-200' : 'border border-transparent';
-        const bgIcon = isWhite ? 'bg-slate-100 text-slate-600' : 'bg-white/20 text-white';
-
-        return (
-            <div onClick={onClick} className={`${bgColor} ${borderClass} p-4 rounded-xl shadow-md mb-3 cursor-pointer hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden relative`}>
-                <div className="flex justify-between items-center mb-4 relative z-10">
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${bgIcon}`}>
-                            <Icon size={18} />
-                        </div>
-                        <span className={`font-bold text-lg ${txtMain}`}>{title}</span>
-                    </div>
-                    {type !== 'total' && <div className={`bg-white/20 p-1 rounded-full ${txtMain}`}><ChevronLeft className="rotate-180" size={16}/></div>}
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center relative z-10">
-                    <div>
-                        <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div>
-                        <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div>
-                    </div>
-                    <div>
-                        <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div>
-                        <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div>
-                    </div>
-                    <div>
-                        <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div>
-                        <div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>
-                            {stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}
-                        </div>
-                    </div>
-                </div>
-                {!isWhite && <Icon size={120} className="absolute -bottom-4 -right-4 opacity-10 text-white transform rotate-12 pointer-events-none" />}
-            </div>
-        );
     };
 
     return (
@@ -1165,7 +1166,5 @@ export default function App() {
         {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} />}
       </div>
     </div>
-  );
-}
   );
 }
