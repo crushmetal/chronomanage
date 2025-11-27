@@ -3,18 +3,18 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   LayoutDashboard, Search, ArrowUpRight, ArrowDownRight, Clock, AlertCircle,
   Package, DollarSign, FileText, Box, Cloud, CloudOff, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Lock, Shuffle
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Lock, Shuffle, Save, Info
 } from 'lucide-react';
 
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } from 'firebase/firestore';
 
 // ==========================================================================
-// CONFIGURATION
+// CONFIGURATION INITIALE
 // ==========================================================================
 const productionConfig = {
-apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o",
+  apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o",
   authDomain: "chronomanagerfinal.firebaseapp.com",
   projectId: "chronomanagerfinal",
   storageBucket: "chronomanagerfinal.firebasestorage.app",
@@ -23,15 +23,17 @@ apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o",
 };
 
 // ==========================================================================
-// INITIALISATION
+// GESTIONNAIRE FIREBASE
 // ==========================================================================
 let app, auth, db;
 let firebaseReady = false;
+let globalInitError = null; // Pour capturer l'erreur d'initialisation
 
 const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
+const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v39.0"; // Mise à jour de version pour forcer le cache
+const APP_VERSION = "v39.3"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -44,20 +46,49 @@ const DEFAULT_BRACELET_STATE = {
     width: '', type: 'Standard', material: '', color: '', quickRelease: false, image: null, notes: ''
 };
 
-let configToUse = productionConfig;
+// Fonction pour tenter d'initialiser Firebase avec une config donnée
+const tryInitFirebase = (config) => {
+    try {
+        if (!config || !config.apiKey || config.apiKey.length < 5) return false;
+        
+        // Évite la double initialisation
+        if (getApps().length === 0) {
+            app = initializeApp(config);
+        } else {
+            app = getApp();
+        }
+        
+        auth = getAuth(app);
+        db = getFirestore(app);
+        firebaseReady = true;
+        globalInitError = null;
+        console.log("Firebase initialized successfully");
+        return true;
+    } catch (e) {
+        console.error("Erreur init Firebase:", e);
+        globalInitError = e.message; // Stocke l'erreur pour l'afficher
+        return false;
+    }
+};
+
+// 1. Essai avec config injectée par l'environnement
 if (typeof __firebase_config !== 'undefined') {
-  try { configToUse = JSON.parse(__firebase_config); firebaseReady = true; } catch(e) {}
+    try { tryInitFirebase(JSON.parse(__firebase_config)); } catch(e) {}
 }
 
-if (firebaseReady) {
-  try {
-    app = initializeApp(configToUse);
-    auth = getAuth(app);
-    db = getFirestore(app);
-  } catch (e) {
-    console.error("Erreur Init Firebase:", e);
-    firebaseReady = false;
-  }
+// 2. Essai avec config "hardcodée"
+if (!firebaseReady) {
+    tryInitFirebase(productionConfig);
+}
+
+// 3. Essai avec config sauvegardée (backup)
+if (!firebaseReady) {
+    try {
+        const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY);
+        if (savedConfig) {
+            tryInitFirebase(JSON.parse(savedConfig));
+        }
+    } catch(e) {}
 }
 
 // --- UTILS ---
@@ -188,6 +219,65 @@ const LiveClock = () => {
   );
 };
 
+// --- COMPOSANT MODAL DE CONFIGURATION FIREBASE ---
+const ConfigModal = ({ onClose, currentError }) => {
+    const [jsonConfig, setJsonConfig] = useState('');
+    const [parseError, setParseError] = useState(null);
+
+    const handleSave = () => {
+        try {
+            let cleanJson = jsonConfig;
+            if (cleanJson.includes('=')) {
+                cleanJson = cleanJson.substring(cleanJson.indexOf('=') + 1);
+            }
+            if (cleanJson.trim().endsWith(';')) {
+                cleanJson = cleanJson.trim().slice(0, -1);
+            }
+            const parsed = new Function('return ' + cleanJson)();
+            if (!parsed.apiKey) throw new Error("apiKey manquante");
+
+            localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(parsed));
+            alert("Configuration sauvegardée ! L'application va redémarrer.");
+            window.location.reload();
+        } catch (e) {
+            setParseError("Format invalide. Collez l'objet { ... } complet.");
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><Settings size={18}/> Configuration Cloud</h3>
+                    <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
+                </div>
+                <div className="p-6 space-y-4">
+                    {currentError && (
+                        <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs mb-4 border border-red-100">
+                            <strong>Erreur de connexion détectée :</strong><br/>
+                            {currentError}
+                            <div className="mt-2 text-[10px] text-red-500">Vérifiez vos clés ou les restrictions de domaine dans la console Firebase.</div>
+                        </div>
+                    )}
+                    <p className="text-sm text-slate-600">
+                        Si les clés intégrées ne fonctionnent pas, vous pouvez forcer une nouvelle configuration ici.
+                    </p>
+                    <textarea 
+                        className="w-full h-40 p-3 border rounded-lg font-mono text-xs bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder={`{ apiKey: "...", ... }`}
+                        value={jsonConfig}
+                        onChange={(e) => setJsonConfig(e.target.value)}
+                    />
+                    {parseError && <div className="text-xs text-red-500 font-medium bg-red-50 p-2 rounded">{parseError}</div>}
+                    <button onClick={handleSave} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 flex items-center justify-center gap-2">
+                        <Save size={18}/> Sauvegarder & Redémarrer
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- APPLICATION ---
 
 export default function App() {
@@ -208,23 +298,34 @@ export default function App() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState('date'); // 'date', 'alpha', 'random'
+  const [sortOrder, setSortOrder] = useState('date');
   const [error, setError] = useState(null); 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isBoxOpening, setIsBoxOpening] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false); 
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
+
+  // --- RE-TENTATIVE INIT AU MONTAGE ---
+  useEffect(() => {
+      // Si firebaseReady est faux mais qu'on a des clés, on retente proprement
+      if (!firebaseReady && productionConfig.apiKey) {
+          tryInitFirebase(productionConfig);
+          if (firebaseReady) {
+              setUseLocalStorage(false);
+              setLoading(true);
+          }
+      }
+  }, []);
 
   // --- ICONE APP (FAVICON) ---
   useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'icon';
-    // Logo SVG encodé : Fond gris foncé, cercle blanc (cadran), aiguilles rouges et noires
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="#1e293b"/><circle cx="256" cy="256" r="180" fill="#f8fafc"/><rect x="246" y="80" width="20" height="40" rx="5" fill="#ef4444"/><rect x="240" y="100" width="32" height="160" rx="16" fill="#334155" transform="rotate(45 256 256)"/><rect x="240" y="100" width="32" height="120" rx="16" fill="#334155" transform="rotate(-60 256 256)"/><circle cx="256" cy="256" r="24" fill="#ef4444"/></svg>`;
     link.href = `data:image/svg+xml;base64,${btoa(svgIcon)}`;
     document.head.appendChild(link);
-
     const appleLink = document.createElement('link');
     appleLink.rel = 'apple-touch-icon';
     appleLink.href = link.href;
@@ -233,14 +334,20 @@ export default function App() {
 
   // --- GOOGLE LOGIN ---
   const handleGoogleLogin = async () => {
-    if (!firebaseReady) return alert("Le Cloud n'est pas configuré.");
+    if (!firebaseReady) {
+        setShowConfigModal(true);
+        return;
+    }
     const provider = new GoogleAuthProvider();
     try { await signInWithPopup(auth, provider); } 
     catch (error) { alert("Erreur : " + error.message); }
   };
 
   const handleLogout = async () => {
-    if (!firebaseReady) return;
+    if (!firebaseReady) {
+        setShowProfileMenu(false);
+        return;
+    }
     try { await signOut(auth); signInAnonymously(auth).catch(() => setUseLocalStorage(true)); setShowProfileMenu(false); } 
     catch (error) { console.error(error); }
   };
@@ -417,23 +524,18 @@ export default function App() {
   const activeWatchesCount = watches.filter(w => w.status === 'collection' || w.status === 'forsale').length;
 
   // --- FILTRAGE ET TRI ---
-  // On utilise useMemo pour gérer le tri (notamment l'aléatoire) efficacement
   const getFilteredAndSortedWatches = useMemo(() => {
     let filtered = watches;
     if (searchTerm) {
         const lower = searchTerm.toLowerCase();
         filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower)));
     }
-
-    // Le tri est fait sur une copie pour ne pas muter l'état
     let sorted = [...filtered];
     if (sortOrder === 'alpha') {
         sorted.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
     } else if (sortOrder === 'random') {
-        // Mélange simple (Fisher-Yates serait mieux mais ceci suffit pour de petites listes)
         sorted.sort(() => Math.random() - 0.5);
     } else {
-        // Default: Date (Décroissant)
         sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
     }
     return sorted;
@@ -451,19 +553,26 @@ export default function App() {
   // --- COMPOSANTS VUE ---
 
   const renderHeaderControls = () => {
-    // Si Firebase n'est pas prêt, on n'affiche rien (c'est le cas normal hors connexion)
-    // MAIS ici on veut permettre la connexion même en local pour migrer vers le cloud.
-    // L'astuce est de montrer le bouton si l'utilisateur est soit null, soit anonyme, soit local-user.
-    
-    // Si pas de config du tout, le bouton ne marchera pas, mais on l'affiche quand même pour l'UX
-    // (dans un vrai cas il faudrait catch l'erreur au clic)
+    const isConfigMissing = !firebaseReady;
 
     return (
       <div className="absolute top-4 right-4 z-20">
-        {!user || user.isAnonymous || user.uid === 'local-user' ? (
-          <button onClick={handleGoogleLogin} className="flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-            <LogIn size={14} /><span className="hidden sm:inline">Connexion</span>
-          </button>
+        {(!user || user.isAnonymous || user.uid === 'local-user') ? (
+          <div className="flex flex-col items-end">
+              <button 
+                onClick={handleGoogleLogin} 
+                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-slate-200 text-xs font-medium transition-colors ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/90 text-slate-700 hover:bg-slate-50'}`}
+              >
+                {isConfigMissing ? <Settings size={14} /> : <LogIn size={14} />}
+                <span className="hidden sm:inline">{isConfigMissing ? 'Configurer Cloud' : 'Connexion'}</span>
+              </button>
+              {isConfigMissing && globalInitError && (
+                  <div className="mt-1 bg-red-500 text-white text-[9px] p-1.5 rounded shadow-sm max-w-[150px] animate-in fade-in slide-in-from-top-1">
+                      <div className="flex items-center gap-1 font-bold mb-0.5"><AlertCircle size={10}/> Erreur connexion</div>
+                      <div className="opacity-90 truncate" title={globalInitError}>{globalInitError}</div>
+                  </div>
+              )}
+          </div>
         ) : (
           <div className="relative">
             <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 transition-transform active:scale-95">
@@ -1018,8 +1127,10 @@ export default function App() {
             <button onClick={() => setView('profile')} className={`flex flex-col items-center w-1/6 ${view === 'profile' ? 'text-slate-900' : ''}`}><Grid size={20}/><span className="mt-1">Galerie</span></button>
           </nav>
         )}
+        
+        {/* MODALE CONFIG */}
+        {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} />}
       </div>
     </div>
   );
 }
-
