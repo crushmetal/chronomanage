@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, Clock, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,12 +33,14 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v39.5"; 
+const APP_VERSION = "v39.6"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
-    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', box: '', warrantyDate: '', revision: '',
+    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
+    dialColor: '', // Nouveau champ
+    box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', image: null
 };
 
@@ -447,26 +449,35 @@ export default function App() {
   };
 
   // --- AUTH EFFECT ---
+  // CORRECTION MAJEURE : On attend le statut Auth de Firebase avant de faire quoi que ce soit.
+  // On ne force plus le sign-in anonyme agressif si un user est déjà là (même en chargement).
   useEffect(() => {
     if (useLocalStorage) {
         setLoading(false);
         return;
     }
-    const initAuth = async () => {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-            try { await signInWithCustomToken(auth, __initial_auth_token); } 
-            catch (e) { await signInAnonymously(auth); }
-        } else {
-             await signInAnonymously(auth).catch((err) => {
+    
+    // On écoute simplement. Si user existe, on le prend.
+    // Si null (vraiment déconnecté), on signe en anonyme pour ne pas bloquer l'app.
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+          setUser(currentUser);
+          setError(null);
+          // Si on était en loading, on arrête
+          setLoading(false);
+      } else {
+          // Personne n'est connecté. On lance l'anonyme seulement maintenant.
+          signInAnonymously(auth)
+            .then(() => {
+                // Le listener va se redéclencher avec le user anonyme
+            })
+            .catch((err) => {
+                console.warn("Auth anonyme failed, fallback local", err);
                 setUseLocalStorage(true); 
                 setUser({ uid: 'local-user' }); 
                 setLoading(false);
             });
-        }
-    };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) { setUser(currentUser); setError(null); } 
+      }
     });
     return () => unsubscribe();
   }, [useLocalStorage]);
@@ -542,11 +553,11 @@ export default function App() {
     const sep = ";";
     let csvContent = "\uFEFF"; 
     csvContent += "sep=;\n"; 
-    const headers = ["Marque", "Modele", "Reference", "Diametre (mm)", "Entre-corne (mm)", "Annee", "Mouvement", "Pays", "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Prix Achat", "Prix Vente", "Estimation", "Statut", "Notes", "Lien"];
+    const headers = ["Marque", "Modele", "Reference", "Couleur Cadran", "Diametre (mm)", "Entre-corne (mm)", "Annee", "Mouvement", "Pays", "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Prix Achat", "Prix Vente", "Estimation", "Statut", "Notes", "Lien"];
     csvContent += headers.join(sep) + "\n";
     watches.forEach(w => {
       const row = [
-        w.brand, w.model, w.reference, w.diameter, w.strapWidth, w.year, w.movement, w.country, w.waterResistance, w.glass, w.box, w.warrantyDate, w.revision, w.purchasePrice, w.sellingPrice, w.status, 
+        w.brand, w.model, w.reference, w.dialColor, w.diameter, w.strapWidth, w.year, w.movement, w.country, w.waterResistance, w.glass, w.box, w.warrantyDate, w.revision, w.purchasePrice, w.sellingPrice, w.status, 
         w.conditionNotes ? w.conditionNotes.replace(/(\r\n|\n|\r|;)/gm, " ") : "", 
         w.link
       ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`); 
@@ -554,7 +565,7 @@ export default function App() {
     });
     bracelets.forEach(b => {
       const row = [
-        "BRACELET", b.type, "", "", b.width, "", "", "", "", "", "", "", "", "", "", "actif", 
+        "BRACELET", b.type, "", "", "", b.width, "", "", "", "", "", "", "", "", "", "", "actif", 
         (b.notes + (b.quickRelease ? " (Quick Release)" : "")).replace(/(\r\n|\n|\r|;)/gm, " "), 
         ""
       ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`);
@@ -670,7 +681,8 @@ export default function App() {
         ) : (
           <div className="relative">
             <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 transition-transform active:scale-95">
-              {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
+              {/* Ajout du referrerPolicy pour éviter les 403 de Google */}
+              {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
             </button>
             {showProfileMenu && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 z-30">
@@ -684,6 +696,96 @@ export default function App() {
           </div>
         )}
       </div>
+    );
+  };
+
+  const FinanceDetailList = ({ title, items, onClose }) => {
+    const [localSort, setLocalSort] = useState('date'); 
+
+    const sortedItems = useMemo(() => {
+        let sorted = [...items];
+        if (localSort === 'alpha') {
+            sorted.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
+        } else {
+            sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+        }
+        return sorted;
+    }, [items, localSort]);
+
+    return (
+        <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-bottom-10">
+          <div className="p-4 border-b flex items-center justify-between bg-slate-50">
+            <h2 className="font-bold text-lg text-slate-800">{title}</h2>
+            <div className="flex gap-2">
+                <button 
+                    onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50"
+                >
+                    <ArrowUpDown size={14} />
+                    {localSort === 'date' ? 'Date' : 'A-Z'}
+                </button>
+                <button onClick={onClose} className="p-2 bg-white rounded-full shadow-sm border border-slate-200"><X size={20}/></button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+             {sortedItems.map(w => {
+               const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
+               return (
+                 <div key={w.id} className="flex items-center p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
+                     <div className="w-12 h-12 bg-slate-100 rounded overflow-hidden flex-shrink-0 mr-3 border border-slate-200">{w.image && <img src={w.image} className="w-full h-full object-cover"/>}</div>
+                     <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm truncate text-slate-800">{w.brand} {w.model}</div>
+                        <div className="text-xs text-slate-500">Achat: {formatPrice(w.purchasePrice)}</div>
+                     </div>
+                     <div className="text-right">
+                        <div className="font-bold text-sm text-slate-800">{formatPrice(w.sellingPrice || w.purchasePrice)}</div>
+                        <div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div>
+                     </div>
+                 </div>
+               )
+             })}
+             {sortedItems.length === 0 && <div className="text-center text-slate-400 py-10 text-sm">Aucune montre dans cette catégorie.</div>}
+          </div>
+        </div>
+    );
+  };
+
+  const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor }) => {
+    const isWhite = type === 'total';
+    const txtMain = isWhite ? 'text-slate-800' : 'text-white';
+    const txtSub = isWhite ? 'text-slate-400' : 'text-white/70';
+    const borderClass = isWhite ? 'border border-slate-200' : 'border border-transparent';
+    const bgIcon = isWhite ? 'bg-slate-100 text-slate-600' : 'bg-white/20 text-white';
+
+    return (
+        <div onClick={onClick} className={`${bgColor} ${borderClass} p-4 rounded-xl shadow-md mb-3 cursor-pointer hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden relative`}>
+            <div className="flex justify-between items-center mb-4 relative z-10">
+                <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${bgIcon}`}>
+                        <Icon size={18} />
+                    </div>
+                    <span className={`font-bold text-lg ${txtMain}`}>{title}</span>
+                </div>
+                {type !== 'total' && <div className={`bg-white/20 p-1 rounded-full ${txtMain}`}><ChevronLeft className="rotate-180" size={16}/></div>}
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center relative z-10">
+                <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div>
+                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div>
+                </div>
+                <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div>
+                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div>
+                </div>
+                <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div>
+                    <div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>
+                        {stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}
+                    </div>
+                </div>
+            </div>
+            {!isWhite && <Icon size={120} className="absolute -bottom-4 -right-4 opacity-10 text-white transform rotate-12 pointer-events-none" />}
+        </div>
     );
   };
 
@@ -892,6 +994,7 @@ export default function App() {
                      <DetailItem icon={Ruler} label="Diamètre" value={w.diameter ? w.diameter + ' mm' : ''} />
                      <DetailItem icon={Layers} label="Épaisseur" value={w.thickness ? w.thickness + ' mm' : ''} />
                      <DetailItem icon={Activity} label="Bracelet" value={w.strapWidth ? w.strapWidth + ' mm' : ''} />
+                     {w.dialColor && <DetailItem icon={Palette} label="Cadran" value={w.dialColor} />}
                      <DetailItem icon={Droplets} label="Étanchéité" value={w.waterResistance ? w.waterResistance + ' ATM' : ''} />
                      <DetailItem icon={MovementIcon} label="Mouvement" value={w.movement} />
                      <DetailItem icon={Search} label="Verre" value={w.glass} />
@@ -1025,6 +1128,11 @@ export default function App() {
                         <input className="w-full p-3 border rounded-lg" placeholder="Marque (ex: Rolex)" value={watchForm.brand} onChange={e => setWatchForm({...watchForm, brand: e.target.value})} required />
                         <input className="w-full p-3 border rounded-lg" placeholder="Modèle" value={watchForm.model} onChange={e => setWatchForm({...watchForm, model: e.target.value})} required />
                         <input className="w-full p-3 border rounded-lg" placeholder="Référence" value={watchForm.reference} onChange={e => setWatchForm({...watchForm, reference: e.target.value})} />
+                        {/* NOUVEAU CHAMP : COULEUR CADRAN */}
+                        <div className="relative">
+                            <input className="w-full p-3 pl-10 border rounded-lg" placeholder="Couleur cadran" value={watchForm.dialColor || ''} onChange={e => setWatchForm({...watchForm, dialColor: e.target.value})} />
+                            <Palette className="absolute left-3 top-3.5 text-slate-400" size={18} />
+                        </div>
                     </div>
                     {watchForm.status === 'wishlist' ? (
                         <div className="space-y-3"><h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Lien Web</h3><input className="w-full p-3 border rounded-lg" placeholder="https://..." value={watchForm.link} onChange={e => setWatchForm({...watchForm, link: e.target.value})} /></div>
