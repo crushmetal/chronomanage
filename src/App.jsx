@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, FileCode
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -219,6 +219,58 @@ const LiveClock = () => {
 
 // --- COMPOSANTS EXTERNALISÉS ---
 
+// NOUVEAU : MODALE D'AIDE POUR LES RÈGLES FIREBASE
+const RulesHelpModal = ({ onClose }) => {
+    const rulesCode = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Autoriser chaque utilisateur à accéder à ses propres données
+    match /artifacts/chrono-manager-universal/users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}`;
+
+    return (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
+                <div className="bg-slate-50 p-4 border-b flex justify-between items-center">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><ShieldCheck className="text-emerald-600"/> Réparer les permissions</h3>
+                    <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div className="text-sm text-slate-600">
+                        <p className="mb-2">L'erreur <strong>permission-denied</strong> signifie que Firebase bloque l'accès à vos données par sécurité.</p>
+                        <p>Pour corriger cela, copiez le code ci-dessous et collez-le dans l'onglet <strong>Règles (Rules)</strong> de votre base de données Firestore.</p>
+                    </div>
+
+                    <div className="relative bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
+                        <button 
+                            onClick={() => navigator.clipboard.writeText(rulesCode)} 
+                            className="absolute top-2 right-2 p-1.5 bg-white/10 hover:bg-white/20 rounded text-white transition-colors"
+                            title="Copier"
+                        >
+                            <Copy size={14}/>
+                        </button>
+                        <pre>{rulesCode}</pre>
+                    </div>
+
+                    <ol className="text-xs text-slate-500 list-decimal pl-4 space-y-1">
+                        <li>Allez sur la console Firebase {'>'} Firestore Database</li>
+                        <li>Cliquez sur l'onglet <strong>Règles</strong></li>
+                        <li>Remplacez tout le contenu par le code ci-dessus</li>
+                        <li>Cliquez sur <strong>Publier</strong></li>
+                    </ol>
+                    
+                    <button onClick={onClose} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors">
+                        C'est fait !
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const FinanceDetailList = ({ title, items, onClose }) => {
     const [localSort, setLocalSort] = useState('date'); 
 
@@ -393,6 +445,7 @@ export default function App() {
   const [isBoxOpening, setIsBoxOpening] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false); 
   const [authDomainError, setAuthDomainError] = useState(null); 
+  const [showRulesHelp, setShowRulesHelp] = useState(false); // État pour la modale d'aide Rules
   
   const [isAuthLoading, setIsAuthLoading] = useState(false); 
 
@@ -429,7 +482,6 @@ export default function App() {
         setShowConfigModal(true);
         return;
     }
-    // CORRECTION: Force le mode cloud pour permettre la reconnexion
     setUseLocalStorage(false); 
     setIsAuthLoading(true);
     
@@ -459,8 +511,6 @@ export default function App() {
 
   // --- AUTH EFFECT ---
   useEffect(() => {
-    // CORRECTION: Si on utilise le stockage local, on n'écoute plus l'auth, 
-    // SAUF si on est en train de tenter un login (isAuthLoading)
     if (useLocalStorage && !isAuthLoading) {
         setLoading(false);
         return;
@@ -470,7 +520,6 @@ export default function App() {
           setUser(currentUser);
           setError(null);
           setLoading(false);
-          // Force le mode cloud si on est connecté
           if (useLocalStorage) setUseLocalStorage(false);
       } else {
           const timer = setTimeout(() => {
@@ -508,11 +557,9 @@ export default function App() {
         const unsubW = onSnapshot(qW, (snap) => {
           setWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.dateAdded)-new Date(a.dateAdded)));
           setLoading(false);
-          // On reset l'erreur si succès
           if(error) setError(null);
         }, (err) => { 
             console.error("Erreur lecture DB:", err);
-            // CORRECTION: On n'écrase pas le mode Cloud si c'est un utilisateur Google
             if (user?.isAnonymous) {
                 setUseLocalStorage(true); 
             } else {
@@ -706,7 +753,6 @@ export default function App() {
         ) : (
           <div className="relative">
             <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 transition-transform active:scale-95">
-              {/* Ajout du referrerPolicy pour éviter les 403 de Google */}
               {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
             </button>
             {showProfileMenu && (
@@ -730,136 +776,6 @@ export default function App() {
     );
   };
 
-  const FinanceDetailList = ({ title, items, onClose }) => {
-    const [localSort, setLocalSort] = useState('date'); 
-
-    const sortedItems = useMemo(() => {
-        let sorted = [...items];
-        if (localSort === 'alpha') {
-            sorted.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
-        } else {
-            sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-        }
-        return sorted;
-    }, [items, localSort]);
-
-    return (
-        <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-bottom-10">
-          <div className="p-4 border-b flex items-center justify-between bg-slate-50">
-            <h2 className="font-bold text-lg text-slate-800">{title}</h2>
-            <div className="flex gap-2">
-                <button 
-                    onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50"
-                >
-                    <ArrowUpDown size={14} />
-                    {localSort === 'date' ? 'Date' : 'A-Z'}
-                </button>
-                <button onClick={onClose} className="p-2 bg-white rounded-full shadow-sm border border-slate-200"><X size={20}/></button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-             {sortedItems.map(w => {
-               const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
-               return (
-                 <div key={w.id} className="flex items-center p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
-                     <div className="w-12 h-12 bg-slate-100 rounded overflow-hidden flex-shrink-0 mr-3 border border-slate-200">{w.image && <img src={w.image} className="w-full h-full object-cover"/>}</div>
-                     <div className="flex-1 min-w-0">
-                        <div className="font-bold text-sm truncate text-slate-800">{w.brand} {w.model}</div>
-                        <div className="text-xs text-slate-500">Achat: {formatPrice(w.purchasePrice)}</div>
-                     </div>
-                     <div className="text-right">
-                        <div className="font-bold text-sm text-slate-800">{formatPrice(w.sellingPrice || w.purchasePrice)}</div>
-                        <div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div>
-                     </div>
-                 </div>
-               )
-             })}
-             {sortedItems.length === 0 && <div className="text-center text-slate-400 py-10 text-sm">Aucune montre dans cette catégorie.</div>}
-          </div>
-        </div>
-    );
-  };
-
-  const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor }) => {
-    const isWhite = type === 'total';
-    const txtMain = isWhite ? 'text-slate-800' : 'text-white';
-    const txtSub = isWhite ? 'text-slate-400' : 'text-white/70';
-    const borderClass = isWhite ? 'border border-slate-200' : 'border border-transparent';
-    const bgIcon = isWhite ? 'bg-slate-100 text-slate-600' : 'bg-white/20 text-white';
-
-    return (
-        <div onClick={onClick} className={`${bgColor} ${borderClass} p-4 rounded-xl shadow-md mb-3 cursor-pointer hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden relative`}>
-            <div className="flex justify-between items-center mb-4 relative z-10">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${bgIcon}`}>
-                        <Icon size={18} />
-                    </div>
-                    <span className={`font-bold text-lg ${txtMain}`}>{title}</span>
-                </div>
-                {type !== 'total' && <div className={`bg-white/20 p-1 rounded-full ${txtMain}`}><ChevronLeft className="rotate-180" size={16}/></div>}
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center relative z-10">
-                <div>
-                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div>
-                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div>
-                </div>
-                <div>
-                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div>
-                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div>
-                </div>
-                <div>
-                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div>
-                    <div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>
-                        {stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}
-                    </div>
-                </div>
-            </div>
-            {!isWhite && <Icon size={120} className="absolute -bottom-4 -right-4 opacity-10 text-white transform rotate-12 pointer-events-none" />}
-        </div>
-    );
-  };
-
-  const renderFinance = () => {
-    const collectionWatches = watches.filter(w => w.status === 'collection');
-    const forSaleWatches = watches.filter(w => w.status === 'forsale');
-    const soldWatches = watches.filter(w => w.status === 'sold');
-
-    const calculateStats = (list, isSold = false) => {
-        const buy = list.reduce((acc, w) => acc + (Number(w.purchasePrice) || 0), 0);
-        const val = list.reduce((acc, w) => acc + (Number(w.sellingPrice) || Number(w.purchasePrice) || 0), 0);
-        return { buy, val, profit: val - buy };
-    };
-
-    const sCol = calculateStats(collectionWatches);
-    const sSale = calculateStats(forSaleWatches);
-    const sSold = calculateStats(soldWatches, true);
-
-    const sTotal = {
-        buy: sCol.buy + sSale.buy + sSold.buy,
-        val: sCol.val + sSale.val + sSold.val,
-        profit: sCol.profit + sSale.profit + sSold.profit
-    };
-
-    return (
-      <div className="pb-24 px-3 space-y-2">
-        <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-100 mb-2">
-            <h1 className="text-xl font-bold text-slate-800 tracking-tight px-1">Finances</h1>
-        </div>
-        {financeDetail === 'collection' && <FinanceDetailList title="Détail Collection" items={collectionWatches} onClose={() => setFinanceDetail(null)} />}
-        {financeDetail === 'forsale' && <FinanceDetailList title="Détail En Vente" items={forSaleWatches} onClose={() => setFinanceDetail(null)} />}
-        {financeDetail === 'sold' && <FinanceDetailList title="Détail Vendues" items={soldWatches} onClose={() => setFinanceDetail(null)} />}
-
-        <FinanceCardFull title={`Ma Collection (${collectionWatches.length})`} icon={Watch} stats={sCol} type="collection" bgColor="bg-emerald-500" onClick={() => setFinanceDetail('collection')} />
-        <FinanceCardFull title={`En Vente (${forSaleWatches.length})`} icon={TrendingUp} stats={sSale} type="forsale" bgColor="bg-amber-500" onClick={() => setFinanceDetail('forsale')} />
-        <FinanceCardFull title={`Vendues (${soldWatches.length})`} icon={DollarSign} stats={sSold} type="sold" bgColor="bg-blue-600" onClick={() => setFinanceDetail('sold')} />
-        <div className="mt-4 pt-2">
-            <FinanceCardFull title="TOTAL GLOBAL" icon={Activity} stats={sTotal} type="total" bgColor="bg-white" onClick={() => {}} />
-        </div>
-      </div>
-    );
-  };
-
   const renderBox = () => (
     <div className="flex flex-col items-center justify-center h-full min-h-[80vh] px-8 relative bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-100 via-slate-50 to-slate-200">
       {renderHeaderControls()}
@@ -876,7 +792,11 @@ export default function App() {
              <div className="mt-3 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg text-xs flex items-center gap-2 animate-in slide-in-from-bottom-2">
                 <AlertCircle size={14} className="flex-shrink-0"/>
                 <span>Problème de synchronisation ({error})</span>
-                <button onClick={() => window.location.reload()} className="ml-auto bg-white p-1 rounded border shadow-sm"><RefreshCw size={12}/></button>
+                {error.includes('permission-denied') && (
+                    <button onClick={() => setShowRulesHelp(true)} className="ml-auto bg-white px-2 py-1 rounded border shadow-sm font-bold text-emerald-600 hover:bg-emerald-50">
+                        Comment réparer ?
+                    </button>
+                )}
              </div>
         )}
       </div>
@@ -1312,6 +1232,9 @@ export default function App() {
         
         {/* MODALE CONFIG */}
         {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} />}
+        
+        {/* MODALE AIDE REGLES */}
+        {showRulesHelp && <RulesHelpModal onClose={() => setShowRulesHelp(false)} />}
       </div>
     </div>
   );
