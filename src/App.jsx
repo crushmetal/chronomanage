@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
-  Search, Clock, AlertCircle,
+  Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, Cloud, CheckCircle2
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v39.7"; 
+const APP_VERSION = "v39.8"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -394,7 +394,7 @@ export default function App() {
   const [showConfigModal, setShowConfigModal] = useState(false); 
   const [authDomainError, setAuthDomainError] = useState(null); 
   
-  const [isAuthLoading, setIsAuthLoading] = useState(false); // New state for loading spinners
+  const [isAuthLoading, setIsAuthLoading] = useState(false); 
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
@@ -466,10 +466,7 @@ export default function App() {
           setError(null);
           setLoading(false);
       } else {
-          // Utilisation d'un timeout pour éviter le flash blanc si l'auth Google est en cours
-          // On ne passe en mode anonyme que si vraiment rien ne se passe
           const timer = setTimeout(() => {
-              // On vérifie qu'on n'est pas déjà en train de se logger via le bouton
               if (!isAuthLoading) {
                   signInAnonymously(auth)
                     .catch((err) => {
@@ -1287,5 +1284,4 @@ export default function App() {
       </div>
     </div>
   );
-}
 }
