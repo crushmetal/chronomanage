@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,13 +33,13 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v39.8"; 
+const APP_VERSION = "v39.9"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
-    dialColor: '', // Nouveau champ
+    dialColor: '', 
     box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', image: null
 };
@@ -429,7 +429,10 @@ export default function App() {
         setShowConfigModal(true);
         return;
     }
+    // CORRECTION: Force le mode cloud pour permettre la reconnexion
+    setUseLocalStorage(false); 
     setIsAuthLoading(true);
+    
     const provider = new GoogleAuthProvider();
     try { await signInWithPopup(auth, provider); } 
     catch (error) { 
@@ -456,7 +459,9 @@ export default function App() {
 
   // --- AUTH EFFECT ---
   useEffect(() => {
-    if (useLocalStorage) {
+    // CORRECTION: Si on utilise le stockage local, on n'écoute plus l'auth, 
+    // SAUF si on est en train de tenter un login (isAuthLoading)
+    if (useLocalStorage && !isAuthLoading) {
         setLoading(false);
         return;
     }
@@ -465,6 +470,8 @@ export default function App() {
           setUser(currentUser);
           setError(null);
           setLoading(false);
+          // Force le mode cloud si on est connecté
+          if (useLocalStorage) setUseLocalStorage(false);
       } else {
           const timer = setTimeout(() => {
               if (!isAuthLoading) {
@@ -501,12 +508,27 @@ export default function App() {
         const unsubW = onSnapshot(qW, (snap) => {
           setWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.dateAdded)-new Date(a.dateAdded)));
           setLoading(false);
-        }, (err) => { setError("Erreur lecture DB"); setUseLocalStorage(true); setLoading(false); });
+          // On reset l'erreur si succès
+          if(error) setError(null);
+        }, (err) => { 
+            console.error("Erreur lecture DB:", err);
+            // CORRECTION: On n'écrase pas le mode Cloud si c'est un utilisateur Google
+            if (user?.isAnonymous) {
+                setUseLocalStorage(true); 
+            } else {
+                setError("Erreur synchro: " + err.code); 
+            }
+            setLoading(false); 
+        });
 
         const qB = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'bracelets'));
         const unsubB = onSnapshot(qB, (snap) => setBracelets(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.dateAdded)-new Date(a.dateAdded))));
         return () => { unsubW(); unsubB(); };
-      } catch(e) { setUseLocalStorage(true); setLoading(false); }
+      } catch(e) { 
+          console.error("Erreur Setup Query:", e);
+          if (user?.isAnonymous) setUseLocalStorage(true);
+          setLoading(false); 
+      }
     }
   }, [user, useLocalStorage]);
 
@@ -848,6 +870,15 @@ export default function App() {
       <div className="absolute bottom-24 flex flex-col items-center z-0">
         <p className="text-slate-800 font-medium text-sm mb-2 tracking-wide">{activeWatchesCount} {activeWatchesCount > 1 ? 'montres' : 'montre'}</p>
         {!firebaseReady && (<div className="inline-flex items-center justify-center text-amber-600 text-xs bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 opacity-60"><WifiOff size={10} className="mr-1"/> Mode Local</div>)}
+        
+        {/* AFFICHAGE ERREUR DE SYNCHRO CLAIRE */}
+        {error && !useLocalStorage && (
+             <div className="mt-3 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg text-xs flex items-center gap-2 animate-in slide-in-from-bottom-2">
+                <AlertCircle size={14} className="flex-shrink-0"/>
+                <span>Problème de synchronisation ({error})</span>
+                <button onClick={() => window.location.reload()} className="ml-auto bg-white p-1 rounded border shadow-sm"><RefreshCw size={12}/></button>
+             </div>
+        )}
       </div>
     </div>
   );
