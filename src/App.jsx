@@ -14,13 +14,14 @@ import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } f
 // CONFIGURATION
 // ==========================================================================
 const productionConfig = {
- apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
+   apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
   authDomain: "chronomanage-cfe36.firebaseapp.com",
   projectId: "chronomanage-cfe36",
   storageBucket: "chronomanage-cfe36.firebasestorage.app",
   messagingSenderId: "449745267926",
   appId: "1:449745267926:web:f218d0a1ece65b9dc7ad77"
 };
+
 // ==========================================================================
 // INITIALISATION
 // ==========================================================================
@@ -30,6 +31,7 @@ let firebaseReady = false;
 const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const APP_ID_STABLE = 'chrono-manager-universal'; 
+const APP_VERSION = "v39.0"; // Mise à jour de version pour forcer le cache
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -449,11 +451,16 @@ export default function App() {
   // --- COMPOSANTS VUE ---
 
   const renderHeaderControls = () => {
-    if (!firebaseReady) return null;
+    // Si Firebase n'est pas prêt, on n'affiche rien (c'est le cas normal hors connexion)
+    // MAIS ici on veut permettre la connexion même en local pour migrer vers le cloud.
+    // L'astuce est de montrer le bouton si l'utilisateur est soit null, soit anonyme, soit local-user.
+    
+    // Si pas de config du tout, le bouton ne marchera pas, mais on l'affiche quand même pour l'UX
+    // (dans un vrai cas il faudrait catch l'erreur au clic)
 
     return (
       <div className="absolute top-4 right-4 z-20">
-        {!user || user.isAnonymous ? (
+        {!user || user.isAnonymous || user.uid === 'local-user' ? (
           <button onClick={handleGoogleLogin} className="flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
             <LogIn size={14} /><span className="hidden sm:inline">Connexion</span>
           </button>
@@ -1015,4 +1022,3 @@ export default function App() {
     </div>
   );
 }
-
