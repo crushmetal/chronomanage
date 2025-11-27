@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   LayoutDashboard, Search, ArrowUpRight, ArrowDownRight, Clock, AlertCircle,
   Package, DollarSign, FileText, Box, Cloud, CloudOff, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Lock, Shuffle, Save, Info
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Lock, Shuffle, Save, Info, Copy
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -27,13 +27,13 @@ const productionConfig = {
 // ==========================================================================
 let app, auth, db;
 let firebaseReady = false;
-let globalInitError = null; // Pour capturer l'erreur d'initialisation
+let globalInitError = null; 
 
 const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v39.3"; 
+const APP_VERSION = "v39.4"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -51,7 +51,6 @@ const tryInitFirebase = (config) => {
     try {
         if (!config || !config.apiKey || config.apiKey.length < 5) return false;
         
-        // Évite la double initialisation
         if (getApps().length === 0) {
             app = initializeApp(config);
         } else {
@@ -66,22 +65,19 @@ const tryInitFirebase = (config) => {
         return true;
     } catch (e) {
         console.error("Erreur init Firebase:", e);
-        globalInitError = e.message; // Stocke l'erreur pour l'afficher
+        globalInitError = e.message; 
         return false;
     }
 };
 
-// 1. Essai avec config injectée par l'environnement
 if (typeof __firebase_config !== 'undefined') {
     try { tryInitFirebase(JSON.parse(__firebase_config)); } catch(e) {}
 }
 
-// 2. Essai avec config "hardcodée"
 if (!firebaseReady) {
     tryInitFirebase(productionConfig);
 }
 
-// 3. Essai avec config sauvegardée (backup)
 if (!firebaseReady) {
     try {
         const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY);
@@ -303,13 +299,13 @@ export default function App() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isBoxOpening, setIsBoxOpening] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false); 
+  const [authDomainError, setAuthDomainError] = useState(null); // Pour afficher la bannière d'aide
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
 
   // --- RE-TENTATIVE INIT AU MONTAGE ---
   useEffect(() => {
-      // Si firebaseReady est faux mais qu'on a des clés, on retente proprement
       if (!firebaseReady && productionConfig.apiKey) {
           tryInitFirebase(productionConfig);
           if (firebaseReady) {
@@ -340,7 +336,14 @@ export default function App() {
     }
     const provider = new GoogleAuthProvider();
     try { await signInWithPopup(auth, provider); } 
-    catch (error) { alert("Erreur : " + error.message); }
+    catch (error) { 
+        if (error.code === 'auth/unauthorized-domain') {
+            // Affichage spécifique pour l'erreur de domaine
+            setAuthDomainError(window.location.hostname);
+        } else {
+            alert("Erreur : " + error.message); 
+        }
+    }
   };
 
   const handleLogout = async () => {
@@ -1116,6 +1119,36 @@ export default function App() {
             {view === 'summary' && renderSummary()}
             {view === 'profile' && renderProfile()}
         </div>
+        
+        {/* BANNIÈRE AIDE DOMAINE */}
+        {authDomainError && (
+            <div className="fixed inset-0 z-[150] bg-black/80 flex items-center justify-center p-6">
+                <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                    <div className="flex items-center gap-3 text-red-600 mb-4">
+                        <AlertTriangle size={32} />
+                        <h3 className="font-bold text-lg leading-tight">Domaine non autorisé</h3>
+                    </div>
+                    <p className="text-sm text-slate-600 mb-4">
+                        Firebase bloque la connexion car ce site de prévisualisation n'est pas dans la liste blanche.
+                    </p>
+                    <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 mb-4">
+                        <div className="text-[10px] text-slate-400 uppercase font-bold mb-1">Domaine à ajouter</div>
+                        <div className="flex items-center justify-between">
+                            <code className="text-sm font-mono text-slate-800 break-all">{authDomainError}</code>
+                            <button onClick={() => navigator.clipboard.writeText(authDomainError)} className="ml-2 p-1 hover:bg-slate-200 rounded"><Copy size={14}/></button>
+                        </div>
+                    </div>
+                    <ol className="text-xs text-slate-500 list-decimal pl-4 space-y-1 mb-6">
+                        <li>Allez dans la <b>Console Firebase</b></li>
+                        <li>Menu <b>Authentication</b> {'>'} <b>Settings</b></li>
+                        <li>Onglet <b>Authorized Domains</b></li>
+                        <li>Cliquez sur <b>Add Domain</b> et collez le lien ci-dessus.</li>
+                    </ol>
+                    <button onClick={() => setAuthDomainError(null)} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold">J'ai compris</button>
+                </div>
+            </div>
+        )}
+
         {view !== 'add' && (
           <nav className="fixed bottom-0 w-full max-w-md bg-white border-t flex justify-between px-4 py-2 z-50 text-[10px] font-medium text-slate-400">
             <button onClick={() => setView('box')} className={`flex flex-col items-center w-1/6 ${view === 'box' ? 'text-amber-800' : ''}`}><Box size={20}/><span className="mt-1">Coffre</span></button>
@@ -1132,5 +1165,7 @@ export default function App() {
         {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} />}
       </div>
     </div>
+  );
+}
   );
 }
