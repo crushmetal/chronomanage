@@ -3,28 +3,28 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   LayoutDashboard, Search, ArrowUpRight, ArrowDownRight, Clock, AlertCircle,
   Package, DollarSign, FileText, Box, Cloud, CloudOff, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, Activity
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, Activity, LogIn, LogOut, User
 } from 'lucide-react';
 
 // --- Firebase Imports ---
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } from 'firebase/firestore';
 
 // ==========================================================================
-// CONFIGURATION
+// CONFIGURATION (A REMPLIR POUR ACTIVER LE CLOUD)
 // ==========================================================================
 const productionConfig = {
-  apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
-  authDomain: "chronomanage-cfe36.firebaseapp.com",
-  projectId: "chronomanage-cfe36",
-  storageBucket: "chronomanage-cfe36.firebasestorage.app",
-  messagingSenderId: "449745267926",
-  appId: "1:449745267926:web:f218d0a1ece65b9dc7ad77"
+  apiKey: "VOTRE_API_KEY_ICI",
+  authDomain: "VOTRE_PROJET.firebaseapp.com",
+  projectId: "VOTRE_PROJET",
+  storageBucket: "VOTRE_BUCKET.firebasestorage.app",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
 };
 
 // ==========================================================================
-// INITIALISATION
+// INITIALISATION SÉCURISÉE
 // ==========================================================================
 let app, auth, db;
 let firebaseReady = false;
@@ -32,6 +32,7 @@ let firebaseReady = false;
 const hasValidKeys = productionConfig.apiKey && !productionConfig.apiKey.includes("VOTRE_API_KEY");
 let configToUse = productionConfig;
 
+// Détection environnement
 if (typeof __firebase_config !== 'undefined') {
   try { configToUse = JSON.parse(__firebase_config); firebaseReady = true; } catch(e) {}
 } else if (hasValidKeys) {
@@ -49,7 +50,7 @@ if (firebaseReady) {
   }
 }
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-v11';
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-v12';
 
 // --- UTILS ---
 const Card = ({ children, className = "", onClick }) => (
@@ -89,10 +90,6 @@ const WatchBoxLogo = () => (
         <stop offset="0%" stopColor="#5D4037" />
         <stop offset="100%" stopColor="#3E2723" />
       </linearGradient>
-      <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#8D6E63" />
-        <stop offset="100%" stopColor="#6D4C41" />
-      </linearGradient>
       <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
         <stop offset="50%" stopColor="rgba(255,255,255,0.1)" />
@@ -127,41 +124,66 @@ export default function App() {
   const [filter, setFilter] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [selectedWatch, setSelectedWatch] = useState(null);
-  
-  // --- Recherche ---
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // AUTH
+  // --- GESTION CONNEXION ---
+  const handleGoogleLogin = async () => {
+    if (!firebaseReady) return alert("Le Cloud n'est pas configuré.");
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Erreur connexion", error);
+      alert("Erreur de connexion : " + error.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (!firebaseReady) return;
+    try {
+      await signOut(auth);
+      // Après déconnexion, on repasse en anonyme ou local
+      signInAnonymously(auth).catch(() => setUseLocalStorage(true));
+    } catch (error) {
+      console.error("Erreur déconnexion", error);
+    }
+  };
+
+  // --- AUTHENTIFICATION INITIALE ---
   useEffect(() => {
     if (useLocalStorage) return;
-    const init = async () => {
-      try { await signInAnonymously(auth); } 
-      catch (err) { setUseLocalStorage(true); setUser({ uid: 'local-user' }); setLoading(false); }
-    };
-    init();
-    const unsub = onAuthStateChanged(auth, (u) => { setUser(u); if(!u) setLoading(false); });
-    return () => unsub();
+    
+    // Écouteur d'état (connecté / déconnecté)
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        setLoading(false); // On est prêt à charger les données
+      } else {
+        // Si personne n'est connecté, on tente l'anonyme par défaut
+        signInAnonymously(auth).catch(() => {
+          setUseLocalStorage(true);
+          setUser({ uid: 'local-user' });
+          setLoading(false);
+        });
+      }
+    });
+    return () => unsubscribe();
   }, [useLocalStorage]);
 
-  // DATA SYNC
+  // --- CHARGEMENT DONNÉES ---
   useEffect(() => {
     if (!user && !useLocalStorage) return;
+
     if (useLocalStorage) {
+      // MODE LOCAL
       try {
         let local = localStorage.getItem('chrono_v10_data');
-        // Migration auto si données v10 absentes
-        if (!local || local === '[]') {
-           const oldKeys = ['chrono_v9_local', 'chrono_manager_v9', 'chronoManager_prod_v1', 'chronoManager_local_v8', 'chronoManager_data_v5'];
-           for (const key of oldKeys) {
-             const oldData = localStorage.getItem(key);
-             if (oldData && oldData !== '[]') { local = oldData; break; }
-           }
-        }
         if (local) setWatches(JSON.parse(local));
-      } catch(e){ console.error("Erreur lecture locale", e); }
+      } catch(e){}
       setLoading(false);
     } else {
+      // MODE CLOUD
       try {
         const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'watches'));
         const unsub = onSnapshot(q, (snap) => {
@@ -207,7 +229,7 @@ export default function App() {
       closeForm(newWatch);
     } else {
       try { await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'watches', id), newWatch); closeForm(newWatch); }
-      catch(e) { alert("Erreur Cloud"); }
+      catch(e) { alert("Erreur Cloud : Verifiez votre connexion"); }
     }
   };
 
@@ -220,16 +242,11 @@ export default function App() {
     else { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'watches', id)); setView('list'); }
   };
 
-  // --- FILTRAGE SEARCH ---
   const getFilteredWatches = () => {
     if (!searchTerm) return watches;
     const lower = searchTerm.toLowerCase();
-    return watches.filter(w => 
-      (w.brand && w.brand.toLowerCase().includes(lower)) || 
-      (w.model && w.model.toLowerCase().includes(lower))
-    );
+    return watches.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower)));
   };
-
   const filteredList = getFilteredWatches();
 
   // --- VUES ---
@@ -238,11 +255,32 @@ export default function App() {
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-8">
       <h1 className="text-xl font-serif text-slate-800 mb-4 tracking-widest uppercase">Écrin Privé</h1>
       <div className="w-64 h-64 transition-transform hover:scale-105 duration-500"><WatchBoxLogo /></div>
-      <p className="mt-8 text-slate-800 font-medium">{watches.length} montres</p>
-      <div className={`flex items-center justify-center text-xs mt-2 px-3 py-1 rounded-full ${useLocalStorage ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
-        {useLocalStorage ? <><WifiOff size={12} className="mr-1"/>Local</> : <><Cloud size={12} className="mr-1"/>Cloud</>}
+      
+      {/* INFO UTILISATEUR */}
+      <div className="mt-6 w-full max-w-xs">
+        {!useLocalStorage && user && !user.isAnonymous ? (
+          <div className="bg-white border border-emerald-100 rounded-lg p-3 shadow-sm flex items-center justify-between">
+             <div className="flex items-center text-emerald-800 text-xs truncate">
+                <User size={14} className="mr-2 text-emerald-600"/>
+                <span className="truncate">{user.email || "Connecté"}</span>
+             </div>
+             <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-red-500 ml-2"><LogOut size={14}/></button>
+          </div>
+        ) : (
+          <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm text-center">
+             <p className="text-xs text-slate-500 mb-2">{useLocalStorage ? "Mode Démo (Local)" : "Mode Invité (Temporaire)"}</p>
+             {!useLocalStorage && (
+               <button onClick={handleGoogleLogin} className="w-full py-2 bg-blue-600 text-white text-xs font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
+                 <LogIn size={14} /> Synchroniser (Google)
+               </button>
+             )}
+          </div>
+        )}
       </div>
-      <button onClick={() => setView('list')} className="mt-10 px-10 py-3 bg-slate-900 text-white rounded-full shadow-xl active:scale-95 transition-transform">Entrer</button>
+
+      <p className="mt-6 text-slate-800 font-medium">{watches.length} montres</p>
+      
+      <button onClick={() => setView('list')} className="mt-6 px-10 py-3 bg-slate-900 text-white rounded-full shadow-xl active:scale-95 transition-transform">Entrer</button>
     </div>
   );
 
@@ -250,55 +288,18 @@ export default function App() {
     <div className="sticky top-0 bg-slate-50 z-10 pt-2 pb-2 px-1 shadow-sm">
       <div className="flex justify-between items-center px-1 mb-2">
         <h1 className="text-2xl font-bold text-slate-800">{title}</h1>
-        <button 
-          onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} 
-          className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}
-        >
-          <Search size={20} />
-        </button>
+        <button onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}><Search size={20} /></button>
       </div>
-      
-      {/* Barre de recherche */}
-      {isSearchOpen && (
-        <div className="px-1 mb-3 animate-in fade-in slide-in-from-top-2">
-          <input 
-            autoFocus
-            type="text" 
-            placeholder="Rechercher marque, modèle..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full p-2 pl-3 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
-          />
-        </div>
-      )}
-
-      {/* Filtres (uniquement si demandé) */}
-      {withFilters && !isSearchOpen && (
-        <div className="flex gap-1 overflow-x-auto max-w-full no-scrollbar px-1 pb-1">
-          {['all', 'collection', 'forsale', 'sold'].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1 rounded-full text-xs whitespace-nowrap ${filter===f ? 'bg-slate-800 text-white' : 'bg-white border text-slate-600'}`}>
-              {f === 'all' ? 'Tout' : f === 'collection' ? 'Ma Collec' : f === 'forsale' ? 'Vente' : 'Vendu'}
-            </button>
-          ))}
-        </div>
-      )}
+      {isSearchOpen && (<div className="px-1 mb-3 animate-in fade-in slide-in-from-top-2"><input autoFocus type="text" placeholder="Rechercher marque, modèle..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full p-2 pl-3 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"/></div>)}
+      {withFilters && !isSearchOpen && (<div className="flex gap-1 overflow-x-auto max-w-full no-scrollbar px-1 pb-1">{['all', 'collection', 'forsale', 'sold'].map(f => (<button key={f} onClick={() => setFilter(f)} className={`px-3 py-1 rounded-full text-xs whitespace-nowrap ${filter===f ? 'bg-slate-800 text-white' : 'bg-white border text-slate-600'}`}>{f === 'all' ? 'Tout' : f === 'collection' ? 'Ma Collec' : f === 'forsale' ? 'Vente' : 'Vendu'}</button>))}</div>)}
     </div>
   );
 
   const renderList = () => {
-    // On applique d'abord le filtre de recherche, PUIS le filtre de statut
-    const displayWatches = filteredList.filter(w => {
-      if (filter === 'all') return true;
-      if (filter === 'collection') return w.status === 'collection';
-      if (filter === 'forsale') return w.status === 'forsale';
-      if (filter === 'sold') return w.status === 'sold';
-      return true;
-    });
-
+    const displayWatches = filteredList.filter(w => { if (filter === 'all') return true; if (filter === 'collection') return w.status === 'collection'; if (filter === 'forsale') return w.status === 'forsale'; if (filter === 'sold') return w.status === 'sold'; return true; });
     return (
       <div className="pb-24 px-2">
         {renderHeader("Collection", true)}
-        
         <div className="grid grid-cols-2 gap-3 px-1 mt-2">
           {displayWatches.map(w => (
             <Card key={w.id} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
@@ -316,19 +317,11 @@ export default function App() {
   };
 
   const renderSummary = () => {
-    const categories = [
-      { id: 'collection', title: 'Ma Collection', color: 'bg-blue-50 text-blue-800 border-blue-100', icon: Watch },
-      { id: 'forsale', title: 'En Vente', color: 'bg-amber-50 text-amber-800 border-amber-100', icon: TrendingUp },
-      { id: 'sold', title: 'Vendues', color: 'bg-emerald-50 text-emerald-800 border-emerald-100', icon: DollarSign },
-    ];
-
-    // On utilise filteredList ici aussi pour que la recherche fonctionne dans l'inventaire
+    const categories = [{ id: 'collection', title: 'Ma Collection', color: 'bg-blue-50 text-blue-800 border-blue-100', icon: Watch }, { id: 'forsale', title: 'En Vente', color: 'bg-amber-50 text-amber-800 border-amber-100', icon: TrendingUp }, { id: 'sold', title: 'Vendues', color: 'bg-emerald-50 text-emerald-800 border-emerald-100', icon: DollarSign }];
     const hasWatches = filteredList.length > 0;
-
     return (
       <div className="pb-24 px-2">
         {renderHeader("Inventaire")}
-        
         <div className="space-y-6 px-1 mt-2">
           {categories.map(cat => {
             const list = filteredList.filter(w => w.status === cat.id);
@@ -348,13 +341,12 @@ export default function App() {
               </div>
             );
           })}
-          {!hasWatches && <div className="text-center text-slate-400 py-10 text-sm">Aucun résultat pour cette recherche.</div>}
+          {!hasWatches && <div className="text-center text-slate-400 py-10 text-sm">Aucun résultat.</div>}
         </div>
       </div>
     );
   };
 
-  // ... (Le reste des vues Detail, Form, Finance reste identique à V10, je les remets pour complétude)
   const renderDetail = () => {
     if(!selectedWatch) return null;
     const w = selectedWatch;
@@ -372,11 +364,7 @@ export default function App() {
           <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden shadow-sm border">
             {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className="text-slate-300"/></div>}
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">{w.brand}</h1>
-            <p className="text-lg text-slate-600">{w.model}</p>
-            {w.reference && <span className="text-xs bg-slate-50 px-2 py-1 rounded mt-2 inline-block border font-mono">Ref: {w.reference}</span>}
-          </div>
+          <div><h1 className="text-2xl font-bold text-slate-900">{w.brand}</h1><p className="text-lg text-slate-600">{w.model}</p>{w.reference && <span className="text-xs bg-slate-50 px-2 py-1 rounded mt-2 inline-block border font-mono">Ref: {w.reference}</span>}</div>
           <div className="flex justify-between gap-2">
              <div className="flex-1 bg-slate-50 p-2 rounded-lg border text-center"><Ruler size={16} className="mx-auto mb-1 text-slate-400"/><span className="text-xs block text-slate-500">Diamètre</span><span className="font-semibold text-sm">{w.diameter ? w.diameter + ' mm' : '-'}</span></div>
              <div className="flex-1 bg-slate-50 p-2 rounded-lg border text-center"><Calendar size={16} className="mx-auto mb-1 text-slate-400"/><span className="text-xs block text-slate-500">Année</span><span className="font-semibold text-sm">{w.year || '-'}</span></div>
