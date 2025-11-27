@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, FileCode
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v39.9"; 
+const APP_VERSION = "v39.10"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -67,7 +67,7 @@ const tryInitFirebase = (config) => {
         return true;
     } catch (e) {
         console.error("Erreur init Firebase:", e);
-        globalInitError = e.message; 
+        globalInitError = e.message || String(e); 
         return false;
     }
 };
@@ -217,59 +217,7 @@ const LiveClock = () => {
   );
 };
 
-// --- COMPOSANTS EXTERNALISÉS ---
-
-// NOUVEAU : MODALE D'AIDE POUR LES RÈGLES FIREBASE
-const RulesHelpModal = ({ onClose }) => {
-    const rulesCode = `rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Autoriser chaque utilisateur à accéder à ses propres données
-    match /artifacts/chrono-manager-universal/users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}`;
-
-    return (
-        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
-                <div className="bg-slate-50 p-4 border-b flex justify-between items-center">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><ShieldCheck className="text-emerald-600"/> Réparer les permissions</h3>
-                    <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
-                </div>
-                <div className="p-6 space-y-4">
-                    <div className="text-sm text-slate-600">
-                        <p className="mb-2">L'erreur <strong>permission-denied</strong> signifie que Firebase bloque l'accès à vos données par sécurité.</p>
-                        <p>Pour corriger cela, copiez le code ci-dessous et collez-le dans l'onglet <strong>Règles (Rules)</strong> de votre base de données Firestore.</p>
-                    </div>
-
-                    <div className="relative bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
-                        <button 
-                            onClick={() => navigator.clipboard.writeText(rulesCode)} 
-                            className="absolute top-2 right-2 p-1.5 bg-white/10 hover:bg-white/20 rounded text-white transition-colors"
-                            title="Copier"
-                        >
-                            <Copy size={14}/>
-                        </button>
-                        <pre>{rulesCode}</pre>
-                    </div>
-
-                    <ol className="text-xs text-slate-500 list-decimal pl-4 space-y-1">
-                        <li>Allez sur la console Firebase {'>'} Firestore Database</li>
-                        <li>Cliquez sur l'onglet <strong>Règles</strong></li>
-                        <li>Remplacez tout le contenu par le code ci-dessus</li>
-                        <li>Cliquez sur <strong>Publier</strong></li>
-                    </ol>
-                    
-                    <button onClick={onClose} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors">
-                        C'est fait !
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
+// --- COMPOSANTS EXTERNALISÉS (FINANCE) ---
 
 const FinanceDetailList = ({ title, items, onClose }) => {
     const [localSort, setLocalSort] = useState('date'); 
@@ -357,6 +305,59 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor }) =
                 </div>
             </div>
             {!isWhite && <Icon size={120} className="absolute -bottom-4 -right-4 opacity-10 text-white transform rotate-12 pointer-events-none" />}
+        </div>
+    );
+};
+
+// --- COMPOSANTS MODALES AIDE / CONFIG ---
+
+const RulesHelpModal = ({ onClose }) => {
+    const rulesCode = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Autoriser chaque utilisateur à accéder à ses propres données
+    match /artifacts/chrono-manager-universal/users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}`;
+
+    return (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
+                <div className="bg-slate-50 p-4 border-b flex justify-between items-center">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><ShieldCheck className="text-emerald-600"/> Réparer les permissions</h3>
+                    <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div className="text-sm text-slate-600">
+                        <p className="mb-2">L'erreur <strong>permission-denied</strong> signifie que Firebase bloque l'accès à vos données par sécurité.</p>
+                        <p>Pour corriger cela, copiez le code ci-dessous et collez-le dans l'onglet <strong>Règles (Rules)</strong> de votre base de données Firestore.</p>
+                    </div>
+
+                    <div className="relative bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
+                        <button 
+                            onClick={() => navigator.clipboard.writeText(rulesCode)} 
+                            className="absolute top-2 right-2 p-1.5 bg-white/10 hover:bg-white/20 rounded text-white transition-colors"
+                            title="Copier"
+                        >
+                            <Copy size={14}/>
+                        </button>
+                        <pre>{rulesCode}</pre>
+                    </div>
+
+                    <ol className="text-xs text-slate-500 list-decimal pl-4 space-y-1">
+                        <li>Allez sur la console Firebase {'>'} Firestore Database</li>
+                        <li>Cliquez sur l'onglet <strong>Règles</strong></li>
+                        <li>Remplacez tout le contenu par le code ci-dessus</li>
+                        <li>Cliquez sur <strong>Publier</strong></li>
+                    </ol>
+                    
+                    <button onClick={onClose} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors">
+                        C'est fait !
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
@@ -563,7 +564,8 @@ export default function App() {
             if (user?.isAnonymous) {
                 setUseLocalStorage(true); 
             } else {
-                setError("Erreur synchro: " + err.code); 
+                // CORRECTION : Ensure error is a string to avoid crash
+                setError("Erreur synchro: " + (err.code || err.message)); 
             }
             setLoading(false); 
         });
@@ -725,7 +727,46 @@ export default function App() {
   const filteredWatches = getFilteredAndSortedWatches;
   const filteredBracelets = getFilteredBracelets();
 
-  // --- COMPOSANTS VUE ---
+  // --- RENDER FINANCE (Définie à l'intérieur car dépend de l'état local) ---
+  const renderFinance = () => {
+    const collectionWatches = watches.filter(w => w.status === 'collection');
+    const forSaleWatches = watches.filter(w => w.status === 'forsale');
+    const soldWatches = watches.filter(w => w.status === 'sold');
+
+    const calculateStats = (list, isSold = false) => {
+        const buy = list.reduce((acc, w) => acc + (Number(w.purchasePrice) || 0), 0);
+        const val = list.reduce((acc, w) => acc + (Number(w.sellingPrice) || Number(w.purchasePrice) || 0), 0);
+        return { buy, val, profit: val - buy };
+    };
+
+    const sCol = calculateStats(collectionWatches);
+    const sSale = calculateStats(forSaleWatches);
+    const sSold = calculateStats(soldWatches, true);
+
+    const sTotal = {
+        buy: sCol.buy + sSale.buy + sSold.buy,
+        val: sCol.val + sSale.val + sSold.val,
+        profit: sCol.profit + sSale.profit + sSold.profit
+    };
+
+    return (
+      <div className="pb-24 px-3 space-y-2">
+        <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-100 mb-2">
+            <h1 className="text-xl font-bold text-slate-800 tracking-tight px-1">Finances</h1>
+        </div>
+        {financeDetail === 'collection' && <FinanceDetailList title="Détail Collection" items={collectionWatches} onClose={() => setFinanceDetail(null)} />}
+        {financeDetail === 'forsale' && <FinanceDetailList title="Détail En Vente" items={forSaleWatches} onClose={() => setFinanceDetail(null)} />}
+        {financeDetail === 'sold' && <FinanceDetailList title="Détail Vendues" items={soldWatches} onClose={() => setFinanceDetail(null)} />}
+
+        <FinanceCardFull title={`Ma Collection (${collectionWatches.length})`} icon={Watch} stats={sCol} type="collection" bgColor="bg-emerald-500" onClick={() => setFinanceDetail('collection')} />
+        <FinanceCardFull title={`En Vente (${forSaleWatches.length})`} icon={TrendingUp} stats={sSale} type="forsale" bgColor="bg-amber-500" onClick={() => setFinanceDetail('forsale')} />
+        <FinanceCardFull title={`Vendues (${soldWatches.length})`} icon={DollarSign} stats={sSold} type="sold" bgColor="bg-blue-600" onClick={() => setFinanceDetail('sold')} />
+        <div className="mt-4 pt-2">
+            <FinanceCardFull title="TOTAL GLOBAL" icon={Activity} stats={sTotal} type="total" bgColor="bg-white" onClick={() => {}} />
+        </div>
+      </div>
+    );
+  };
 
   const renderHeaderControls = () => {
     const isConfigMissing = !firebaseReady;
@@ -787,12 +828,11 @@ export default function App() {
         <p className="text-slate-800 font-medium text-sm mb-2 tracking-wide">{activeWatchesCount} {activeWatchesCount > 1 ? 'montres' : 'montre'}</p>
         {!firebaseReady && (<div className="inline-flex items-center justify-center text-amber-600 text-xs bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 opacity-60"><WifiOff size={10} className="mr-1"/> Mode Local</div>)}
         
-        {/* AFFICHAGE ERREUR DE SYNCHRO CLAIRE */}
         {error && !useLocalStorage && (
              <div className="mt-3 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg text-xs flex items-center gap-2 animate-in slide-in-from-bottom-2">
                 <AlertCircle size={14} className="flex-shrink-0"/>
                 <span>Problème de synchronisation ({error})</span>
-                {error.includes('permission-denied') && (
+                {typeof error === 'string' && error.includes('permission-denied') && (
                     <button onClick={() => setShowRulesHelp(true)} className="ml-auto bg-white px-2 py-1 rounded border shadow-sm font-bold text-emerald-600 hover:bg-emerald-50">
                         Comment réparer ?
                     </button>
