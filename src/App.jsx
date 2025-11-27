@@ -15,12 +15,12 @@ import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } f
 // CONFIGURATION
 // ==========================================================================
 const productionConfig = {
-  apiKey: "VOTRE_API_KEY_ICI",
-  authDomain: "VOTRE_PROJET.firebaseapp.com",
-  projectId: "VOTRE_PROJET",
-  storageBucket: "VOTRE_BUCKET.firebasestorage.app",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+  apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
+  authDomain: "chronomanage-cfe36.firebaseapp.com",
+  projectId: "chronomanage-cfe36",
+  storageBucket: "chronomanage-cfe36.firebasestorage.app",
+  messagingSenderId: "449745267926",
+  appId: "1:449745267926:web:f218d0a1ece65b9dc7ad77"
 };
 
 // ==========================================================================
