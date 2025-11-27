@@ -129,7 +129,6 @@ const WatchBoxLogo = ({ isOpen }) => (
            <stop offset="0%" stopColor="#fdfbf7" />
            <stop offset="100%" stopColor="#dcd5cc" />
         </linearGradient>
-        {/* Dégradé pour la vitre */}
         <linearGradient id="windowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
            <stop offset="0%" stopColor="rgba(220, 240, 255, 0.4)" />
            <stop offset="50%" stopColor="rgba(200, 230, 255, 0.2)" />
@@ -143,20 +142,13 @@ const WatchBoxLogo = ({ isOpen }) => (
       </defs>
       
       {/* --- BAS DE LA BOITE (Fixe) --- */}
-      
-      {/* 1. Intérieur (Coussins) - Au fond */}
       <path d="M30,60 L170,60 L180,100 L20,100 Z" fill="url(#interior)" stroke="#8D6E63" strokeWidth="0.5" />
       <g transform="translate(0, 0)">
-        {/* Coussins beaucoup plus larges (28px) et moins nombreux pour remplir l'espace */}
         {[32, 66, 100, 134].map((x, i) => (
              <rect key={i} x={x} y={65} width="28" height="30" rx="4" fill="url(#cushionGrad)" stroke="#D7CCC8" strokeWidth="0.5" />
         ))}
       </g>
-
-      {/* 2. Face Avant du Bas */}
       <path d="M20,100 L180,100 L180,140 L20,140 Z" fill="url(#leatherGrad)" stroke="#271c19" strokeWidth="0.5"/>
-      
-      {/* 3. Partie Basse du Verrou */}
       <g transform="translate(94, 102)">
          <rect x="0" y="0" width="12" height="10" rx="1" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" />
          <circle cx="6" cy="5" r="1.5" fill="#3E2723" />
@@ -166,24 +158,14 @@ const WatchBoxLogo = ({ isOpen }) => (
       <g 
         className="transition-all duration-1000 ease-in-out"
         style={{ 
-          transformOrigin: '100px 60px', // Charnière au fond (y=60)
-          transform: isOpen ? 'rotateX(-110deg)' : 'rotateX(0deg)' // Ouvre vers l'arrière
+          transformOrigin: '100px 60px', 
+          transform: isOpen ? 'rotateX(-110deg)' : 'rotateX(0deg)' 
         }}
       >
-          {/* Cadre du couvercle (Cuir) */}
           <path d="M20,100 L180,100 L170,60 L30,60 Z" fill="url(#leatherGrad)" stroke="#3E2723" strokeWidth="1" />
-          
-          {/* Vitre sur le dessus (Inset) */}
-          {/* Coordonnées calculées pour être "dans" le couvercle */}
           <path d="M35,92 L165,92 L158,68 L42,68 Z" fill="url(#windowGrad)" stroke="#8D6E63" strokeWidth="0.5" />
-          
-          {/* Reflet sur la vitre */}
           <path d="M35,92 L80,92 L75,68 L42,68 Z" fill="rgba(255,255,255,0.1)" />
-
-          {/* Lèvre avant du couvercle (Épaisseur) */}
           <path d="M20,100 L180,100 L180,108 L20,108 Z" fill="#3E2723" />
-          
-          {/* Partie Haute du Verrou */}
           <g transform="translate(94, 100)">
              <path d="M0,0 H12 V6 C12,8 0,8 0,6 Z" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" />
           </g>
@@ -232,6 +214,21 @@ export default function App() {
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
+
+  // --- ICONE APP (FAVICON) ---
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    // Logo SVG encodé : Fond gris foncé, cercle blanc (cadran), aiguilles rouges et noires
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="#1e293b"/><circle cx="256" cy="256" r="180" fill="#f8fafc"/><rect x="246" y="80" width="20" height="40" rx="5" fill="#ef4444"/><rect x="240" y="100" width="32" height="160" rx="16" fill="#334155" transform="rotate(45 256 256)"/><rect x="240" y="100" width="32" height="120" rx="16" fill="#334155" transform="rotate(-60 256 256)"/><circle cx="256" cy="256" r="24" fill="#ef4444"/></svg>`;
+    link.href = `data:image/svg+xml;base64,${btoa(svgIcon)}`;
+    document.head.appendChild(link);
+
+    const appleLink = document.createElement('link');
+    appleLink.rel = 'apple-touch-icon';
+    appleLink.href = link.href;
+    document.head.appendChild(appleLink);
+  }, []);
 
   // --- GOOGLE LOGIN ---
   const handleGoogleLogin = async () => {
