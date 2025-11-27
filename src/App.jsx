@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, Clock, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, Cloud, CheckCircle2
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v39.6"; 
+const APP_VERSION = "v39.7"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -392,7 +392,9 @@ export default function App() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isBoxOpening, setIsBoxOpening] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false); 
-  const [authDomainError, setAuthDomainError] = useState(null); // Pour afficher la bannière d'aide
+  const [authDomainError, setAuthDomainError] = useState(null); 
+  
+  const [isAuthLoading, setIsAuthLoading] = useState(false); // New state for loading spinners
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
@@ -427,15 +429,17 @@ export default function App() {
         setShowConfigModal(true);
         return;
     }
+    setIsAuthLoading(true);
     const provider = new GoogleAuthProvider();
     try { await signInWithPopup(auth, provider); } 
     catch (error) { 
         if (error.code === 'auth/unauthorized-domain') {
-            // Affichage spécifique pour l'erreur de domaine
             setAuthDomainError(window.location.hostname);
-        } else {
+        } else if (error.code !== 'auth/popup-closed-by-user') {
             alert("Erreur : " + error.message); 
         }
+    } finally {
+        setIsAuthLoading(false);
     }
   };
 
@@ -444,43 +448,43 @@ export default function App() {
         setShowProfileMenu(false);
         return;
     }
-    try { await signOut(auth); signInAnonymously(auth).catch(() => setUseLocalStorage(true)); setShowProfileMenu(false); } 
+    setIsAuthLoading(true);
+    try { await signOut(auth); setShowProfileMenu(false); } 
     catch (error) { console.error(error); }
+    finally { setIsAuthLoading(false); }
   };
 
   // --- AUTH EFFECT ---
-  // CORRECTION MAJEURE : On attend le statut Auth de Firebase avant de faire quoi que ce soit.
-  // On ne force plus le sign-in anonyme agressif si un user est déjà là (même en chargement).
   useEffect(() => {
     if (useLocalStorage) {
         setLoading(false);
         return;
     }
-    
-    // On écoute simplement. Si user existe, on le prend.
-    // Si null (vraiment déconnecté), on signe en anonyme pour ne pas bloquer l'app.
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
           setUser(currentUser);
           setError(null);
-          // Si on était en loading, on arrête
           setLoading(false);
       } else {
-          // Personne n'est connecté. On lance l'anonyme seulement maintenant.
-          signInAnonymously(auth)
-            .then(() => {
-                // Le listener va se redéclencher avec le user anonyme
-            })
-            .catch((err) => {
-                console.warn("Auth anonyme failed, fallback local", err);
-                setUseLocalStorage(true); 
-                setUser({ uid: 'local-user' }); 
-                setLoading(false);
-            });
+          // Utilisation d'un timeout pour éviter le flash blanc si l'auth Google est en cours
+          // On ne passe en mode anonyme que si vraiment rien ne se passe
+          const timer = setTimeout(() => {
+              // On vérifie qu'on n'est pas déjà en train de se logger via le bouton
+              if (!isAuthLoading) {
+                  signInAnonymously(auth)
+                    .catch((err) => {
+                        console.warn("Auth anonyme failed", err);
+                        setUseLocalStorage(true); 
+                        setUser({ uid: 'local-user' }); 
+                    })
+                    .finally(() => setLoading(false));
+              }
+          }, 1000);
+          return () => clearTimeout(timer);
       }
     });
     return () => unsubscribe();
-  }, [useLocalStorage]);
+  }, [useLocalStorage, isAuthLoading]);
 
   // --- DATA LOADING ---
   useEffect(() => {
@@ -659,16 +663,18 @@ export default function App() {
 
   const renderHeaderControls = () => {
     const isConfigMissing = !firebaseReady;
+    const isAnonymous = user?.isAnonymous || user?.uid === 'local-user';
 
     return (
       <div className="absolute top-4 right-4 z-20">
-        {(!user || user.isAnonymous || user.uid === 'local-user') ? (
+        {(!user || isAnonymous) ? (
           <div className="flex flex-col items-end">
               <button 
                 onClick={handleGoogleLogin} 
-                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-slate-200 text-xs font-medium transition-colors ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/90 text-slate-700 hover:bg-slate-50'}`}
+                disabled={isAuthLoading}
+                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-slate-200 text-xs font-medium transition-all active:scale-95 ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/90 text-slate-700 hover:bg-slate-50'}`}
               >
-                {isConfigMissing ? <Settings size={14} /> : <LogIn size={14} />}
+                {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : (isConfigMissing ? <Settings size={14} /> : <LogIn size={14} />)}
                 <span className="hidden sm:inline">{isConfigMissing ? 'Configurer Cloud' : 'Connexion'}</span>
               </button>
               {isConfigMissing && globalInitError && (
@@ -685,12 +691,18 @@ export default function App() {
               {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
             </button>
             {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 z-30">
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 z-30">
                 <div className="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-1">Connecté</p>
-                  <p className="text-sm font-medium text-slate-800 truncate">{user.email}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                      <div className={`w-2 h-2 rounded-full ${isAnonymous ? 'bg-amber-500' : 'bg-green-500'}`}></div>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{isAnonymous ? 'Local (Non synchronisé)' : 'Cloud (Synchronisé)'}</p>
+                  </div>
+                  <p className="text-sm font-medium text-slate-800 truncate">{user.email || 'Utilisateur Anonyme'}</p>
                 </div>
-                <button onClick={() => { handleLogout(); setShowProfileMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"><LogOut size={16} /> Déconnexion</button>
+                <button onClick={() => { handleLogout(); }} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                    {isAuthLoading ? <Loader2 size={16} className="animate-spin"/> : <LogOut size={16} />} 
+                    Déconnexion
+                </button>
               </div>
             )}
           </div>
@@ -1275,4 +1287,5 @@ export default function App() {
       </div>
     </div>
   );
+}
 }
