@@ -49,7 +49,7 @@ if (firebaseReady) {
   }
 }
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-v10';
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-v11';
 
 // --- UTILS ---
 const Card = ({ children, className = "", onClick }) => (
@@ -89,6 +89,10 @@ const WatchBoxLogo = () => (
         <stop offset="0%" stopColor="#5D4037" />
         <stop offset="100%" stopColor="#3E2723" />
       </linearGradient>
+      <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#8D6E63" />
+        <stop offset="100%" stopColor="#6D4C41" />
+      </linearGradient>
       <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
         <stop offset="50%" stopColor="rgba(255,255,255,0.1)" />
@@ -123,6 +127,10 @@ export default function App() {
   const [filter, setFilter] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [selectedWatch, setSelectedWatch] = useState(null);
+  
+  // --- Recherche ---
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // AUTH
   useEffect(() => {
@@ -136,40 +144,24 @@ export default function App() {
     return () => unsub();
   }, [useLocalStorage]);
 
-  // DATA SYNC (AVEC MIGRATION)
+  // DATA SYNC
   useEffect(() => {
     if (!user && !useLocalStorage) return;
     if (useLocalStorage) {
       try {
-        // 1. On cherche la version V10
         let local = localStorage.getItem('chrono_v10_data');
-        
-        // 2. MIGRATION : Si pas de V10, on cherche TOUTES les anciennes versions possibles
+        // Migration auto si données v10 absentes
         if (!local || local === '[]') {
-           // Liste des clés utilisées dans les versions précédentes
-           const oldKeys = [
-             'chrono_v9_local', 
-             'chrono_manager_v9', 
-             'chronoManager_prod_v1',
-             'chronoManager_local_v8',
-             'chronoManager_data_v5'
-           ];
-           
+           const oldKeys = ['chrono_v9_local', 'chrono_manager_v9', 'chronoManager_prod_v1', 'chronoManager_local_v8', 'chronoManager_data_v5'];
            for (const key of oldKeys) {
              const oldData = localStorage.getItem(key);
-             if (oldData && oldData !== '[]') {
-               console.log(`Données retrouvées dans ${key}, migration vers V10...`);
-               local = oldData;
-               break; // On a trouvé, on arrête de chercher
-             }
+             if (oldData && oldData !== '[]') { local = oldData; break; }
            }
         }
-
         if (local) setWatches(JSON.parse(local));
       } catch(e){ console.error("Erreur lecture locale", e); }
       setLoading(false);
     } else {
-      // Mode Cloud
       try {
         const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'watches'));
         const unsub = onSnapshot(q, (snap) => {
@@ -187,7 +179,6 @@ export default function App() {
   }, [watches, useLocalStorage]);
 
   // --- ACTIONS ---
-  
   const [formData, setFormData] = useState({
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
@@ -221,20 +212,25 @@ export default function App() {
   };
 
   const closeForm = (w) => { if(selectedWatch) setSelectedWatch(w); setFilter('all'); setView('list'); setEditingId(null); resetForm(); };
-  
-  const resetForm = () => setFormData({ 
-    brand: '', model: '', reference: '', 
-    diameter: '', year: '', movement: '',
-    purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', image: null 
-  });
-  
+  const resetForm = () => setFormData({ brand: '', model: '', reference: '', diameter: '', year: '', movement: '', purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', image: null });
   const handleEdit = (w) => { setFormData(w); setEditingId(w.id); setView('add'); };
-  
   const handleDelete = async (id) => {
     if(!confirm("Supprimer ?")) return;
     if(useLocalStorage) { setWatches(prev => prev.filter(w => w.id !== id)); setView('list'); }
     else { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'watches', id)); setView('list'); }
   };
+
+  // --- FILTRAGE SEARCH ---
+  const getFilteredWatches = () => {
+    if (!searchTerm) return watches;
+    const lower = searchTerm.toLowerCase();
+    return watches.filter(w => 
+      (w.brand && w.brand.toLowerCase().includes(lower)) || 
+      (w.model && w.model.toLowerCase().includes(lower))
+    );
+  };
+
+  const filteredList = getFilteredWatches();
 
   // --- VUES ---
 
@@ -250,31 +246,115 @@ export default function App() {
     </div>
   );
 
-  const renderList = () => (
-    <div className="pb-24 px-2">
-      <header className="sticky top-0 bg-slate-50 py-4 z-10 flex justify-between items-center px-1">
-        <h1 className="text-2xl font-bold text-slate-800">Collection</h1>
-        <div className="flex gap-1 overflow-x-auto max-w-[60%] no-scrollbar">
+  const renderHeader = (title, withFilters = false) => (
+    <div className="sticky top-0 bg-slate-50 z-10 pt-2 pb-2 px-1 shadow-sm">
+      <div className="flex justify-between items-center px-1 mb-2">
+        <h1 className="text-2xl font-bold text-slate-800">{title}</h1>
+        <button 
+          onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} 
+          className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}
+        >
+          <Search size={20} />
+        </button>
+      </div>
+      
+      {/* Barre de recherche */}
+      {isSearchOpen && (
+        <div className="px-1 mb-3 animate-in fade-in slide-in-from-top-2">
+          <input 
+            autoFocus
+            type="text" 
+            placeholder="Rechercher marque, modèle..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-2 pl-3 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+          />
+        </div>
+      )}
+
+      {/* Filtres (uniquement si demandé) */}
+      {withFilters && !isSearchOpen && (
+        <div className="flex gap-1 overflow-x-auto max-w-full no-scrollbar px-1 pb-1">
           {['all', 'collection', 'forsale', 'sold'].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1 rounded-full text-xs whitespace-nowrap ${filter===f ? 'bg-slate-800 text-white' : 'bg-white border'}`}>{f === 'all' ? 'Tout' : f === 'collection' ? 'Collec' : f === 'forsale' ? 'Vente' : 'Vendu'}</button>
+            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1 rounded-full text-xs whitespace-nowrap ${filter===f ? 'bg-slate-800 text-white' : 'bg-white border text-slate-600'}`}>
+              {f === 'all' ? 'Tout' : f === 'collection' ? 'Ma Collec' : f === 'forsale' ? 'Vente' : 'Vendu'}
+            </button>
           ))}
         </div>
-      </header>
-      <div className="grid grid-cols-2 gap-3">
-        {watches.filter(w => filter === 'all' || w.status === filter).map(w => (
-          <Card key={w.id} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
-            <div className="aspect-square bg-slate-100 relative">
-              {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
-              <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">{w.status === 'sold' ? 'VENDU' : formatPrice(w.sellingPrice || w.purchasePrice)}</div>
-            </div>
-            <div className="p-3"><div className="font-bold text-sm truncate">{w.brand}</div><div className="text-xs text-slate-500 truncate">{w.model}</div></div>
-          </Card>
-        ))}
-      </div>
-      {watches.length === 0 && <div className="text-center py-12 text-slate-400 text-sm">Aucune montre.</div>}
+      )}
     </div>
   );
 
+  const renderList = () => {
+    // On applique d'abord le filtre de recherche, PUIS le filtre de statut
+    const displayWatches = filteredList.filter(w => {
+      if (filter === 'all') return true;
+      if (filter === 'collection') return w.status === 'collection';
+      if (filter === 'forsale') return w.status === 'forsale';
+      if (filter === 'sold') return w.status === 'sold';
+      return true;
+    });
+
+    return (
+      <div className="pb-24 px-2">
+        {renderHeader("Collection", true)}
+        
+        <div className="grid grid-cols-2 gap-3 px-1 mt-2">
+          {displayWatches.map(w => (
+            <Card key={w.id} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
+              <div className="aspect-square bg-slate-100 relative">
+                {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
+                <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">{w.status === 'sold' ? 'VENDU' : formatPrice(w.sellingPrice || w.purchasePrice)}</div>
+              </div>
+              <div className="p-3"><div className="font-bold text-sm truncate">{w.brand}</div><div className="text-xs text-slate-500 truncate">{w.model}</div></div>
+            </Card>
+          ))}
+        </div>
+        {displayWatches.length === 0 && <div className="text-center py-12 text-slate-400 text-sm">Aucune montre trouvée.</div>}
+      </div>
+    );
+  };
+
+  const renderSummary = () => {
+    const categories = [
+      { id: 'collection', title: 'Ma Collection', color: 'bg-blue-50 text-blue-800 border-blue-100', icon: Watch },
+      { id: 'forsale', title: 'En Vente', color: 'bg-amber-50 text-amber-800 border-amber-100', icon: TrendingUp },
+      { id: 'sold', title: 'Vendues', color: 'bg-emerald-50 text-emerald-800 border-emerald-100', icon: DollarSign },
+    ];
+
+    // On utilise filteredList ici aussi pour que la recherche fonctionne dans l'inventaire
+    const hasWatches = filteredList.length > 0;
+
+    return (
+      <div className="pb-24 px-2">
+        {renderHeader("Inventaire")}
+        
+        <div className="space-y-6 px-1 mt-2">
+          {categories.map(cat => {
+            const list = filteredList.filter(w => w.status === cat.id);
+            if(list.length === 0) return null;
+            return (
+              <div key={cat.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className={`px-4 py-3 border-b flex items-center ${cat.color} border-opacity-50`}><cat.icon size={16} className="mr-2" /><h3 className="font-bold text-sm">{cat.title} <span className="opacity-60 text-xs font-normal">({list.length})</span></h3></div>
+                <div className="divide-y divide-slate-100">
+                    {list.map(w => (
+                        <div key={w.id} onClick={() => { setSelectedWatch(w); setView('detail'); }} className="flex items-center p-3 hover:bg-slate-50 cursor-pointer">
+                            <div className="w-10 h-10 rounded bg-slate-100 overflow-hidden flex-shrink-0 mr-3">{w.image && <img src={w.image} className="w-full h-full object-cover"/>}</div>
+                            <div className="flex-1 min-w-0"><div className="font-medium text-sm text-slate-900 truncate">{w.brand}</div><div className="text-xs text-slate-500 truncate">{w.model}</div></div>
+                            <div className="text-right"><div className="font-semibold text-xs text-slate-700">{cat.id === 'sold' ? formatPrice(w.sellingPrice) : formatPrice(w.purchasePrice)}</div><div className="text-[9px] text-slate-400 uppercase">{cat.id === 'sold' ? 'Vente' : 'Achat'}</div></div>
+                        </div>
+                    ))}
+                </div>
+              </div>
+            );
+          })}
+          {!hasWatches && <div className="text-center text-slate-400 py-10 text-sm">Aucun résultat pour cette recherche.</div>}
+        </div>
+      </div>
+    );
+  };
+
+  // ... (Le reste des vues Detail, Form, Finance reste identique à V10, je les remets pour complétude)
   const renderDetail = () => {
     if(!selectedWatch) return null;
     const w = selectedWatch;
@@ -292,45 +372,21 @@ export default function App() {
           <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden shadow-sm border">
             {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className="text-slate-300"/></div>}
           </div>
-          
           <div>
             <h1 className="text-2xl font-bold text-slate-900">{w.brand}</h1>
             <p className="text-lg text-slate-600">{w.model}</p>
             {w.reference && <span className="text-xs bg-slate-50 px-2 py-1 rounded mt-2 inline-block border font-mono">Ref: {w.reference}</span>}
           </div>
-
-          {/* CARACTÉRISTIQUES TECHNIQUES */}
           <div className="flex justify-between gap-2">
-             <div className="flex-1 bg-slate-50 p-2 rounded-lg border text-center">
-               <Ruler size={16} className="mx-auto mb-1 text-slate-400"/>
-               <span className="text-xs block text-slate-500">Diamètre</span>
-               <span className="font-semibold text-sm">{w.diameter ? w.diameter + ' mm' : '-'}</span>
-             </div>
-             <div className="flex-1 bg-slate-50 p-2 rounded-lg border text-center">
-               <Calendar size={16} className="mx-auto mb-1 text-slate-400"/>
-               <span className="text-xs block text-slate-500">Année</span>
-               <span className="font-semibold text-sm">{w.year || '-'}</span>
-             </div>
-             <div className="flex-1 bg-slate-50 p-2 rounded-lg border text-center">
-               <Activity size={16} className="mx-auto mb-1 text-slate-400"/>
-               <span className="text-xs block text-slate-500">Mouv.</span>
-               <span className="font-semibold text-sm">{w.movement || '-'}</span>
-             </div>
+             <div className="flex-1 bg-slate-50 p-2 rounded-lg border text-center"><Ruler size={16} className="mx-auto mb-1 text-slate-400"/><span className="text-xs block text-slate-500">Diamètre</span><span className="font-semibold text-sm">{w.diameter ? w.diameter + ' mm' : '-'}</span></div>
+             <div className="flex-1 bg-slate-50 p-2 rounded-lg border text-center"><Calendar size={16} className="mx-auto mb-1 text-slate-400"/><span className="text-xs block text-slate-500">Année</span><span className="font-semibold text-sm">{w.year || '-'}</span></div>
+             <div className="flex-1 bg-slate-50 p-2 rounded-lg border text-center"><Activity size={16} className="mx-auto mb-1 text-slate-400"/><span className="text-xs block text-slate-500">Mouv.</span><span className="font-semibold text-sm">{w.movement || '-'}</span></div>
           </div>
-
-          {/* PRIX */}
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 bg-slate-50 rounded-lg border"><div className="text-xs text-slate-400 uppercase">Achat</div><div className="text-lg font-bold">{formatPrice(w.purchasePrice)}</div></div>
-            <div className="p-3 bg-slate-50 rounded-lg border">
-                <div className="text-xs text-slate-400 uppercase">{w.status === 'sold' ? 'Vente' : 'Estim.'}</div>
-                <div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice)}</div>
-                {w.status === 'sold' && <div className="text-xs text-emerald-600 mt-1">Profit: {formatPrice(w.sellingPrice - w.purchasePrice)}</div>}
-            </div>
+            <div className="p-3 bg-slate-50 rounded-lg border"><div className="text-xs text-slate-400 uppercase">{w.status === 'sold' ? 'Vente' : 'Estim.'}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice)}</div>{w.status === 'sold' && <div className="text-xs text-emerald-600 mt-1">Profit: {formatPrice(w.sellingPrice - w.purchasePrice)}</div>}</div>
           </div>
-
-          {/* NOTES */}
           {w.conditionNotes && <div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100"><div className="flex items-center font-bold text-amber-800 mb-1 text-xs"><FileText size={12} className="mr-1"/> Notes</div>{w.conditionNotes}</div>}
-          
           <div className="text-center pt-4 text-xs text-slate-300">Ajouté le {new Date(w.dateAdded).toLocaleDateString()}</div>
         </div>
       </div>
@@ -341,34 +397,25 @@ export default function App() {
     <div className="pb-24 p-4">
       <div className="flex justify-between items-center mb-6 mt-2"><h1 className="text-2xl font-bold">{editingId ? 'Modifier' : 'Ajouter'}</h1><button onClick={() => { setEditingId(null); setFormData({ brand: '', model: '', reference: '', diameter: '', year: '', movement: '', purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', image: null }); setView(selectedWatch ? 'detail' : 'list'); }}><X/></button></div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Photo */}
         <label className="block w-full aspect-video bg-slate-100 rounded-xl flex items-center justify-center border-2 border-dashed cursor-pointer overflow-hidden hover:bg-slate-50">
           {formData.image ? <img src={formData.image} className="w-full h-full object-cover"/> : <div className="text-center text-slate-400"><Camera className="mx-auto mb-2"/><span className="text-xs">Ajouter Photo</span></div>}
           <input type="file" onChange={handleImageUpload} className="hidden"/>
         </label>
-
-        {/* Infos Principales */}
         <div className="space-y-3">
             <input className="w-full p-3 border rounded-lg" placeholder="Marque (ex: Rolex)" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} required />
             <input className="w-full p-3 border rounded-lg" placeholder="Modèle (ex: Submariner)" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} required />
             <input className="w-full p-3 border rounded-lg" placeholder="Référence" value={formData.reference} onChange={e => setFormData({...formData, reference: e.target.value})} />
         </div>
-
-        {/* Détails Techniques (Nouvelle ligne) */}
         <div className="grid grid-cols-3 gap-2">
             <input className="p-3 border rounded-lg text-sm" placeholder="Diam. (mm)" type="number" value={formData.diameter} onChange={e => setFormData({...formData, diameter: e.target.value})} />
             <input className="p-3 border rounded-lg text-sm" placeholder="Année" type="number" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
             <input className="p-3 border rounded-lg text-sm" placeholder="Mouvement" value={formData.movement} onChange={e => setFormData({...formData, movement: e.target.value})} />
         </div>
-
-        {/* Prix */}
         <div className="grid grid-cols-2 gap-4">
           <input type="number" className="w-full p-3 border rounded-lg" placeholder="Prix Achat" value={formData.purchasePrice} onChange={e => setFormData({...formData, purchasePrice: e.target.value})} />
           <input type="number" className="w-full p-3 border rounded-lg" placeholder="Estimation" value={formData.sellingPrice} onChange={e => setFormData({...formData, sellingPrice: e.target.value})} />
         </div>
-
         <textarea className="w-full p-3 border rounded-lg" rows="3" placeholder="Notes / État..." value={formData.conditionNotes} onChange={e => setFormData({...formData, conditionNotes: e.target.value})} />
-        
         <div className="flex gap-2">
           {['collection', 'forsale', 'sold'].map(s => (
             <button key={s} type="button" onClick={() => setFormData({...formData, status: s})} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${formData.status === s ? 'bg-slate-800 text-white' : 'bg-white'}`}>{s === 'collection' ? 'Collec' : s === 'forsale' ? 'Vente' : 'Vendu'}</button>
@@ -379,69 +426,21 @@ export default function App() {
     </div>
   );
 
-  // --- RESTAURATION DE L'ONGLET FINANCE ---
   const renderFinance = () => {
     const stats = {
-      // Total investi (Montres en collection + Montres en vente)
       invested: watches.filter(w => w.status !== 'sold').reduce((a, c) => a + (c.purchasePrice || 0), 0),
-      
-      // Valeur estimée (Prix de vente estimé OU prix d'achat si pas d'estimation)
       potentialValue: watches.filter(w => w.status !== 'sold').reduce((a, c) => a + (c.sellingPrice || c.purchasePrice || 0), 0),
-      
-      // Total vendu (Prix de vente final des montres vendues)
       soldTotal: watches.filter(w => w.status === 'sold').reduce((a, c) => a + (c.sellingPrice || 0), 0),
-      
-      // Bénéfice réalisé (Prix de vente - Prix d'achat)
       soldProfit: watches.filter(w => w.status === 'sold').reduce((a, c) => a + ((c.sellingPrice || 0) - (c.purchasePrice || 0)), 0),
     };
-
     return (
       <div className="space-y-4 pb-24 px-2">
-        <header className="mb-6 mt-4">
-            <h1 className="text-2xl font-bold text-slate-800">Finance</h1>
-            <p className="text-slate-500 text-sm">Tableau de bord financier</p>
-        </header>
-        
-        {/* Bloc Investissement Actuel */}
+        <header className="mb-6 mt-4"><h1 className="text-2xl font-bold text-slate-800">Finance</h1><p className="text-slate-500 text-sm">Tableau de bord financier</p></header>
         <div className="grid grid-cols-2 gap-3">
-          <Card className="p-4 bg-slate-900 text-white border-none">
-            <div className="flex items-center space-x-2 text-slate-300 mb-1">
-                <DollarSign size={16} />
-                <span className="text-xs font-medium uppercase tracking-wider">Investi</span>
-            </div>
-            <div className="text-lg font-bold">{formatPrice(stats.invested)}</div>
-            <div className="text-xs text-slate-400 mt-1">{watches.filter(w => w.status !== 'sold').length} montres</div>
-          </Card>
-
-          <Card className="p-4 bg-white">
-            <div className="flex items-center space-x-2 text-emerald-600 mb-1">
-                <TrendingUp size={16} />
-                <span className="text-xs font-medium uppercase tracking-wider">Estimation</span>
-            </div>
-            <div className="text-lg font-bold text-slate-800">{formatPrice(stats.potentialValue)}</div>
-            <div className="text-xs text-emerald-600 mt-1">
-                {stats.potentialValue - stats.invested > 0 ? '+' : ''}
-                {formatPrice(stats.potentialValue - stats.invested)} latents
-            </div>
-          </Card>
+          <Card className="p-4 bg-slate-900 text-white border-none"><div className="flex items-center space-x-2 text-slate-300 mb-1"><DollarSign size={16} /><span className="text-xs font-medium uppercase tracking-wider">Investi</span></div><div className="text-lg font-bold">{formatPrice(stats.invested)}</div><div className="text-xs text-slate-400 mt-1">{watches.filter(w => w.status !== 'sold').length} montres</div></Card>
+          <Card className="p-4 bg-white"><div className="flex items-center space-x-2 text-emerald-600 mb-1"><TrendingUp size={16} /><span className="text-xs font-medium uppercase tracking-wider">Estimation</span></div><div className="text-lg font-bold text-slate-800">{formatPrice(stats.potentialValue)}</div><div className="text-xs text-emerald-600 mt-1">{stats.potentialValue - stats.invested > 0 ? '+' : ''}{formatPrice(stats.potentialValue - stats.invested)} latents</div></Card>
         </div>
-
-        {/* Bloc Ventes Réalisées */}
-        <Card className="p-4 border-emerald-100 bg-emerald-50/50">
-          <h3 className="text-sm font-semibold text-emerald-800 mb-3 border-b border-emerald-100 pb-2">Bilan des Ventes</h3>
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="text-xs text-emerald-600">Chiffre d'affaires</div>
-              <div className="font-bold text-emerald-900">{formatPrice(stats.soldTotal)}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-emerald-600">Bénéfice Net</div>
-              <div className={`font-bold text-xl ${stats.soldProfit >= 0 ? 'text-emerald-700' : 'text-red-500'}`}>
-                {stats.soldProfit > 0 ? '+' : ''}{formatPrice(stats.soldProfit)}
-              </div>
-            </div>
-          </div>
-        </Card>
+        <Card className="p-4 border-emerald-100 bg-emerald-50/50"><h3 className="text-sm font-semibold text-emerald-800 mb-3 border-b border-emerald-100 pb-2">Bilan des Ventes</h3><div className="flex justify-between items-center"><div><div className="text-xs text-emerald-600">Chiffre d'affaires</div><div className="font-bold text-emerald-900">{formatPrice(stats.soldTotal)}</div></div><div className="text-right"><div className="text-xs text-emerald-600">Bénéfice Net</div><div className={`font-bold text-xl ${stats.soldProfit >= 0 ? 'text-emerald-700' : 'text-red-500'}`}>{stats.soldProfit > 0 ? '+' : ''}{formatPrice(stats.soldProfit)}</div></div></div></Card>
       </div>
     );
   };
