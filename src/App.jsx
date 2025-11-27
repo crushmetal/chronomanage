@@ -49,7 +49,7 @@ if (firebaseReady) {
   }
 }
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-v15';
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-v16';
 
 // --- UTILS ---
 const Card = ({ children, className = "", onClick }) => (
@@ -124,7 +124,6 @@ const WatchBoxLogo = () => (
       ))}
     </g>
     <rect x="94" y="60" width="12" height="10" rx="1" fill="#FFC107" stroke="#B7880B" strokeWidth="1" />
-    <circle cx="100" cy="65" r="1.5" fill="#3E2723" />
     <path d="M20,60 L180,60 L170,10 L30,10 Z" fill="url(#leatherGrad)" stroke="#3E2723" strokeWidth="1" opacity="0.95"/>
     <path d="M35,55 L165,55 L158,18 L42,18 Z" fill="url(#glassGrad)" stroke="#8D6E63" strokeWidth="1"/>
   </svg>
@@ -184,10 +183,18 @@ export default function App() {
     if (!user && !useLocalStorage) return;
     if (useLocalStorage) {
       try {
-        let local = localStorage.getItem('chrono_v15_data');
-        // Migration auto si données v15 absentes
+        let local = localStorage.getItem('chrono_v16_data');
+        // Migration auto : On regarde si des données existent dans les versions précédentes
         if (!local || local === '[]') {
-           const oldKeys = ['chrono_v10_data', 'chrono_v9_local', 'chrono_manager_v9', 'chronoManager_prod_v1'];
+           const oldKeys = [
+             'chrono_v15_data', // Version précédente
+             'chrono_v14_data', // Celle qui contenait vos données
+             'chrono_v10_data', 
+             'chrono_v9_local', 
+             'chrono_manager_v9', 
+             'chronoManager_prod_v1', 
+             'chronoManager_local_v8'
+           ];
            for (const key of oldKeys) {
              const oldData = localStorage.getItem(key);
              if (oldData && oldData !== '[]') { local = oldData; break; }
@@ -210,7 +217,7 @@ export default function App() {
 
   // SAVE LOCAL
   useEffect(() => {
-    if (useLocalStorage) localStorage.setItem('chrono_v15_data', JSON.stringify(watches));
+    if (useLocalStorage) localStorage.setItem('chrono_v16_data', JSON.stringify(watches));
   }, [watches, useLocalStorage]);
 
   // --- ACTIONS ---
@@ -435,7 +442,7 @@ export default function App() {
               <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Origine & Garantie</h3>
               <div className="grid grid-cols-2 gap-3">
                  <DetailItem icon={Package} label="Boîte" value={w.box} />
-                 <DetailItem icon={ShieldCheck} label="Garantie Jsq" value={w.warrantyDate} />
+                 <DetailItem icon={ShieldCheck} label="Garantie" value={w.warrantyDate} />
               </div>
           </div>
 
@@ -494,9 +501,10 @@ export default function App() {
             <div className="grid grid-cols-3 gap-3">
                 <input className="p-3 border rounded-lg text-sm" placeholder="Pays" value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} />
                 <input className="p-3 border rounded-lg text-sm" placeholder="Année" type="number" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
-                <input className="p-3 border rounded-lg text-sm" placeholder="Boîte (Oui/Non)" value={formData.box} onChange={e => setFormData({...formData, box: e.target.value})} />
+                <input className="p-3 border rounded-lg text-sm" placeholder="Boîte" value={formData.box} onChange={e => setFormData({...formData, box: e.target.value})} />
             </div>
-            <input className="w-full p-3 border rounded-lg text-sm" placeholder="Garantie jusqu'au..." type="date" value={formData.warrantyDate} onChange={e => setFormData({...formData, warrantyDate: e.target.value})} />
+            {/* Champ Garantie modifié en texte libre */}
+            <input className="w-full p-3 border rounded-lg text-sm" placeholder="Garantie (ex: 2 ans, 12/2026, Non...)" type="text" value={formData.warrantyDate} onChange={e => setFormData({...formData, warrantyDate: e.target.value})} />
         </div>
 
         {/* Prix & Statut */}
