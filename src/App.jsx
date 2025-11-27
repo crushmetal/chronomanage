@@ -14,12 +14,12 @@ import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } f
 // CONFIGURATION
 // ==========================================================================
 const productionConfig = {
-apiKey: "AIzaSyAB4nISY14ctmHxgAMaVEG0nzGesvPgSc8",
-  authDomain: "chronomanage-cfe36.firebaseapp.com",
-  projectId: "chronomanage-cfe36",
-  storageBucket: "chronomanage-cfe36.firebasestorage.app",
-  messagingSenderId: "449745267926",
-  appId: "1:449745267926:web:f218d0a1ece65b9dc7ad77"
+apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o",
+  authDomain: "chronomanagerfinal.firebaseapp.com",
+  projectId: "chronomanagerfinal",
+  storageBucket: "chronomanagerfinal.firebasestorage.app",
+  messagingSenderId: "913764049964",
+  appId: "1:913764049964:web:542604509381001b801d89"
 };
 
 // ==========================================================================
