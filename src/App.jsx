@@ -24,7 +24,7 @@ const productionConfig = {
 };
 
 // ==========================================================================
-// INITIALISATION SÉCURISÉE
+// INITIALISATION
 // ==========================================================================
 let app, auth, db;
 let firebaseReady = false;
@@ -32,7 +32,6 @@ let firebaseReady = false;
 const hasValidKeys = productionConfig.apiKey && !productionConfig.apiKey.includes("VOTRE_API_KEY");
 let configToUse = productionConfig;
 
-// Détection environnement
 if (typeof __firebase_config !== 'undefined') {
   try { configToUse = JSON.parse(__firebase_config); firebaseReady = true; } catch(e) {}
 } else if (hasValidKeys) {
@@ -50,7 +49,7 @@ if (firebaseReady) {
   }
 }
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-v12';
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'chrono-v14';
 
 // --- UTILS ---
 const Card = ({ children, className = "", onClick }) => (
@@ -90,6 +89,10 @@ const WatchBoxLogo = () => (
         <stop offset="0%" stopColor="#5D4037" />
         <stop offset="100%" stopColor="#3E2723" />
       </linearGradient>
+      <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#8D6E63" />
+        <stop offset="100%" stopColor="#6D4C41" />
+      </linearGradient>
       <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
         <stop offset="50%" stopColor="rgba(255,255,255,0.1)" />
@@ -126,6 +129,8 @@ export default function App() {
   const [selectedWatch, setSelectedWatch] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState(null); 
+  const [showProfileMenu, setShowProfileMenu] = useState(false); // Nouveau state pour le menu profil
 
   // --- GESTION CONNEXION ---
   const handleGoogleLogin = async () => {
@@ -143,8 +148,8 @@ export default function App() {
     if (!firebaseReady) return;
     try {
       await signOut(auth);
-      // Après déconnexion, on repasse en anonyme ou local
       signInAnonymously(auth).catch(() => setUseLocalStorage(true));
+      setShowProfileMenu(false);
     } catch (error) {
       console.error("Erreur déconnexion", error);
     }
@@ -154,14 +159,23 @@ export default function App() {
   useEffect(() => {
     if (useLocalStorage) return;
     
-    // Écouteur d'état (connecté / déconnecté)
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        setLoading(false); // On est prêt à charger les données
+        setLoading(false);
+        setError(null);
       } else {
-        // Si personne n'est connecté, on tente l'anonyme par défaut
-        signInAnonymously(auth).catch(() => {
+        signInAnonymously(auth).catch((err) => {
+          console.error("Erreur Auth:", err);
+          if (err.code === 'auth/api-key-not-valid') {
+            setError("Clés API invalides ou manquantes.");
+          } else if (err.code === 'auth/operation-not-allowed') {
+            setError("Connexion Anonyme non activée dans Firebase.");
+          } else if (err.message && err.message.includes("domain")) {
+            setError("Domaine Vercel non autorisé dans Firebase.");
+          } else {
+            setError("Erreur connexion: " + err.message);
+          }
           setUseLocalStorage(true);
           setUser({ uid: 'local-user' });
           setLoading(false);
@@ -176,20 +190,30 @@ export default function App() {
     if (!user && !useLocalStorage) return;
 
     if (useLocalStorage) {
-      // MODE LOCAL
       try {
         let local = localStorage.getItem('chrono_v10_data');
+        if (!local || local === '[]') {
+           const oldKeys = ['chrono_v9_local', 'chrono_manager_v9', 'chronoManager_prod_v1', 'chronoManager_local_v8'];
+           for (const key of oldKeys) {
+             const oldData = localStorage.getItem(key);
+             if (oldData && oldData !== '[]') { local = oldData; break; }
+           }
+        }
         if (local) setWatches(JSON.parse(local));
       } catch(e){}
       setLoading(false);
     } else {
-      // MODE CLOUD
       try {
         const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'watches'));
         const unsub = onSnapshot(q, (snap) => {
           setWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.dateAdded)-new Date(a.dateAdded)));
           setLoading(false);
-        }, () => { setUseLocalStorage(true); setLoading(false); });
+        }, (err) => {
+            console.error("Erreur Firestore:", err);
+            setError("Erreur lecture base de données: " + err.message);
+            setUseLocalStorage(true); 
+            setLoading(false); 
+        });
         return () => unsub();
       } catch(e) { setUseLocalStorage(true); setLoading(false); }
     }
@@ -229,7 +253,7 @@ export default function App() {
       closeForm(newWatch);
     } else {
       try { await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'watches', id), newWatch); closeForm(newWatch); }
-      catch(e) { alert("Erreur Cloud : Verifiez votre connexion"); }
+      catch(e) { alert("Erreur Cloud: " + e.message); }
     }
   };
 
@@ -249,38 +273,85 @@ export default function App() {
   };
   const filteredList = getFilteredWatches();
 
-  // --- VUES ---
+  // --- NOUVEAU HEADER AVEC PROFIL ---
+  const renderHeaderControls = () => {
+    // Ne rien afficher si on est en mode local forcé sans clé valide (erreur)
+    if (useLocalStorage && !hasValidKeys) return null;
 
-  const renderBox = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] px-8">
-      <h1 className="text-xl font-serif text-slate-800 mb-4 tracking-widest uppercase">Écrin Privé</h1>
-      <div className="w-64 h-64 transition-transform hover:scale-105 duration-500"><WatchBoxLogo /></div>
-      
-      {/* INFO UTILISATEUR */}
-      <div className="mt-6 w-full max-w-xs">
-        {!useLocalStorage && user && !user.isAnonymous ? (
-          <div className="bg-white border border-emerald-100 rounded-lg p-3 shadow-sm flex items-center justify-between">
-             <div className="flex items-center text-emerald-800 text-xs truncate">
-                <User size={14} className="mr-2 text-emerald-600"/>
-                <span className="truncate">{user.email || "Connecté"}</span>
-             </div>
-             <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-red-500 ml-2"><LogOut size={14}/></button>
-          </div>
+    return (
+      <div className="absolute top-4 right-4 z-20">
+        {!user || user.isAnonymous ? (
+          <button 
+            onClick={handleGoogleLogin}
+            className="flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <LogIn size={14} />
+            <span className="hidden sm:inline">Connexion</span>
+          </button>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm text-center">
-             <p className="text-xs text-slate-500 mb-2">{useLocalStorage ? "Mode Démo (Local)" : "Mode Invité (Temporaire)"}</p>
-             {!useLocalStorage && (
-               <button onClick={handleGoogleLogin} className="w-full py-2 bg-blue-600 text-white text-xs font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
-                 <LogIn size={14} /> Synchroniser (Google)
-               </button>
-             )}
+          <div className="relative">
+            <button 
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 transition-transform active:scale-95"
+            >
+              {user.photoURL ? (
+                <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white">
+                  <span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span>
+                </div>
+              )}
+            </button>
+
+            {/* Menu Déroulant */}
+            {showProfileMenu && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 z-30">
+                <div className="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-1">Connecté en tant que</p>
+                  <p className="text-sm font-medium text-slate-800 truncate">{user.email}</p>
+                </div>
+                <button 
+                  onClick={() => { handleLogout(); setShowProfileMenu(false); }}
+                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                >
+                  <LogOut size={16} /> Déconnexion
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
+    );
+  };
 
-      <p className="mt-6 text-slate-800 font-medium">{watches.length} montres</p>
+  // --- VUES ---
+
+  const renderBox = () => (
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-8 relative">
+      {/* Bouton Profil en haut à droite */}
+      {renderHeaderControls()}
+
+      <h1 className="text-xl font-serif text-slate-800 mb-4 tracking-widest uppercase">Écrin Privé</h1>
+      <div className="w-64 h-64 transition-transform hover:scale-105 duration-500"><WatchBoxLogo /></div>
       
-      <button onClick={() => setView('list')} className="mt-6 px-10 py-3 bg-slate-900 text-white rounded-full shadow-xl active:scale-95 transition-transform">Entrer</button>
+      {/* Messages d'erreur discrets */}
+      <div className="mt-6 w-full max-w-xs text-center">
+        {!hasValidKeys && (
+            <div className="inline-flex items-center justify-center text-amber-600 text-xs bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+                <WifiOff size={12} className="mr-1"/> Mode Local (Démo)
+            </div>
+        )}
+        {hasValidKeys && error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-2 text-center mb-3">
+                <p className="text-xs text-red-800 font-bold flex items-center justify-center"><AlertTriangle size={12} className="mr-1"/> Problème Cloud</p>
+                <p className="text-[10px] text-red-600 mt-1">{error}</p>
+            </div>
+        )}
+      </div>
+
+      <p className="mt-4 text-slate-800 font-medium">{watches.length} montres</p>
+      
+      <button onClick={() => setView('list')} className="mt-8 px-10 py-3 bg-slate-900 text-white rounded-full shadow-xl active:scale-95 transition-transform">Entrer</button>
     </div>
   );
 
