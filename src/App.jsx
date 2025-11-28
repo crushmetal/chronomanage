@@ -3,12 +3,12 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs } from 'firebase/firestore';
 
 // ==========================================================================
 // CONFIGURATION INITIALE
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v39.10"; 
+const APP_VERSION = "v40.0"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -211,11 +211,34 @@ const LiveClock = () => {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div className="font-mono text-4xl font-light text-slate-600 tracking-wider mb-2">
+    <div className="font-mono text-4xl font-light text-slate-600 tracking-wider mb-2 drop-shadow-sm">
       {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
     </div>
   );
 };
+
+// --- BACKGROUND GRAPHIQUE ---
+const GraphicBackground = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {/* Grille technique */}
+      <div className="absolute inset-0" 
+           style={{ 
+             backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', 
+             backgroundSize: '20px 20px' 
+           }} 
+      ></div>
+      
+      {/* Formes abstraites */}
+      <svg className="absolute -right-20 -top-20 text-slate-200 w-96 h-96 opacity-60" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="20" opacity="0.3" />
+        <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="1" />
+        <path d="M100 20 L100 0" stroke="currentColor" strokeWidth="5" />
+      </svg>
+      <svg className="absolute -left-20 bottom-20 text-slate-200 w-64 h-64 opacity-60" viewBox="0 0 200 200">
+         <rect x="50" y="50" width="100" height="100" transform="rotate(45 100 100)" fill="none" stroke="currentColor" strokeWidth="10" />
+      </svg>
+    </div>
+);
 
 // --- COMPOSANTS EXTERNALISÉS (FINANCE) ---
 
@@ -315,9 +338,11 @@ const RulesHelpModal = ({ onClose }) => {
     const rulesCode = `rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Autoriser chaque utilisateur à accéder à ses propres données
+    // NOUVEAU: Permettre à tous les utilisateurs connectés de LIRE
+    // Mais seulement au propriétaire d'ÉCRIRE (modifier/supprimer)
     match /artifacts/chrono-manager-universal/users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }`;
@@ -326,13 +351,13 @@ service cloud.firestore {
         <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
                 <div className="bg-slate-50 p-4 border-b flex justify-between items-center">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><ShieldCheck className="text-emerald-600"/> Réparer les permissions</h3>
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><ShieldCheck className="text-emerald-600"/> Mise à jour des permissions</h3>
                     <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
                 </div>
                 <div className="p-6 space-y-4">
                     <div className="text-sm text-slate-600">
-                        <p className="mb-2">L'erreur <strong>permission-denied</strong> signifie que Firebase bloque l'accès à vos données par sécurité.</p>
-                        <p>Pour corriger cela, copiez le code ci-dessous et collez-le dans l'onglet <strong>Règles (Rules)</strong> de votre base de données Firestore.</p>
+                        <p className="mb-2 font-bold text-indigo-600">Pour que la fonction "Amis" marche, il faut mettre à jour vos règles Firebase.</p>
+                        <p>Ce nouveau code permet à vos amis (utilisateurs connectés) de voir votre collection, mais empêche qu'ils la modifient.</p>
                     </div>
 
                     <div className="relative bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
@@ -345,13 +370,6 @@ service cloud.firestore {
                         </button>
                         <pre>{rulesCode}</pre>
                     </div>
-
-                    <ol className="text-xs text-slate-500 list-decimal pl-4 space-y-1">
-                        <li>Allez sur la console Firebase {'>'} Firestore Database</li>
-                        <li>Cliquez sur l'onglet <strong>Règles</strong></li>
-                        <li>Remplacez tout le contenu par le code ci-dessus</li>
-                        <li>Cliquez sur <strong>Publier</strong></li>
-                    </ol>
                     
                     <button onClick={onClose} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors">
                         C'est fait !
@@ -397,7 +415,7 @@ const ConfigModal = ({ onClose, currentError }) => {
                     {currentError && (
                         <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs mb-4 border border-red-100">
                             <strong>Erreur de connexion détectée :</strong><br/>
-                            {currentError}
+                            {String(currentError)}
                             <div className="mt-2 text-[10px] text-red-500">Vérifiez vos clés ou les restrictions de domaine dans la console Firebase.</div>
                         </div>
                     )}
@@ -428,6 +446,13 @@ export default function App() {
   
   const [watches, setWatches] = useState([]);
   const [bracelets, setBracelets] = useState([]);
+  
+  // ÉTAT AMIS
+  const [friends, setFriends] = useState([]); // Liste des amis {id, name}
+  const [viewingFriend, setViewingFriend] = useState(null); // L'ami qu'on regarde actuellement
+  const [friendWatches, setFriendWatches] = useState([]); // Les montres de l'ami
+  const [addFriendId, setAddFriendId] = useState(''); // Champ input
+  const [isFriendsLoading, setIsFriendsLoading] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('box'); 
@@ -446,7 +471,7 @@ export default function App() {
   const [isBoxOpening, setIsBoxOpening] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false); 
   const [authDomainError, setAuthDomainError] = useState(null); 
-  const [showRulesHelp, setShowRulesHelp] = useState(false); // État pour la modale d'aide Rules
+  const [showRulesHelp, setShowRulesHelp] = useState(false); 
   
   const [isAuthLoading, setIsAuthLoading] = useState(false); 
 
@@ -463,6 +488,52 @@ export default function App() {
           }
       }
   }, []);
+
+  // --- CHARGEMENT DES AMIS ---
+  useEffect(() => {
+     if (useLocalStorage || !user?.uid) return;
+     
+     // On stocke la liste des amis dans le localStorage pour simplifier (pas de backend social complexe)
+     // Dans une vraie app, on stockerait ça dans Firestore users/{uid}/friends
+     const savedFriends = localStorage.getItem(`friends_${user.uid}`);
+     if (savedFriends) {
+         setFriends(JSON.parse(savedFriends));
+     }
+  }, [user, useLocalStorage]);
+
+  // --- SAUVEGARDE AMIS ---
+  const saveFriend = (newFriend) => {
+      const updatedFriends = [...friends, newFriend];
+      setFriends(updatedFriends);
+      localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+      setAddFriendId('');
+  };
+
+  const removeFriend = (friendId) => {
+      const updatedFriends = friends.filter(f => f.id !== friendId);
+      setFriends(updatedFriends);
+      localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+  };
+
+  // --- CHARGEMENT COLLECTION AMI ---
+  const loadFriendCollection = async (friend) => {
+      if (!firebaseReady) return;
+      setIsFriendsLoading(true);
+      setViewingFriend(friend);
+      
+      try {
+          const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', friend.id, 'watches'));
+          const snap = await getDocs(q);
+          const fWatches = snap.docs.map(d => ({id: d.id, ...d.data()}));
+          setFriendWatches(fWatches);
+      } catch (err) {
+          console.error("Erreur chargement ami", err);
+          alert("Impossible de charger la collection. Vérifiez que votre ami a créé un compte et que les règles de sécurité permettent la lecture.");
+          setViewingFriend(null);
+      } finally {
+          setIsFriendsLoading(false);
+      }
+  };
 
   // --- ICONE APP (FAVICON) ---
   useEffect(() => {
@@ -564,8 +635,7 @@ export default function App() {
             if (user?.isAnonymous) {
                 setUseLocalStorage(true); 
             } else {
-                // CORRECTION : Ensure error is a string to avoid crash
-                setError("Erreur synchro: " + (err.code || err.message)); 
+                setError("Erreur synchro: " + (err.code || err.message || String(err))); 
             }
             setLoading(false); 
         });
@@ -727,7 +797,7 @@ export default function App() {
   const filteredWatches = getFilteredAndSortedWatches;
   const filteredBracelets = getFilteredBracelets();
 
-  // --- RENDER FINANCE (Définie à l'intérieur car dépend de l'état local) ---
+  // --- RENDER FINANCE ---
   const renderFinance = () => {
     const collectionWatches = watches.filter(w => w.status === 'collection');
     const forSaleWatches = watches.filter(w => w.status === 'forsale');
@@ -768,6 +838,193 @@ export default function App() {
     );
   };
 
+  // --- RENDER FRIENDS ---
+  const renderFriendDetail = (watch) => {
+      return (
+          <div className="fixed inset-0 z-[70] bg-white flex flex-col animate-in slide-in-from-bottom-10">
+              <div className="p-4 border-b flex items-center justify-between bg-slate-50">
+                  <h3 className="font-bold text-slate-800">Détail Montre</h3>
+                  <button onClick={() => setSelectedWatch(null)} className="p-2 bg-white rounded-full shadow-sm"><X size={20}/></button>
+              </div>
+              <div className="p-6 flex-1 overflow-y-auto space-y-6">
+                  <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden relative">
+                       {watch.image ? <img src={watch.image} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><Camera size={48} className="text-slate-300"/></div>}
+                  </div>
+                  <div>
+                      <h2 className="text-2xl font-bold text-slate-900">{watch.brand}</h2>
+                      <p className="text-lg text-slate-600">{watch.model}</p>
+                      {watch.reference && <div className="mt-1 text-xs text-slate-400 font-mono">{watch.reference}</div>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                      <DetailItem icon={Ruler} label="Diamètre" value={watch.diameter ? watch.diameter + ' mm' : ''} />
+                      <DetailItem icon={Calendar} label="Année" value={watch.year} />
+                      <DetailItem icon={MovementIcon} label="Mouvement" value={watch.movement} />
+                      <DetailItem icon={Droplets} label="Étanchéité" value={watch.waterResistance} />
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-xl text-center text-sm text-blue-800 font-medium">
+                      Cette montre appartient à {viewingFriend?.name || 'un ami'}.<br/>
+                      <span className="text-xs opacity-70">Les prix sont masqués par confidentialité.</span>
+                  </div>
+              </div>
+          </div>
+      );
+  };
+
+  const renderFriends = () => {
+      if (viewingFriend) {
+          // Vue collection ami
+          const friendCollection = friendWatches.filter(w => w.status === 'collection');
+          const friendSale = friendWatches.filter(w => w.status === 'forsale');
+          const friendWish = friendWatches.filter(w => w.status === 'wishlist');
+          
+          return (
+              <div className="pb-24 bg-slate-50 min-h-screen">
+                  <div className="sticky top-0 bg-white/95 backdrop-blur z-10 px-4 py-3 border-b border-slate-100 flex items-center gap-3">
+                      <button onClick={() => setViewingFriend(null)} className="p-2 -ml-2 hover:bg-slate-100 rounded-full"><ChevronLeft/></button>
+                      <div>
+                          <h1 className="font-bold text-slate-800 leading-tight">{viewingFriend.name}</h1>
+                          <p className="text-xs text-slate-500">Collection partagée</p>
+                      </div>
+                  </div>
+                  
+                  <div className="p-4 space-y-6">
+                      {/* BLOC COLLECTION */}
+                      <div>
+                          <h3 className="font-bold text-sm text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2"><Watch size={14}/> Collection ({friendCollection.length})</h3>
+                          <div className="grid grid-cols-2 gap-3">
+                              {friendCollection.map(w => (
+                                  <div key={w.id} onClick={() => setSelectedWatch(w)} className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 active:scale-95 transition-transform">
+                                      <div className="aspect-square bg-slate-50 relative">
+                                          {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Activity size={16}/></div>}
+                                      </div>
+                                      <div className="p-2">
+                                          <div className="font-bold text-sm truncate">{w.brand}</div>
+                                          <div className="text-xs text-slate-500 truncate">{w.model}</div>
+                                      </div>
+                                  </div>
+                              ))}
+                              {friendCollection.length === 0 && <div className="col-span-2 text-center text-xs text-slate-400 py-4 bg-slate-100 rounded-xl border border-dashed">Vide</div>}
+                          </div>
+                      </div>
+
+                      {/* BLOC EN VENTE */}
+                      <div>
+                          <h3 className="font-bold text-sm text-amber-600 uppercase tracking-wider mb-3 flex items-center gap-2"><TrendingUp size={14}/> En Vente ({friendSale.length})</h3>
+                          <div className="grid grid-cols-2 gap-3">
+                              {friendSale.map(w => (
+                                  <div key={w.id} onClick={() => setSelectedWatch(w)} className="bg-white rounded-xl shadow-sm overflow-hidden border border-amber-100 active:scale-95 transition-transform">
+                                      <div className="aspect-square bg-amber-50 relative">
+                                          {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-amber-300"><Activity size={16}/></div>}
+                                          <div className="absolute top-2 right-2 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Vente</div>
+                                      </div>
+                                      <div className="p-2">
+                                          <div className="font-bold text-sm truncate">{w.brand}</div>
+                                          <div className="text-xs text-slate-500 truncate">{w.model}</div>
+                                      </div>
+                                  </div>
+                              ))}
+                              {friendSale.length === 0 && <div className="col-span-2 text-center text-xs text-slate-400 py-4 bg-slate-100 rounded-xl border border-dashed">Rien à vendre</div>}
+                          </div>
+                      </div>
+
+                      {/* BLOC SOUHAITS */}
+                      <div>
+                          <h3 className="font-bold text-sm text-rose-500 uppercase tracking-wider mb-3 flex items-center gap-2"><Heart size={14}/> Souhaits ({friendWish.length})</h3>
+                          <div className="space-y-2">
+                              {friendWish.map(w => (
+                                  <div key={w.id} className="flex items-center bg-white p-2 rounded-xl border border-rose-100 shadow-sm">
+                                      <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 mr-3">
+                                          {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={14}/></div>}
+                                      </div>
+                                      <div>
+                                          <div className="font-bold text-sm text-slate-800">{w.brand}</div>
+                                          <div className="text-xs text-slate-500">{w.model}</div>
+                                      </div>
+                                  </div>
+                              ))}
+                              {friendWish.length === 0 && <div className="text-center text-xs text-slate-400 py-4 bg-slate-100 rounded-xl border border-dashed">Aucun souhait</div>}
+                          </div>
+                      </div>
+                  </div>
+                  {/* MODAL DETAIL AMI */}
+                  {selectedWatch && renderFriendDetail(selectedWatch)}
+              </div>
+          );
+      }
+
+      return (
+          <div className="pb-24 px-3">
+              <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-100 mb-4">
+                  <h1 className="text-xl font-bold text-slate-800 tracking-tight px-1">Mes Amis</h1>
+              </div>
+
+              <div className="bg-indigo-600 rounded-xl p-4 text-white shadow-lg mb-6">
+                  <h3 className="font-bold text-lg mb-1">Inviter un ami</h3>
+                  <p className="text-indigo-100 text-xs mb-4">Partagez votre code unique pour qu'ils puissent voir votre collection (sans les prix).</p>
+                  <div className="bg-white/10 p-3 rounded-lg flex items-center justify-between backdrop-blur-sm border border-white/20">
+                      <code className="font-mono text-sm truncate mr-2">{user?.uid || '...'}</code>
+                      <button onClick={() => { navigator.clipboard.writeText(user?.uid); alert('Code copié !'); }} className="bg-white text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-indigo-50 transition-colors"><Copy size={12}/> Copier</button>
+                  </div>
+              </div>
+
+              <div className="mb-6">
+                   <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Ajouter</h3>
+                   <div className="flex gap-2">
+                       <input 
+                          type="text" 
+                          placeholder="Coller le code ami ici..." 
+                          className="flex-1 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          value={addFriendId}
+                          onChange={(e) => setAddFriendId(e.target.value)}
+                       />
+                       <button 
+                          onClick={() => { if(addFriendId) saveFriend({id: addFriendId, name: `Ami ${addFriendId.substr(0,4)}...`}); }}
+                          className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800"
+                       >
+                           <UserPlus size={20} />
+                       </button>
+                   </div>
+              </div>
+
+              <div>
+                  <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Vos amis ({friends.length})</h3>
+                  <div className="space-y-3">
+                      {friends.map(friend => (
+                          <div key={friend.id} onClick={() => loadFriendCollection(friend)} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-200 transition-colors group">
+                              <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                                      {friend.name.charAt(0)}
+                                  </div>
+                                  <div>
+                                      <div className="font-bold text-slate-800">{friend.name}</div>
+                                      <div className="text-[10px] text-slate-400 font-mono truncate w-32">ID: {friend.id}</div>
+                                  </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                  {isFriendsLoading && viewingFriend?.id === friend.id && <Loader2 className="animate-spin text-indigo-500" size={18}/>}
+                                  <ChevronLeft className="rotate-180 text-slate-300 group-hover:text-indigo-500" size={18}/>
+                              </div>
+                          </div>
+                      ))}
+                      {friends.length === 0 && (
+                          <div className="text-center py-10 bg-white rounded-xl border border-dashed border-slate-200">
+                              <Users className="mx-auto text-slate-300 mb-2" size={32}/>
+                              <p className="text-sm text-slate-400">Vous n'avez pas encore d'amis.</p>
+                          </div>
+                      )}
+                  </div>
+              </div>
+              
+              {/* BOUTON HINT POUR RENOMMER */}
+              {friends.length > 0 && (
+                  <p className="text-center text-[10px] text-slate-300 mt-8">
+                      Astuce : Pour renommer un ami, supprimez-le et ajoutez-le de nouveau avec son code.
+                  </p>
+              )}
+          </div>
+      );
+  };
+
   const renderHeaderControls = () => {
     const isConfigMissing = !firebaseReady;
     const isAnonymous = user?.isAnonymous || user?.uid === 'local-user';
@@ -794,6 +1051,7 @@ export default function App() {
         ) : (
           <div className="relative">
             <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 transition-transform active:scale-95">
+              {/* Ajout du referrerPolicy pour éviter les 403 de Google */}
               {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
             </button>
             {showProfileMenu && (
@@ -818,23 +1076,26 @@ export default function App() {
   };
 
   const renderBox = () => (
-    <div className="flex flex-col items-center justify-center h-full min-h-[80vh] px-8 relative bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-100 via-slate-50 to-slate-200">
+    <div className="flex flex-col items-center justify-center h-full min-h-[80vh] px-8 relative bg-slate-50 text-slate-800 overflow-hidden">
+      {/* BACKGROUND GRAPHIQUE */}
+      <GraphicBackground />
+
       {renderHeaderControls()}
-      <div className="mb-4 text-center"><LiveClock /></div>
+      <div className="mb-4 text-center z-10"><LiveClock /></div>
       <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10" title="Ouvrir">
         <WatchBoxLogo isOpen={isBoxOpening} />
       </div>
-      <div className="absolute bottom-24 flex flex-col items-center z-0">
-        <p className="text-slate-800 font-medium text-sm mb-2 tracking-wide">{activeWatchesCount} {activeWatchesCount > 1 ? 'montres' : 'montre'}</p>
-        {!firebaseReady && (<div className="inline-flex items-center justify-center text-amber-600 text-xs bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 opacity-60"><WifiOff size={10} className="mr-1"/> Mode Local</div>)}
+      <div className="absolute bottom-24 flex flex-col items-center z-10">
+        <p className="text-slate-800 font-medium text-sm mb-2 tracking-wide shadow-sm">{activeWatchesCount} {activeWatchesCount > 1 ? 'montres' : 'montre'}</p>
+        {!firebaseReady && (<div className="inline-flex items-center justify-center text-amber-600 text-xs bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 backdrop-blur-sm"><WifiOff size={10} className="mr-1"/> Mode Local</div>)}
         
         {error && !useLocalStorage && (
              <div className="mt-3 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg text-xs flex items-center gap-2 animate-in slide-in-from-bottom-2">
                 <AlertCircle size={14} className="flex-shrink-0"/>
-                <span>Problème de synchronisation ({error})</span>
+                <span>Problème de synchronisation ({typeof error === 'string' ? error : 'Erreur inconnue'})</span>
                 {typeof error === 'string' && error.includes('permission-denied') && (
                     <button onClick={() => setShowRulesHelp(true)} className="ml-auto bg-white px-2 py-1 rounded border shadow-sm font-bold text-emerald-600 hover:bg-emerald-50">
-                        Comment réparer ?
+                        Réparer
                     </button>
                 )}
              </div>
@@ -940,7 +1201,7 @@ export default function App() {
           </button>
 
           {wishes.map(w => (
-            <Card key={w.id} className="flex p-3 gap-3" onClick={() => { setSelectedWatch(w); setView('detail'); }}>
+            <Card key={w.id} className="flex p-3 gap-3 relative" onClick={() => { setSelectedWatch(w); setView('detail'); }}>
                 <div className="w-20 h-20 bg-slate-100 rounded-lg flex-shrink-0 overflow-hidden">
                     {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}
                 </div>
@@ -948,7 +1209,18 @@ export default function App() {
                     <div><h3 className="font-bold text-slate-800">{w.brand}</h3><p className="text-xs text-slate-500">{w.model}</p></div>
                     <div className="flex justify-between items-end">
                         <div className="font-semibold text-emerald-600">{formatPrice(w.purchasePrice)}</div>
-                        {w.link && <a href={w.link} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100"><ExternalLink size={14} /></a>}
+                        {/* Sécurisation du bouton lien externe : z-index plus élevé et gestion d'événement stricte */}
+                        {w.link && (
+                            <a 
+                                href={w.link} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 z-10"
+                                onClick={(e) => { e.stopPropagation(); }}
+                            >
+                                <ExternalLink size={14} />
+                            </a>
+                        )}
                     </div>
                 </div>
             </Card>
@@ -1227,6 +1499,7 @@ export default function App() {
             {view === 'add' && renderForm()}
             {view === 'summary' && renderSummary()}
             {view === 'profile' && renderProfile()}
+            {view === 'friends' && renderFriends()}
         </div>
         
         {/* BANNIÈRE AIDE DOMAINE */}
@@ -1265,7 +1538,7 @@ export default function App() {
             <button onClick={() => setView('wishlist')} className={`flex flex-col items-center w-1/6 ${view === 'wishlist' ? 'text-rose-600' : ''}`}><Heart size={20}/><span className="mt-1">Souhaits</span></button>
             <button onClick={() => openAdd()} className="flex-none flex items-center justify-center w-12 h-12 bg-slate-900 text-white rounded-full shadow-lg -mt-4 border-2 border-slate-50"><Plus size={24}/></button>
             <button onClick={() => setView('finance')} className={`flex flex-col items-center w-1/6 ${view === 'finance' ? 'text-emerald-700' : ''}`}><TrendingUp size={20}/><span className="mt-1">Finance</span></button>
-            <button onClick={() => setView('summary')} className={`flex flex-col items-center w-1/6 ${view === 'summary' ? 'text-indigo-600' : ''}`}><ClipboardList size={20}/><span className="mt-1">Inventaire</span></button>
+            <button onClick={() => setView('friends')} className={`flex flex-col items-center w-1/6 ${view === 'friends' ? 'text-indigo-600' : ''}`}><Users size={20}/><span className="mt-1">Amis</span></button>
             <button onClick={() => setView('profile')} className={`flex flex-col items-center w-1/6 ${view === 'profile' ? 'text-slate-900' : ''}`}><Grid size={20}/><span className="mt-1">Galerie</span></button>
           </nav>
         )}
