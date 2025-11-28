@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, SortAsc, SortDesc, Filter
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,13 +33,14 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v40.3"; 
+const APP_VERSION = "v40.4"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
     dialColor: '', 
+    isLimitedEdition: false, limitedNumber: '', limitedTotal: '', // NOUVEAUX CHAMPS
     box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', image: null
 };
@@ -220,15 +221,7 @@ const LiveClock = () => {
 // --- BACKGROUND GRAPHIQUE ---
 const GraphicBackground = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Grille technique */}
-      <div className="absolute inset-0" 
-           style={{ 
-             backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', 
-             backgroundSize: '20px 20px' 
-           }} 
-      ></div>
-      
-      {/* Formes abstraites */}
+      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
       <svg className="absolute -right-20 -top-20 text-slate-200 w-96 h-96 opacity-60" viewBox="0 0 200 200">
         <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="20" opacity="0.3" />
         <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="1" />
@@ -338,8 +331,6 @@ const RulesHelpModal = ({ onClose }) => {
     const rulesCode = `rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // NOUVEAU: Permettre à tous les utilisateurs connectés de LIRE
-    // Mais seulement au propriétaire d'ÉCRIRE (modifier/supprimer)
     match /artifacts/chrono-manager-universal/users/{userId}/{document=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
@@ -359,7 +350,6 @@ service cloud.firestore {
                         <p className="mb-2 font-bold text-indigo-600">Pour que la fonction "Amis" marche, il faut mettre à jour vos règles Firebase.</p>
                         <p>Ce nouveau code permet à vos amis (utilisateurs connectés) de voir votre collection, mais empêche qu'ils la modifient.</p>
                     </div>
-
                     <div className="relative bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
                         <button 
                             onClick={() => navigator.clipboard.writeText(rulesCode)} 
@@ -370,10 +360,7 @@ service cloud.firestore {
                         </button>
                         <pre>{rulesCode}</pre>
                     </div>
-                    
-                    <button onClick={onClose} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors">
-                        C'est fait !
-                    </button>
+                    <button onClick={onClose} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors">C'est fait !</button>
                 </div>
             </div>
         </div>
@@ -448,11 +435,15 @@ export default function App() {
   const [bracelets, setBracelets] = useState([]);
   
   // ÉTAT AMIS
-  const [friends, setFriends] = useState([]); // Liste des amis {id, name}
-  const [viewingFriend, setViewingFriend] = useState(null); // L'ami qu'on regarde actuellement
-  const [friendWatches, setFriendWatches] = useState([]); // Les montres de l'ami
-  const [addFriendId, setAddFriendId] = useState(''); // Champ input
+  const [friends, setFriends] = useState([]); 
+  const [viewingFriend, setViewingFriend] = useState(null); 
+  const [friendWatches, setFriendWatches] = useState([]); 
+  const [addFriendId, setAddFriendId] = useState(''); 
   const [isFriendsLoading, setIsFriendsLoading] = useState(false);
+  
+  // GALERIE FILTRES
+  const [showGallerySold, setShowGallerySold] = useState(false);
+  const [showGalleryWishlist, setShowGalleryWishlist] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('box'); 
@@ -492,14 +483,12 @@ export default function App() {
   // --- CHARGEMENT DES AMIS ---
   useEffect(() => {
      if (useLocalStorage || !user?.uid) return;
-     
      const savedFriends = localStorage.getItem(`friends_${user.uid}`);
      if (savedFriends) {
          setFriends(JSON.parse(savedFriends));
      }
   }, [user, useLocalStorage]);
 
-  // --- SAUVEGARDE AMIS ---
   const saveFriend = (newFriend) => {
       const updatedFriends = [...friends, newFriend];
       setFriends(updatedFriends);
@@ -522,12 +511,10 @@ export default function App() {
       }
   };
 
-  // --- CHARGEMENT COLLECTION AMI ---
   const loadFriendCollection = async (friend) => {
       if (!firebaseReady) return;
       setIsFriendsLoading(true);
       setViewingFriend(friend);
-      
       try {
           const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', friend.id, 'watches'));
           const snap = await getDocs(q);
@@ -563,7 +550,6 @@ export default function App() {
     }
     setUseLocalStorage(false); 
     setIsAuthLoading(true);
-    
     const provider = new GoogleAuthProvider();
     try { await signInWithPopup(auth, provider); } 
     catch (error) { 
@@ -702,13 +688,14 @@ export default function App() {
     const sep = ";";
     let csvContent = "\uFEFF"; 
     csvContent += "sep=;\n"; 
-    const headers = ["Marque", "Modele", "Reference", "Couleur Cadran", "Diametre (mm)", "Entre-corne (mm)", "Annee", "Mouvement", "Pays", "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Prix Achat", "Prix Vente", "Estimation", "Statut", "Notes", "Lien"];
+    const headers = ["Marque", "Modele", "Reference", "Couleur Cadran", "Diametre (mm)", "Entre-corne (mm)", "Annee", "Mouvement", "Pays", "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Prix Achat", "Prix Vente", "Estimation", "Statut", "Notes", "Lien", "Edition Limitee", "Num", "Total"];
     csvContent += headers.join(sep) + "\n";
     watches.forEach(w => {
       const row = [
         w.brand, w.model, w.reference, w.dialColor, w.diameter, w.strapWidth, w.year, w.movement, w.country, w.waterResistance, w.glass, w.box, w.warrantyDate, w.revision, w.purchasePrice, w.sellingPrice, w.status, 
         w.conditionNotes ? w.conditionNotes.replace(/(\r\n|\n|\r|;)/gm, " ") : "", 
-        w.link
+        w.link,
+        w.isLimitedEdition ? "Oui" : "Non", w.limitedNumber, w.limitedTotal
       ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`); 
       csvContent += row.join(sep) + "\n";
     });
@@ -716,7 +703,7 @@ export default function App() {
       const row = [
         "BRACELET", b.type, "", "", "", b.width, "", "", "", "", "", "", "", "", "", "", "actif", 
         (b.notes + (b.quickRelease ? " (Quick Release)" : "")).replace(/(\r\n|\n|\r|;)/gm, " "), 
-        ""
+        "", "", "", ""
       ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`);
       csvContent += row.join(sep) + "\n";
     });
@@ -780,16 +767,35 @@ export default function App() {
   // --- FILTRAGE ET TRI ---
   const getFilteredAndSortedWatches = useMemo(() => {
     let filtered = watches;
+    // Filtre de recherche
     if (searchTerm) {
         const lower = searchTerm.toLowerCase();
         filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower)));
     }
+    
+    // Copie pour le tri
     let sorted = [...filtered];
-    if (sortOrder === 'alpha') {
+
+    if (sortOrder === 'priceAsc') {
+        // Tri prix croissant (dépend du status: achat pour collection, vente pour reste)
+        sorted.sort((a, b) => {
+            const priceA = a.status === 'collection' ? (a.purchasePrice || 0) : (a.sellingPrice || a.purchasePrice || 0);
+            const priceB = b.status === 'collection' ? (b.purchasePrice || 0) : (b.sellingPrice || b.purchasePrice || 0);
+            return priceA - priceB;
+        });
+    } else if (sortOrder === 'priceDesc') {
+        // Tri prix décroissant
+        sorted.sort((a, b) => {
+            const priceA = a.status === 'collection' ? (a.purchasePrice || 0) : (a.sellingPrice || a.purchasePrice || 0);
+            const priceB = b.status === 'collection' ? (b.purchasePrice || 0) : (b.sellingPrice || b.purchasePrice || 0);
+            return priceB - priceA;
+        });
+    } else if (sortOrder === 'alpha') {
         sorted.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
     } else if (sortOrder === 'random') {
         sorted.sort(() => Math.random() - 0.5);
     } else {
+        // Default: Date (Décroissant)
         sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
     }
     return sorted;
@@ -861,6 +867,12 @@ export default function App() {
                       <h2 className="text-2xl font-bold text-slate-900">{watch.brand}</h2>
                       <p className="text-lg text-slate-600">{watch.model}</p>
                       {watch.reference && <div className="mt-1 text-xs text-slate-400 font-mono">{watch.reference}</div>}
+                      {/* LIMITEE AMI */}
+                      {watch.isLimitedEdition && (
+                        <div className="mt-2 inline-flex items-center px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">
+                             EDITION LIMITÉE {watch.limitedNumber && watch.limitedTotal ? `${watch.limitedNumber} / ${watch.limitedTotal}` : ''}
+                        </div>
+                      )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                       <DetailItem icon={Ruler} label="Diamètre" value={watch.diameter ? watch.diameter + ' mm' : ''} />
@@ -1072,7 +1084,7 @@ export default function App() {
               <button 
                 onClick={handleGoogleLogin} 
                 disabled={isAuthLoading}
-                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-slate-200 text-xs font-medium transition-all active:scale-95 ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/90 text-slate-700 hover:bg-slate-50'}`}
+                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-white/20 text-xs font-medium transition-all active:scale-95 ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/10 text-white hover:bg-white/20'}`}
               >
                 {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : (isConfigMissing ? <Settings size={14} /> : <LogIn size={14} />)}
                 <span className="hidden sm:inline">{isConfigMissing ? 'Configurer Cloud' : 'Connexion'}</span>
@@ -1086,9 +1098,9 @@ export default function App() {
           </div>
         ) : (
           <div className="relative">
-            <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 transition-transform active:scale-95">
+            <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-white/50 transition-transform active:scale-95">
               {/* Ajout du referrerPolicy pour éviter les 403 de Google */}
-              {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
+              {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
             </button>
             {showProfileMenu && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 z-30">
@@ -1145,16 +1157,24 @@ export default function App() {
       <div className="flex justify-between items-center px-2 mb-2">
         <h1 className="text-xl font-bold text-slate-800 tracking-tight">{title}</h1>
         <div className="flex items-center gap-2">
+            {/* NOUVEAU SELECTEUR DE TRI (V40.4) */}
             {(title === "Collection" || title === "Inventaire" || title === "Galerie") && (
-                <button 
-                    onClick={() => setSortOrder(prev => prev === 'date' ? 'alpha' : prev === 'alpha' ? 'random' : 'date')} 
-                    className="p-2 rounded-full text-slate-500 hover:bg-slate-100 transition-colors flex items-center gap-1 bg-slate-50"
-                >
-                    {sortOrder === 'random' ? <Shuffle size={16} /> : <ArrowUpDown size={16} />}
-                    <span className="text-[10px] font-medium w-9 text-center">
-                        {sortOrder === 'date' ? 'Date' : sortOrder === 'alpha' ? 'A-Z' : 'Aléat.'}
-                    </span>
-                </button>
+                <div className="relative">
+                    <select 
+                        value={sortOrder} 
+                        onChange={(e) => setSortOrder(e.target.value)}
+                        className="appearance-none bg-slate-100 border border-slate-200 text-slate-600 text-xs font-medium py-1.5 pl-3 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                    >
+                        <option value="date">Date</option>
+                        <option value="alpha">A-Z</option>
+                        <option value="random">Aléatoire</option>
+                        <option value="priceAsc">Prix Croissant</option>
+                        <option value="priceDesc">Prix Décroissant</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                        <ArrowUpDown size={12} />
+                    </div>
+                </div>
             )}
             <button onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}><Search size={18} /></button>
         </div>
@@ -1207,6 +1227,14 @@ export default function App() {
             <Card key={w.id} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
               <div className="aspect-square bg-slate-50 relative">
                 {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
+                
+                {/* NOUVEAU : PRIX D'ACHAT SUR LA PHOTO COLLECTION */}
+                {w.status === 'collection' && (
+                    <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-white/20">
+                        {formatPrice(w.purchasePrice)}
+                    </div>
+                )}
+
                 <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm border border-slate-100">
                     {w.status === 'sold' ? <span className="text-emerald-600">VENDU</span> : formatPrice(w.sellingPrice || w.purchasePrice)}
                 </div>
@@ -1289,6 +1317,13 @@ export default function App() {
                 <h1 className="text-3xl font-bold text-slate-900 leading-tight">{w.brand}</h1>
                 <p className="text-xl text-slate-600 font-medium">{w.model}</p>
                 {w.reference && <span className="text-xs bg-slate-100 px-2 py-1 rounded mt-2 inline-block border font-mono text-slate-500">REF: {w.reference}</span>}
+                
+                {/* BADGE EDITION LIMITEE DANS DETAIL */}
+                {w.isLimitedEdition && (
+                     <div className="mt-2 inline-flex items-center px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full shadow-sm">
+                         EDITION LIMITÉE {w.limitedNumber && w.limitedTotal ? `${w.limitedNumber} / ${w.limitedTotal}` : ''}
+                     </div>
+                )}
               </div>
           </div>
           {w.status === 'wishlist' && w.link && (
@@ -1401,9 +1436,35 @@ export default function App() {
 
   const renderProfile = () => (
     <div className="pb-24 px-2">
-      {renderHeader("Galerie")}
+      {/* NOUVEAU : Header avec Filtres Galerie */}
+      <div className="sticky top-0 bg-white z-10 pt-2 pb-2 px-1 shadow-sm border-b border-slate-100 mb-2">
+         <div className="flex justify-between items-center px-2">
+            <h1 className="text-xl font-bold text-slate-800 tracking-tight">Galerie</h1>
+            <div className="flex gap-2">
+               <button 
+                  onClick={() => setShowGalleryWishlist(!showGalleryWishlist)}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-white border-slate-200 text-slate-400'}`}
+               >
+                  Souhaits
+               </button>
+               <button 
+                  onClick={() => setShowGallerySold(!showGallerySold)}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-200 text-slate-400'}`}
+               >
+                  Vendus
+               </button>
+            </div>
+         </div>
+      </div>
+
       <div className="grid grid-cols-3 gap-1 mt-2 px-1">
-          {filteredWatches.filter(w => w.image).map(w => (
+          {filteredWatches.filter(w => {
+             if (!w.image) return false;
+             if (w.status === 'collection' || w.status === 'forsale') return true;
+             if (w.status === 'wishlist' && showGalleryWishlist) return true;
+             if (w.status === 'sold' && showGallerySold) return true;
+             return false;
+          }).map(w => (
               <div key={w.id} className="aspect-square bg-slate-100 rounded overflow-hidden relative cursor-pointer" onClick={() => { setSelectedWatch(w); setView('detail'); }}>
                   <img src={w.image} className="w-full h-full object-cover" />
                   <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] p-1 truncate">{w.model}</div>
@@ -1440,6 +1501,37 @@ export default function App() {
                         <div className="relative">
                             <input className="w-full p-3 pl-10 border rounded-lg" placeholder="Couleur cadran" value={watchForm.dialColor || ''} onChange={e => setWatchForm({...watchForm, dialColor: e.target.value})} />
                             <Palette className="absolute left-3 top-3.5 text-slate-400" size={18} />
+                        </div>
+                        
+                        {/* NOUVEAU : EDITION LIMITEE (V40.4) */}
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <div className="flex items-center mb-2">
+                                <input 
+                                    type="checkbox" 
+                                    id="isLimited"
+                                    checked={watchForm.isLimitedEdition}
+                                    onChange={e => setWatchForm({...watchForm, isLimitedEdition: e.target.checked})}
+                                    className="w-4 h-4 text-indigo-600 rounded mr-2"
+                                />
+                                <label htmlFor="isLimited" className="text-sm font-bold text-slate-700">Édition Limitée</label>
+                            </div>
+                            {watchForm.isLimitedEdition && (
+                                <div className="flex gap-2 pl-6 animate-in slide-in-from-top-1">
+                                    <input 
+                                        className="w-full p-2 border rounded text-sm" 
+                                        placeholder="N° (ex: 42)" 
+                                        value={watchForm.limitedNumber}
+                                        onChange={e => setWatchForm({...watchForm, limitedNumber: e.target.value})}
+                                    />
+                                    <span className="text-slate-400 py-2">/</span>
+                                    <input 
+                                        className="w-full p-2 border rounded text-sm" 
+                                        placeholder="Total (ex: 100)" 
+                                        value={watchForm.limitedTotal}
+                                        onChange={e => setWatchForm({...watchForm, limitedTotal: e.target.value})}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                     {watchForm.status === 'wishlist' ? (
