@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v40.6"; 
+const APP_VERSION = "v40.9"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -1449,35 +1449,60 @@ export default function App() {
     <div className="pb-24 px-2">
       {/* NOUVEAU : Header avec Filtres Galerie */}
       <div className="sticky top-0 bg-white z-10 pt-2 pb-2 px-1 shadow-sm border-b border-slate-100 mb-2">
-         <div className="flex justify-between items-center px-2">
+         {/* LIGNE 1 : TITRE + TRI + RECHERCHE */}
+         <div className="flex justify-between items-center px-2 mb-2">
             <h1 className="text-xl font-bold text-slate-800 tracking-tight">Galerie</h1>
-            <div className="flex gap-2">
-               {/* NOUVEAUX BOUTONS DE FILTRE GALERIE */}
+            <div className="flex items-center gap-2">
+                {/* SELECTEUR DE TRI RÉINTÉGRÉ */}
+                <div className="relative">
+                    <select 
+                        value={sortOrder} 
+                        onChange={(e) => setSortOrder(e.target.value)}
+                        className="appearance-none bg-slate-100 border border-slate-200 text-slate-600 text-xs font-medium py-1.5 pl-3 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                    >
+                        <option value="date">Date</option>
+                        <option value="alpha">A-Z</option>
+                        <option value="random">Aléatoire</option>
+                        <option value="priceAsc">Prix Croissant</option>
+                        <option value="priceDesc">Prix Décroissant</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                        <ArrowUpDown size={12} />
+                    </div>
+                </div>
+                <button onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}><Search size={18} /></button>
+            </div>
+         </div>
+
+         {/* RECHERCHE */}
+         {isSearchOpen && (<div className="px-2 mb-3 animate-in fade-in slide-in-from-top-2"><input autoFocus type="text" placeholder="Rechercher..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full p-2 pl-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"/></div>)}
+
+         {/* LIGNE 2 : FILTRES BOUTONS */}
+         <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
                <button 
                   onClick={() => setShowGalleryCollection(!showGalleryCollection)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-slate-200 text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-slate-200 text-slate-400'}`}
                >
                   Collection
                </button>
                <button 
                   onClick={() => setShowGalleryForsale(!showGalleryForsale)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-white border-slate-200 text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-white border-slate-200 text-slate-400'}`}
                >
                   Vente
                </button>
                <button 
-                  onClick={() => setShowGalleryWishlist(!showGalleryWishlist)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-white border-slate-200 text-slate-400'}`}
-               >
-                  Souhaits
-               </button>
-               <button 
                   onClick={() => setShowGallerySold(!showGallerySold)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-200 text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-200 text-slate-400'}`}
                >
                   Vendus
                </button>
-            </div>
+               <button 
+                  onClick={() => setShowGalleryWishlist(!showGalleryWishlist)}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-white border-slate-200 text-slate-400'}`}
+               >
+                  Souhaits
+               </button>
          </div>
       </div>
 
@@ -1497,6 +1522,7 @@ export default function App() {
                   </div>
               </div>
           ))}
+          {filteredWatches.length === 0 && <div className="col-span-3 text-center text-slate-400 py-8 text-sm">Aucune photo disponible</div>}
       </div>
     </div>
   );
