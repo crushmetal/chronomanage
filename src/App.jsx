@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, SortAsc, SortDesc, Filter
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,14 +33,14 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v40.4"; 
+const APP_VERSION = "v40.5"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
     dialColor: '', 
-    isLimitedEdition: false, limitedNumber: '', limitedTotal: '', // NOUVEAUX CHAMPS
+    isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
     box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', image: null
 };
@@ -441,7 +441,9 @@ export default function App() {
   const [addFriendId, setAddFriendId] = useState(''); 
   const [isFriendsLoading, setIsFriendsLoading] = useState(false);
   
-  // GALERIE FILTRES
+  // GALERIE FILTRES (V40.5)
+  const [showGalleryCollection, setShowGalleryCollection] = useState(true);
+  const [showGalleryForsale, setShowGalleryForsale] = useState(true);
   const [showGallerySold, setShowGallerySold] = useState(false);
   const [showGalleryWishlist, setShowGalleryWishlist] = useState(false);
 
@@ -1441,6 +1443,19 @@ export default function App() {
          <div className="flex justify-between items-center px-2">
             <h1 className="text-xl font-bold text-slate-800 tracking-tight">Galerie</h1>
             <div className="flex gap-2">
+               {/* NOUVEAUX BOUTONS DE FILTRE GALERIE */}
+               <button 
+                  onClick={() => setShowGalleryCollection(!showGalleryCollection)}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-slate-200 text-slate-400'}`}
+               >
+                  Collection
+               </button>
+               <button 
+                  onClick={() => setShowGalleryForsale(!showGalleryForsale)}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-white border-slate-200 text-slate-400'}`}
+               >
+                  Vente
+               </button>
                <button 
                   onClick={() => setShowGalleryWishlist(!showGalleryWishlist)}
                   className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-white border-slate-200 text-slate-400'}`}
@@ -1460,7 +1475,8 @@ export default function App() {
       <div className="grid grid-cols-3 gap-1 mt-2 px-1">
           {filteredWatches.filter(w => {
              if (!w.image) return false;
-             if (w.status === 'collection' || w.status === 'forsale') return true;
+             if (w.status === 'collection' && showGalleryCollection) return true;
+             if (w.status === 'forsale' && showGalleryForsale) return true;
              if (w.status === 'wishlist' && showGalleryWishlist) return true;
              if (w.status === 'sold' && showGallerySold) return true;
              return false;
