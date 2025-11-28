@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v40.0"; 
+const APP_VERSION = "v40.2"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -493,8 +493,6 @@ export default function App() {
   useEffect(() => {
      if (useLocalStorage || !user?.uid) return;
      
-     // On stocke la liste des amis dans le localStorage pour simplifier (pas de backend social complexe)
-     // Dans une vraie app, on stockerait ça dans Firestore users/{uid}/friends
      const savedFriends = localStorage.getItem(`friends_${user.uid}`);
      if (savedFriends) {
          setFriends(JSON.parse(savedFriends));
@@ -513,6 +511,15 @@ export default function App() {
       const updatedFriends = friends.filter(f => f.id !== friendId);
       setFriends(updatedFriends);
       localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+  };
+
+  const renameFriend = (friendId, currentName) => {
+      const newName = prompt("Nouveau nom pour cet ami :", currentName);
+      if (newName && newName.trim() !== "") {
+          const updatedFriends = friends.map(f => f.id === friendId ? {...f, name: newName} : f);
+          setFriends(updatedFriends);
+          localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+      }
   };
 
   // --- CHARGEMENT COLLECTION AMI ---
@@ -861,9 +868,28 @@ export default function App() {
                       <DetailItem icon={MovementIcon} label="Mouvement" value={watch.movement} />
                       <DetailItem icon={Droplets} label="Étanchéité" value={watch.waterResistance} />
                   </div>
-                  <div className="bg-blue-50 p-4 rounded-xl text-center text-sm text-blue-800 font-medium">
-                      Cette montre appartient à {viewingFriend?.name || 'un ami'}.<br/>
-                      <span className="text-xs opacity-70">Les prix sont masqués par confidentialité.</span>
+                  
+                  {/* PRIX VISIBLE UNIQUEMENT POUR SOUHAITS ET VENTE */}
+                  {(watch.status === 'wishlist' || watch.status === 'forsale') && (
+                    <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100 flex justify-between items-center">
+                        <span className="text-xs font-bold uppercase text-slate-400">
+                            {watch.status === 'forsale' ? 'Prix de vente' : 'Prix'}
+                        </span>
+                        <span className="font-bold text-slate-900">
+                            {formatPrice(watch.status === 'forsale' ? (watch.sellingPrice || watch.purchasePrice) : watch.purchasePrice)}
+                        </span>
+                    </div>
+                  )}
+
+                  {/* LIEN WEB (Nouveauté v40.1) */}
+                  {watch.link && (
+                      <a href={watch.link} target="_blank" rel="noreferrer" className="mt-2 flex w-full items-center justify-center p-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-colors">
+                          <ExternalLink size={16} className="mr-2"/> Voir le site web
+                      </a>
+                  )}
+
+                  <div className="bg-blue-50 p-4 rounded-xl text-center text-sm text-blue-800 font-medium mt-4">
+                      Cette montre appartient à {viewingFriend?.name || 'un ami'}.
                   </div>
               </div>
           </div>
@@ -932,7 +958,7 @@ export default function App() {
                           <h3 className="font-bold text-sm text-rose-500 uppercase tracking-wider mb-3 flex items-center gap-2"><Heart size={14}/> Souhaits ({friendWish.length})</h3>
                           <div className="space-y-2">
                               {friendWish.map(w => (
-                                  <div key={w.id} className="flex items-center bg-white p-2 rounded-xl border border-rose-100 shadow-sm">
+                                  <div key={w.id} onClick={() => setSelectedWatch(w)} className="flex items-center bg-white p-2 rounded-xl border border-rose-100 shadow-sm cursor-pointer hover:bg-rose-50/50 transition-colors">
                                       <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 mr-3">
                                           {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={14}/></div>}
                                       </div>
@@ -960,7 +986,7 @@ export default function App() {
 
               <div className="bg-indigo-600 rounded-xl p-4 text-white shadow-lg mb-6">
                   <h3 className="font-bold text-lg mb-1">Inviter un ami</h3>
-                  <p className="text-indigo-100 text-xs mb-4">Partagez votre code unique pour qu'ils puissent voir votre collection (sans les prix).</p>
+                  <p className="text-indigo-100 text-xs mb-4">Partagez votre code unique pour qu'ils puissent voir votre collection.</p>
                   <div className="bg-white/10 p-3 rounded-lg flex items-center justify-between backdrop-blur-sm border border-white/20">
                       <code className="font-mono text-sm truncate mr-2">{user?.uid || '...'}</code>
                       <button onClick={() => { navigator.clipboard.writeText(user?.uid); alert('Code copié !'); }} className="bg-white text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-indigo-50 transition-colors"><Copy size={12}/> Copier</button>
@@ -990,7 +1016,7 @@ export default function App() {
                   <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Vos amis ({friends.length})</h3>
                   <div className="space-y-3">
                       {friends.map(friend => (
-                          <div key={friend.id} onClick={() => loadFriendCollection(friend)} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-200 transition-colors group">
+                          <div key={friend.id} onClick={() => loadFriendCollection(friend)} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-200 transition-colors group relative">
                               <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
                                       {friend.name.charAt(0)}
@@ -1000,8 +1026,16 @@ export default function App() {
                                       <div className="text-[10px] text-slate-400 font-mono truncate w-32">ID: {friend.id}</div>
                                   </div>
                               </div>
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2">
                                   {isFriendsLoading && viewingFriend?.id === friend.id && <Loader2 className="animate-spin text-indigo-500" size={18}/>}
+                                  {/* BOUTON RENOMMER */}
+                                  <button onClick={(e) => { e.stopPropagation(); renameFriend(friend.id, friend.name); }} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Renommer">
+                                      <Edit2 size={16}/>
+                                  </button>
+                                  {/* BOUTON SUPPRIMER */}
+                                  <button onClick={(e) => { e.stopPropagation(); if(confirm('Supprimer cet ami ?')) removeFriend(friend.id); }} className="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Supprimer">
+                                      <Trash2 size={16}/>
+                                  </button>
                                   <ChevronLeft className="rotate-180 text-slate-300 group-hover:text-indigo-500" size={18}/>
                               </div>
                           </div>
@@ -1014,13 +1048,6 @@ export default function App() {
                       )}
                   </div>
               </div>
-              
-              {/* BOUTON HINT POUR RENOMMER */}
-              {friends.length > 0 && (
-                  <p className="text-center text-[10px] text-slate-300 mt-8">
-                      Astuce : Pour renommer un ami, supprimez-le et ajoutez-le de nouveau avec son code.
-                  </p>
-              )}
           </div>
       );
   };
