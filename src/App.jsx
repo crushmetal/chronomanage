@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v40.2"; 
+const APP_VERSION = "v40.3"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -941,7 +941,12 @@ export default function App() {
                                   <div key={w.id} onClick={() => setSelectedWatch(w)} className="bg-white rounded-xl shadow-sm overflow-hidden border border-amber-100 active:scale-95 transition-transform">
                                       <div className="aspect-square bg-amber-50 relative">
                                           {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-amber-300"><Activity size={16}/></div>}
-                                          <div className="absolute top-2 right-2 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Vente</div>
+                                          
+                                          {/* MODIF: PRIX SUR LA PHOTO (Badge vert pour être visible) */}
+                                          <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm">
+                                            {formatPrice(w.sellingPrice || w.purchasePrice)}
+                                          </div>
+                                          <div className="absolute bottom-2 left-2 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Vente</div>
                                       </div>
                                       <div className="p-2">
                                           <div className="font-bold text-sm truncate">{w.brand}</div>
@@ -959,12 +964,16 @@ export default function App() {
                           <div className="space-y-2">
                               {friendWish.map(w => (
                                   <div key={w.id} onClick={() => setSelectedWatch(w)} className="flex items-center bg-white p-2 rounded-xl border border-rose-100 shadow-sm cursor-pointer hover:bg-rose-50/50 transition-colors">
-                                      <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 mr-3">
+                                      <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 mr-3 relative">
                                           {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={14}/></div>}
                                       </div>
-                                      <div>
-                                          <div className="font-bold text-sm text-slate-800">{w.brand}</div>
-                                          <div className="text-xs text-slate-500">{w.model}</div>
+                                      <div className="flex-1 min-w-0">
+                                          <div className="font-bold text-sm text-slate-800 truncate">{w.brand}</div>
+                                          <div className="text-xs text-slate-500 truncate">{w.model}</div>
+                                      </div>
+                                      {/* MODIF: PRIX AFFICHE DANS LA LISTE */}
+                                      <div className="font-bold text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg whitespace-nowrap ml-2">
+                                        {formatPrice(w.purchasePrice)}
                                       </div>
                                   </div>
                               ))}
