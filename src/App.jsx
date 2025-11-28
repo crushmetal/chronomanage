@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v40.5"; 
+const APP_VERSION = "v40.6"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -1230,15 +1230,24 @@ export default function App() {
               <div className="aspect-square bg-slate-50 relative">
                 {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
                 
-                {/* NOUVEAU : PRIX D'ACHAT SUR LA PHOTO COLLECTION */}
-                {w.status === 'collection' && (
+                {/* PRIX D'ACHAT (Badge noir haut-gauche) - POUR TOUS LES STATUTS SI DISPO */}
+                {(w.purchasePrice) && (
                     <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-white/20">
                         {formatPrice(w.purchasePrice)}
                     </div>
                 )}
 
-                <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm border border-slate-100">
-                    {w.status === 'sold' ? <span className="text-emerald-600">VENDU</span> : formatPrice(w.sellingPrice || w.purchasePrice)}
+                {/* PRIX DE VENTE / STATUT (Haut Droite) */}
+                <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm border border-slate-100 flex flex-col items-end">
+                    {w.status === 'sold' ? (
+                        <>
+                            <span className="text-emerald-600 font-extrabold">VENDUE</span>
+                            <span className="text-[9px] text-emerald-600 leading-none">{formatPrice(w.sellingPrice)}</span>
+                        </>
+                    ) : (
+                        // Pour Collection et En Vente : on affiche le prix de vente (ou achat si pas de vente)
+                        formatPrice(w.sellingPrice || w.purchasePrice)
+                    )}
                 </div>
               </div>
               <div className="p-3">
@@ -1483,7 +1492,9 @@ export default function App() {
           }).map(w => (
               <div key={w.id} className="aspect-square bg-slate-100 rounded overflow-hidden relative cursor-pointer" onClick={() => { setSelectedWatch(w); setView('detail'); }}>
                   <img src={w.image} className="w-full h-full object-cover" />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] p-1 truncate">{w.model}</div>
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] p-1 truncate">
+                    <span className="font-bold">{w.brand}</span> {w.model}
+                  </div>
               </div>
           ))}
       </div>
