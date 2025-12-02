@@ -33,13 +33,14 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v40.12"; 
+const APP_VERSION = "v41.2"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
     dialColor: '', 
+    powerReserve: '', jewels: '',
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
@@ -332,12 +333,10 @@ const RulesHelpModal = ({ onClose }) => {
     const rulesCode = `rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 1. COLLECTIONS UTILISATEURS (Lecture publique / Ecriture propriétaire)
     match /artifacts/chrono-manager-universal/users/{userId}/{document=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
-    // 2. DEMANDES D'AMIS (Boîte aux lettres)
     match /artifacts/chrono-manager-universal/requests/{requestId} {
       allow read, create, delete: if request.auth != null;
     }
@@ -353,8 +352,8 @@ service cloud.firestore {
                 </div>
                 <div className="p-6 space-y-4">
                     <div className="text-sm text-slate-600">
-                        <p className="mb-2 font-bold text-indigo-600">Pour activer les demandes d'amis, le code de sécurité doit être mis à jour.</p>
-                        <p>Copiez ce code et remplacez l'ancien dans la console Firebase.</p>
+                        <p className="mb-2 font-bold text-indigo-600">Pour que la fonction "Amis" marche, il faut mettre à jour vos règles Firebase.</p>
+                        <p>Ce nouveau code permet à vos amis (utilisateurs connectés) de voir votre collection, mais empêche qu'ils la modifient.</p>
                     </div>
                     <div className="relative bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
                         <button 
@@ -946,6 +945,8 @@ export default function App() {
                       <DetailItem icon={Calendar} label="Année" value={watch.year} />
                       <DetailItem icon={MovementIcon} label="Mouvement" value={watch.movement} />
                       <DetailItem icon={Droplets} label="Étanchéité" value={watch.waterResistance} />
+                      {watch.powerReserve && <DetailItem icon={Zap} label="Réserve" value={watch.powerReserve + ' h'} />}
+                      {watch.jewels && <DetailItem icon={Gem} label="Rubis" value={watch.jewels} />}
                   </div>
                   
                   {/* PRIX VISIBLE UNIQUEMENT POUR SOUHAITS ET VENTE */}
@@ -1103,7 +1104,7 @@ export default function App() {
               </div>
 
               <div className="mb-6">
-                   <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Ajouter</h3>
+                   <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Ajouter un ami</h3>
                    <div className="flex gap-2">
                        <input 
                           type="text" 
@@ -1113,7 +1114,7 @@ export default function App() {
                           onChange={(e) => setAddFriendId(e.target.value)}
                        />
                        <button 
-                          onClick={() => { if(addFriendId) saveFriend({id: addFriendId, name: `Ami ${addFriendId.substr(0,4)}...`}); }}
+                          onClick={() => sendFriendRequest()}
                           className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800"
                        >
                            <UserPlus size={20} />
@@ -1132,7 +1133,7 @@ export default function App() {
                                   </div>
                                   <div>
                                       <div className="font-bold text-slate-800">{friend.name}</div>
-                                      <div className="text-[10px] text-slate-400 font-mono truncate w-32">ID: {friend.id}</div>
+                                      <div className="text-[10px] text-slate-400 font-mono truncate w-32">ID: {friend.id.substring(0,8)}...</div>
                                   </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1172,7 +1173,7 @@ export default function App() {
               <button 
                 onClick={handleGoogleLogin} 
                 disabled={isAuthLoading}
-                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-slate-200 text-xs font-medium transition-all active:scale-95 ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/90 text-slate-700 hover:bg-slate-50'}`}
+                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-white/20 text-xs font-medium transition-all active:scale-95 ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/10 text-white hover:bg-white/20'}`}
               >
                 {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : (isConfigMissing ? <Settings size={14} /> : <LogIn size={14} />)}
                 <span className="hidden sm:inline">{isConfigMissing ? 'Configurer Cloud' : 'Connexion'}</span>
@@ -1186,7 +1187,7 @@ export default function App() {
           </div>
         ) : (
           <div className="relative">
-            <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 transition-transform active:scale-95">
+            <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-white/50 transition-transform active:scale-95">
               {/* Ajout du referrerPolicy pour éviter les 403 de Google */}
               {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
             </button>
