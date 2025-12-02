@@ -3,12 +3,12 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc } from 'firebase/firestore';
 
 // ==========================================================================
 // CONFIGURATION INITIALE
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v40.9"; 
+const APP_VERSION = "v40.12"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -41,6 +41,7 @@ const DEFAULT_WATCH_STATE = {
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
     dialColor: '', 
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
+    publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', image: null
 };
@@ -331,9 +332,14 @@ const RulesHelpModal = ({ onClose }) => {
     const rulesCode = `rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // 1. COLLECTIONS UTILISATEURS (Lecture publique / Ecriture propriétaire)
     match /artifacts/chrono-manager-universal/users/{userId}/{document=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    // 2. DEMANDES D'AMIS (Boîte aux lettres)
+    match /artifacts/chrono-manager-universal/requests/{requestId} {
+      allow read, create, delete: if request.auth != null;
     }
   }
 }`;
@@ -347,8 +353,8 @@ service cloud.firestore {
                 </div>
                 <div className="p-6 space-y-4">
                     <div className="text-sm text-slate-600">
-                        <p className="mb-2 font-bold text-indigo-600">Pour que la fonction "Amis" marche, il faut mettre à jour vos règles Firebase.</p>
-                        <p>Ce nouveau code permet à vos amis (utilisateurs connectés) de voir votre collection, mais empêche qu'ils la modifient.</p>
+                        <p className="mb-2 font-bold text-indigo-600">Pour activer les demandes d'amis, le code de sécurité doit être mis à jour.</p>
+                        <p>Copiez ce code et remplacez l'ancien dans la console Firebase.</p>
                     </div>
                     <div className="relative bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
                         <button 
@@ -436,6 +442,7 @@ export default function App() {
   
   // ÉTAT AMIS
   const [friends, setFriends] = useState([]); 
+  const [friendRequests, setFriendRequests] = useState([]); // NOUVEAU
   const [viewingFriend, setViewingFriend] = useState(null); 
   const [friendWatches, setFriendWatches] = useState([]); 
   const [addFriendId, setAddFriendId] = useState(''); 
@@ -482,20 +489,77 @@ export default function App() {
       }
   }, []);
 
-  // --- CHARGEMENT DES AMIS ---
+  // --- CHARGEMENT DES AMIS ET DEMANDES ---
   useEffect(() => {
      if (useLocalStorage || !user?.uid) return;
      const savedFriends = localStorage.getItem(`friends_${user.uid}`);
      if (savedFriends) {
          setFriends(JSON.parse(savedFriends));
      }
+
+     // LISTENER POUR LES DEMANDES D'AMIS ENTRANTES (NOUVEAU)
+     if (firebaseReady && !useLocalStorage) {
+         try {
+             const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'requests'), where('toUser', '==', user.uid));
+             const unsubRequests = onSnapshot(q, (snap) => {
+                 const reqs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                 setFriendRequests(reqs);
+             }, (err) => {
+                 console.error("Erreur écoute demandes:", err);
+                 // CORRECTION: Afficher l'erreur à l'utilisateur pour qu'il puisse "Réparer" (mettre à jour les règles)
+                 if (err.code === 'permission-denied') {
+                     setError("permission-denied (Amis)");
+                 }
+             }); 
+             return () => unsubRequests();
+         } catch (e) {
+             console.error("Erreur init listener requests", e);
+         }
+     }
   }, [user, useLocalStorage]);
 
-  const saveFriend = (newFriend) => {
+  // --- LOGIQUE AMIS ---
+
+  // 1. Envoyer une demande (au lieu d'ajouter directement)
+  const sendFriendRequest = async () => {
+      if (!addFriendId || addFriendId.length < 5) return alert("Code invalide");
+      if (addFriendId === user.uid) return alert("Vous ne pouvez pas vous ajouter vous-même");
+      if (friends.some(f => f.id === addFriendId)) return alert("Déjà dans vos amis");
+
+      try {
+          await addDoc(collection(db, 'artifacts', APP_ID_STABLE, 'requests'), {
+              fromUser: user.uid,
+              fromEmail: user.email,
+              toUser: addFriendId,
+              status: 'pending',
+              createdAt: new Date().toISOString()
+          });
+          alert("Demande envoyée !");
+          setAddFriendId('');
+      } catch (e) {
+          console.error(e);
+          if (e.code === 'permission-denied') {
+              setShowRulesHelp(true); // Affiche l'aide si erreur de droits
+          } else {
+              alert("Erreur envoi demande: " + e.message);
+          }
+      }
+  };
+
+  // 2. Accepter une demande
+  const acceptRequest = async (req) => {
+      const newFriend = { id: req.fromUser, name: req.fromEmail || 'Ami' };
       const updatedFriends = [...friends, newFriend];
       setFriends(updatedFriends);
       localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
-      setAddFriendId('');
+      
+      // Supprimer la demande après acceptation
+      await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'requests', req.id));
+  };
+
+  // 3. Refuser une demande
+  const rejectRequest = async (reqId) => {
+      await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'requests', reqId));
   };
 
   const removeFriend = (friendId) => {
@@ -520,7 +584,8 @@ export default function App() {
       try {
           const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', friend.id, 'watches'));
           const snap = await getDocs(q);
-          const fWatches = snap.docs.map(d => ({id: d.id, ...d.data()}));
+          // FILTRE VISIBILITE (v41.0) : On ne garde que les montres publiques
+          const fWatches = snap.docs.map(d => ({id: d.id, ...d.data()})).filter(w => w.publicVisible !== false);
           setFriendWatches(fWatches);
       } catch (err) {
           console.error("Erreur chargement ami", err);
@@ -1006,6 +1071,27 @@ export default function App() {
               <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-100 mb-4">
                   <h1 className="text-xl font-bold text-slate-800 tracking-tight px-1">Mes Amis</h1>
               </div>
+              
+              {/* 1. LISTE DES DEMANDES EN ATTENTE */}
+              {friendRequests.length > 0 && (
+                  <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <h3 className="font-bold text-sm text-amber-700 uppercase tracking-wider mb-3 flex items-center gap-2"><Bell size={16}/> Demandes reçues</h3>
+                      <div className="space-y-2">
+                          {friendRequests.map(req => (
+                              <div key={req.id} className="bg-white p-3 rounded-lg shadow-sm flex items-center justify-between">
+                                  <div>
+                                      <div className="font-bold text-sm text-slate-800">{req.fromEmail || 'Utilisateur'}</div>
+                                      <div className="text-[10px] text-slate-400 font-mono">ID: {req.fromUser.substring(0,8)}...</div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                      <button onClick={() => rejectRequest(req.id)} className="p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100"><X size={16}/></button>
+                                      <button onClick={() => acceptRequest(req)} className="p-2 bg-emerald-50 text-emerald-600 rounded-full hover:bg-emerald-100"><Check size={16}/></button>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+              )}
 
               <div className="bg-indigo-600 rounded-xl p-4 text-white shadow-lg mb-6">
                   <h3 className="font-bold text-lg mb-1">Inviter un ami</h3>
@@ -1086,7 +1172,7 @@ export default function App() {
               <button 
                 onClick={handleGoogleLogin} 
                 disabled={isAuthLoading}
-                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-white/20 text-xs font-medium transition-all active:scale-95 ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-slate-200 text-xs font-medium transition-all active:scale-95 ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/90 text-slate-700 hover:bg-slate-50'}`}
               >
                 {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : (isConfigMissing ? <Settings size={14} /> : <LogIn size={14} />)}
                 <span className="hidden sm:inline">{isConfigMissing ? 'Configurer Cloud' : 'Connexion'}</span>
@@ -1100,7 +1186,7 @@ export default function App() {
           </div>
         ) : (
           <div className="relative">
-            <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-white/50 transition-transform active:scale-95">
+            <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 transition-transform active:scale-95">
               {/* Ajout du referrerPolicy pour éviter les 403 de Google */}
               {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
             </button>
@@ -1586,6 +1672,23 @@ export default function App() {
                                 </div>
                             )}
                         </div>
+                        
+                        {/* NOUVEAU : VISIBILITE (V41.0) */}
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    {watchForm.publicVisible ? <Eye className="text-indigo-600 mr-2" size={20}/> : <EyeOff className="text-slate-400 mr-2" size={20}/>}
+                                    <span className="text-sm font-bold text-slate-700">Visible par les amis</span>
+                                </div>
+                                <input 
+                                    type="checkbox" 
+                                    checked={watchForm.publicVisible !== false}
+                                    onChange={e => setWatchForm({...watchForm, publicVisible: e.target.checked})}
+                                    className="w-5 h-5 text-indigo-600 rounded"
+                                />
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1 pl-8">Si décoché, cette montre restera privée dans votre coffre.</p>
+                        </div>
                     </div>
                     {watchForm.status === 'wishlist' ? (
                         <div className="space-y-3"><h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Lien Web</h3><input className="w-full p-3 border rounded-lg" placeholder="https://..." value={watchForm.link} onChange={e => setWatchForm({...watchForm, link: e.target.value})} /></div>
@@ -1603,6 +1706,19 @@ export default function App() {
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Mouvement" value={watchForm.movement} onChange={e => setWatchForm({...watchForm, movement: e.target.value})} />
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Verre" value={watchForm.glass} onChange={e => setWatchForm({...watchForm, glass: e.target.value})} />
                                 </div>
+                                {/* NOUVEAU : DETAILS AUTO/MECA (V41.0) */}
+                                {['auto', 'meca', 'automatic', 'automatique', 'mécanique', 'mechanic'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
+                                    <div className="grid grid-cols-2 gap-3 animate-in slide-in-from-top-1">
+                                        <div className="relative">
+                                            <input className="w-full p-3 pl-8 border rounded-lg text-sm" placeholder="Réserve (h)" value={watchForm.powerReserve || ''} onChange={e => setWatchForm({...watchForm, powerReserve: e.target.value})} />
+                                            <div className="absolute left-2.5 top-3.5 text-slate-400"><Zap size={14}/></div>
+                                        </div>
+                                        <div className="relative">
+                                            <input className="w-full p-3 pl-8 border rounded-lg text-sm" placeholder="Nb Rubis" value={watchForm.jewels || ''} onChange={e => setWatchForm({...watchForm, jewels: e.target.value})} />
+                                            <div className="absolute left-2.5 top-3.5 text-slate-400"><Gem size={14}/></div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-3">
                                 <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Origine</h3>
