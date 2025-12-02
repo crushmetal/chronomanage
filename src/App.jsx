@@ -8,7 +8,7 @@ import {
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc, updateDoc } from 'firebase/firestore';
 
 // ==========================================================================
 // CONFIGURATION INITIALE
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v41.2"; 
+const APP_VERSION = "v41.3"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -592,6 +592,29 @@ export default function App() {
           setViewingFriend(null);
       } finally {
           setIsFriendsLoading(false);
+      }
+  };
+
+  // --- VISIBILITÉ INSTANTANÉE (V41.3) ---
+  const toggleVisibility = async (watch) => {
+      const newVal = !watch.publicVisible;
+      
+      // Mise à jour optimiste locale
+      setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: newVal } : w));
+      
+      // Mise à jour persistante
+      if (useLocalStorage) {
+          // Déjà fait via le useEffect de sauvegarde locale
+      } else {
+          try {
+              const watchRef = doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id);
+              await setDoc(watchRef, { ...watch, publicVisible: newVal }, { merge: true });
+          } catch (e) {
+              console.error("Erreur toggle visibility", e);
+              // Rollback si erreur
+              setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: !newVal } : w));
+              alert("Erreur de sauvegarde");
+          }
       }
   };
 
@@ -1336,6 +1359,15 @@ export default function App() {
                         formatPrice(w.sellingPrice || w.purchasePrice)
                     )}
                 </div>
+
+                {/* VISIBILITÉ INSTANTANÉE (BAS DROITE) - V41.3 */}
+                {/* On utilise un z-index élevé et stopPropagation pour que le clic sur l'oeil ne déclenche pas l'ouverture de la fiche */}
+                <div 
+                    className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer hover:scale-110 transition-transform z-10"
+                    onClick={(e) => { e.stopPropagation(); toggleVisibility(w); }}
+                >
+                    {w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}
+                </div>
               </div>
               <div className="p-3">
                   <div className="font-bold text-sm truncate text-slate-800">{w.brand}</div>
@@ -1402,6 +1434,13 @@ export default function App() {
           <button onClick={() => { setSelectedWatch(null); setView(w.status === 'wishlist' ? 'wishlist' : 'list'); }}><ChevronLeft/></button>
           <span className="font-bold text-slate-800">Détails</span>
           <div className="flex gap-2">
+            {/* TOGGLE VISIBILITÉ DANS LE DÉTAIL */}
+            <button 
+                onClick={() => toggleVisibility(w)}
+                className={`p-2 rounded-full transition-colors ${w.publicVisible ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}
+            >
+                {w.publicVisible ? <Eye size={18}/> : <EyeOff size={18}/>}
+            </button>
             <button onClick={() => handleEdit(w, 'watch')} className="p-2 bg-slate-50 text-slate-500 rounded-full hover:bg-slate-100"><Edit2 size={18}/></button>
             <button onClick={() => handleDelete(w.id, 'watch')} className="p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100"><Trash2 size={18}/></button>
           </div>
@@ -1438,6 +1477,8 @@ export default function App() {
                      {w.dialColor && <DetailItem icon={Palette} label="Cadran" value={w.dialColor} />}
                      <DetailItem icon={Droplets} label="Étanchéité" value={w.waterResistance ? w.waterResistance + ' ATM' : ''} />
                      <DetailItem icon={MovementIcon} label="Mouvement" value={w.movement} />
+                     {w.powerReserve && <DetailItem icon={Zap} label="Réserve" value={w.powerReserve + ' h'} />}
+                     {w.jewels && <DetailItem icon={Gem} label="Rubis" value={w.jewels} />}
                      <DetailItem icon={Search} label="Verre" value={w.glass} />
                      <DetailItem icon={MapPin} label="Pays" value={w.country} />
                      <DetailItem icon={Calendar} label="Année" value={w.year} />
