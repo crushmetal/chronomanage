@@ -33,14 +33,13 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v41.3"; 
+const APP_VERSION = "v41.6"; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
     dialColor: '', 
-    powerReserve: '', jewels: '',
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
@@ -488,7 +487,7 @@ export default function App() {
       }
   }, []);
 
-  // --- CHARGEMENT DES AMIS ET DEMANDES ---
+  // --- CHARGEMENT DES AMIS ---
   useEffect(() => {
      if (useLocalStorage || !user?.uid) return;
      const savedFriends = localStorage.getItem(`friends_${user.uid}`);
@@ -574,6 +573,13 @@ export default function App() {
           setFriends(updatedFriends);
           localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
       }
+  };
+
+  // --- PREVIEW SELF AS FRIEND ---
+  const handlePreviewOwnProfile = () => {
+      const myPublicWatches = watches.filter(w => w.publicVisible !== false);
+      setFriendWatches(myPublicWatches);
+      setViewingFriend({ id: user.uid, name: 'Mon Profil Public' });
   };
 
   const loadFriendCollection = async (friend) => {
@@ -1126,8 +1132,16 @@ export default function App() {
                   </div>
               </div>
 
+              {/* NEW BUTTON: VIEW OWN PROFILE AS FRIEND */}
+              <button 
+                  onClick={handlePreviewOwnProfile}
+                  className="w-full mb-6 py-3 bg-white border-2 border-indigo-100 text-indigo-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-50 transition-colors"
+              >
+                  <Eye size={18} /> Voir mon profil public
+              </button>
+
               <div className="mb-6">
-                   <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Ajouter un ami</h3>
+                   <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Ajouter</h3>
                    <div className="flex gap-2">
                        <input 
                           type="text" 
@@ -1137,7 +1151,7 @@ export default function App() {
                           onChange={(e) => setAddFriendId(e.target.value)}
                        />
                        <button 
-                          onClick={() => sendFriendRequest()}
+                          onClick={() => { if(addFriendId) saveFriend({id: addFriendId, name: `Ami ${addFriendId.substr(0,4)}...`}); }}
                           className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800"
                        >
                            <UserPlus size={20} />
@@ -1156,7 +1170,7 @@ export default function App() {
                                   </div>
                                   <div>
                                       <div className="font-bold text-slate-800">{friend.name}</div>
-                                      <div className="text-[10px] text-slate-400 font-mono truncate w-32">ID: {friend.id.substring(0,8)}...</div>
+                                      <div className="text-[10px] text-slate-400 font-mono truncate w-32">ID: {friend.id}</div>
                                   </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1296,7 +1310,11 @@ export default function App() {
         <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
             {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (
                 <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                    {f === 'all' ? 'Tout' : f === 'collection' ? 'Ma Collection' : f === 'forsale' ? 'En Vente' : f === 'sold' ? 'Vendu' : 'Bracelets'}
+                    {f === 'all' ? `Tout (${watches.length})` : 
+                     f === 'collection' ? `Ma Collection (${watches.filter(w=>w.status==='collection').length})` : 
+                     f === 'forsale' ? `En Vente (${watches.filter(w=>w.status==='forsale').length})` : 
+                     f === 'sold' ? `Vendues (${watches.filter(w=>w.status==='sold').length})` : 
+                     `Bracelets (${bracelets.length})`}
                 </button>
             ))}
         </div>
