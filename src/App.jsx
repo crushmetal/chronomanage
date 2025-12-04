@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -32,8 +32,8 @@ let globalInitError = null;
 const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
-const APP_ID_STABLE = 'chrono-manager-universal'; 
-const APP_VERSION = "v41.6"; 
+const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
+const APP_VERSION = "v42.0"; // Version avec Galerie Multi-Photos HD
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -43,7 +43,9 @@ const DEFAULT_WATCH_STATE = {
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
-    purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', image: null
+    purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', 
+    image: null, // Legacy (gardé pour compatibilité)
+    images: []   // Nouveau : Liste des photos (max 3)
 };
 
 const DEFAULT_BRACELET_STATE = {
@@ -103,7 +105,7 @@ const DetailItem = ({ icon: Icon, label, value }) => (
         </div>
         <div className="min-w-0">
             <span className="text-[10px] uppercase tracking-wider text-slate-400 block">{label}</span>
-            <span className="font-medium text-sm text-slate-800 truncate block">{value || '-'}</span>
+            <span className="font-serif text-sm text-slate-800 truncate block">{value || '-'}</span>
         </div>
     </div>
 );
@@ -113,6 +115,7 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
 };
 
+// MODIFICATION : Amélioration de la qualité et taille
 const compressImage = (file) => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -122,13 +125,22 @@ const compressImage = (file) => {
       img.src = event.target.result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600; 
-        const scaleSize = MAX_WIDTH / img.width;
-        canvas.width = MAX_WIDTH;
-        canvas.height = img.height * scaleSize;
+        // AUGMENTATION DE LA TAILLE MAX (600 -> 800)
+        const MAX_WIDTH = 800; 
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH) {
+          height = (height * MAX_WIDTH) / width;
+          width = MAX_WIDTH;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
+        ctx.drawImage(img, 0, 0, width, height);
+        // AUGMENTATION DE LA QUALITÉ JPEG (0.7 -> 0.85)
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
       };
     };
   });
@@ -213,7 +225,7 @@ const LiveClock = () => {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div className="font-mono text-4xl font-light text-slate-600 tracking-wider mb-2 drop-shadow-sm">
+    <div className="font-serif text-3xl font-light text-slate-500 tracking-widest mb-2 opacity-80">
       {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
     </div>
   );
@@ -222,14 +234,10 @@ const LiveClock = () => {
 // --- BACKGROUND GRAPHIQUE ---
 const GraphicBackground = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-      <svg className="absolute -right-20 -top-20 text-slate-200 w-96 h-96 opacity-60" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="20" opacity="0.3" />
-        <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="1" />
-        <path d="M100 20 L100 0" stroke="currentColor" strokeWidth="5" />
-      </svg>
-      <svg className="absolute -left-20 bottom-20 text-slate-200 w-64 h-64 opacity-60" viewBox="0 0 200 200">
-         <rect x="50" y="50" width="100" height="100" transform="rotate(45 100 100)" fill="none" stroke="currentColor" strokeWidth="10" />
+      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '30px 30px', opacity: 0.5 }}></div>
+      <svg className="absolute -right-20 -top-20 text-slate-200 w-96 h-96 opacity-40" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+        <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="0.5" />
       </svg>
     </div>
 );
@@ -252,7 +260,7 @@ const FinanceDetailList = ({ title, items, onClose }) => {
     return (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-bottom-10">
           <div className="p-4 border-b flex items-center justify-between bg-slate-50">
-            <h2 className="font-bold text-lg text-slate-800">{title}</h2>
+            <h2 className="font-serif font-bold text-lg text-slate-800 tracking-wide">{title}</h2>
             <div className="flex gap-2">
                 <button 
                     onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')}
@@ -266,10 +274,12 @@ const FinanceDetailList = ({ title, items, onClose }) => {
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
              {sortedItems.map(w => {
+               // Fallback image : Priorité au tableau 'images', sinon champ 'image'
+               const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image;
                const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
                return (
                  <div key={w.id} className="flex items-center p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
-                     <div className="w-12 h-12 bg-slate-100 rounded overflow-hidden flex-shrink-0 mr-3 border border-slate-200">{w.image && <img src={w.image} className="w-full h-full object-cover"/>}</div>
+                     <div className="w-12 h-12 bg-slate-100 rounded overflow-hidden flex-shrink-0 mr-3 border border-slate-200">{thumb && <img src={thumb} className="w-full h-full object-cover"/>}</div>
                      <div className="flex-1 min-w-0">
                         <div className="font-bold text-sm truncate text-slate-800">{w.brand} {w.model}</div>
                         <div className="text-xs text-slate-500">Achat: {formatPrice(w.purchasePrice)}</div>
@@ -301,7 +311,7 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor }) =
                     <div className={`p-2 rounded-lg ${bgIcon}`}>
                         <Icon size={18} />
                     </div>
-                    <span className={`font-bold text-lg ${txtMain}`}>{title}</span>
+                    <span className={`font-serif font-bold text-lg tracking-wide ${txtMain}`}>{title}</span>
                 </div>
                 {type !== 'total' && <div className={`bg-white/20 p-1 rounded-full ${txtMain}`}><ChevronLeft className="rotate-180" size={16}/></div>}
             </div>
@@ -329,42 +339,19 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor }) =
 // --- COMPOSANTS MODALES AIDE / CONFIG ---
 
 const RulesHelpModal = ({ onClose }) => {
-    const rulesCode = `rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /artifacts/chrono-manager-universal/users/{userId}/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    match /artifacts/chrono-manager-universal/requests/{requestId} {
-      allow read, create, delete: if request.auth != null;
-    }
-  }
-}`;
-
     return (
         <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
                 <div className="bg-slate-50 p-4 border-b flex justify-between items-center">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><ShieldCheck className="text-emerald-600"/> Mise à jour des permissions</h3>
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><ShieldCheck className="text-emerald-600"/> Permissions Cloud</h3>
                     <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
                 </div>
                 <div className="p-6 space-y-4">
                     <div className="text-sm text-slate-600">
-                        <p className="mb-2 font-bold text-indigo-600">Pour que la fonction "Amis" marche, il faut mettre à jour vos règles Firebase.</p>
-                        <p>Ce nouveau code permet à vos amis (utilisateurs connectés) de voir votre collection, mais empêche qu'ils la modifient.</p>
+                        <p className="mb-2">Le système de partage requiert des permissions spécifiques pour que vos amis puissent voir votre collection.</p>
+                        <p className="text-xs text-slate-500">Assurez-vous que l'application utilise bien le bon App ID pour la base de données.</p>
                     </div>
-                    <div className="relative bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
-                        <button 
-                            onClick={() => navigator.clipboard.writeText(rulesCode)} 
-                            className="absolute top-2 right-2 p-1.5 bg-white/10 hover:bg-white/20 rounded text-white transition-colors"
-                            title="Copier"
-                        >
-                            <Copy size={14}/>
-                        </button>
-                        <pre>{rulesCode}</pre>
-                    </div>
-                    <button onClick={onClose} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors">C'est fait !</button>
+                    <button onClick={onClose} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors">J'ai compris</button>
                 </div>
             </div>
         </div>
@@ -440,13 +427,13 @@ export default function App() {
   
   // ÉTAT AMIS
   const [friends, setFriends] = useState([]); 
-  const [friendRequests, setFriendRequests] = useState([]); // NOUVEAU
+  const [friendRequests, setFriendRequests] = useState([]); 
   const [viewingFriend, setViewingFriend] = useState(null); 
   const [friendWatches, setFriendWatches] = useState([]); 
   const [addFriendId, setAddFriendId] = useState(''); 
   const [isFriendsLoading, setIsFriendsLoading] = useState(false);
   
-  // GALERIE FILTRES (V40.5)
+  // GALERIE FILTRES
   const [showGalleryCollection, setShowGalleryCollection] = useState(true);
   const [showGalleryForsale, setShowGalleryForsale] = useState(true);
   const [showGallerySold, setShowGallerySold] = useState(false);
@@ -459,6 +446,8 @@ export default function App() {
   const [editingType, setEditingType] = useState('watch');
 
   const [selectedWatch, setSelectedWatch] = useState(null);
+  const [viewedImageIndex, setViewedImageIndex] = useState(0); // NOUVEAU: Index image vue en détail
+
   const [financeDetail, setFinanceDetail] = useState(null);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -495,18 +484,24 @@ export default function App() {
          setFriends(JSON.parse(savedFriends));
      }
 
-     // LISTENER POUR LES DEMANDES D'AMIS ENTRANTES (NOUVEAU)
      if (firebaseReady && !useLocalStorage) {
+         if (user.isAnonymous) {
+             console.log("Mode anonyme: écoute demandes amis désactivée");
+             return;
+         }
+
          try {
-             const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'requests'), where('toUser', '==', user.uid));
+             const requestsRef = collection(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests');
+             const q = query(requestsRef, where('toUser', '==', user.uid));
+
              const unsubRequests = onSnapshot(q, (snap) => {
                  const reqs = snap.docs.map(d => ({id: d.id, ...d.data()}));
                  setFriendRequests(reqs);
              }, (err) => {
-                 console.error("Erreur écoute demandes:", err);
-                 // CORRECTION: Afficher l'erreur à l'utilisateur pour qu'il puisse "Réparer" (mettre à jour les règles)
                  if (err.code === 'permission-denied') {
-                     setError("permission-denied (Amis)");
+                     console.warn("Accès aux demandes d'amis refusé.");
+                 } else {
+                     console.error("Erreur écoute demandes:", err);
                  }
              }); 
              return () => unsubRequests();
@@ -518,14 +513,13 @@ export default function App() {
 
   // --- LOGIQUE AMIS ---
 
-  // 1. Envoyer une demande (au lieu d'ajouter directement)
   const sendFriendRequest = async () => {
       if (!addFriendId || addFriendId.length < 5) return alert("Code invalide");
       if (addFriendId === user.uid) return alert("Vous ne pouvez pas vous ajouter vous-même");
       if (friends.some(f => f.id === addFriendId)) return alert("Déjà dans vos amis");
 
       try {
-          await addDoc(collection(db, 'artifacts', APP_ID_STABLE, 'requests'), {
+          await addDoc(collection(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests'), {
               fromUser: user.uid,
               fromEmail: user.email,
               toUser: addFriendId,
@@ -537,27 +531,32 @@ export default function App() {
       } catch (e) {
           console.error(e);
           if (e.code === 'permission-denied') {
-              setShowRulesHelp(true); // Affiche l'aide si erreur de droits
+              setShowRulesHelp(true);
           } else {
               alert("Erreur envoi demande: " + e.message);
           }
       }
   };
 
-  // 2. Accepter une demande
   const acceptRequest = async (req) => {
       const newFriend = { id: req.fromUser, name: req.fromEmail || 'Ami' };
       const updatedFriends = [...friends, newFriend];
       setFriends(updatedFriends);
       localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
       
-      // Supprimer la demande après acceptation
-      await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'requests', req.id));
+      try {
+        await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', req.id));
+      } catch (e) {
+          console.error("Erreur suppression demande acceptée", e);
+      }
   };
 
-  // 3. Refuser une demande
   const rejectRequest = async (reqId) => {
-      await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'requests', reqId));
+      try {
+        await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', reqId));
+      } catch (e) {
+          console.error("Erreur suppression demande refusée", e);
+      }
   };
 
   const removeFriend = (friendId) => {
@@ -575,7 +574,6 @@ export default function App() {
       }
   };
 
-  // --- PREVIEW SELF AS FRIEND ---
   const handlePreviewOwnProfile = () => {
       const myPublicWatches = watches.filter(w => w.publicVisible !== false);
       setFriendWatches(myPublicWatches);
@@ -589,7 +587,6 @@ export default function App() {
       try {
           const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', friend.id, 'watches'));
           const snap = await getDocs(q);
-          // FILTRE VISIBILITE (v41.0) : On ne garde que les montres publiques
           const fWatches = snap.docs.map(d => ({id: d.id, ...d.data()})).filter(w => w.publicVisible !== false);
           setFriendWatches(fWatches);
       } catch (err) {
@@ -601,31 +598,27 @@ export default function App() {
       }
   };
 
-  // --- VISIBILITÉ INSTANTANÉE (V41.3) ---
   const toggleVisibility = async (watch) => {
       const newVal = !watch.publicVisible;
       
-      // Mise à jour optimiste locale
       setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: newVal } : w));
       
-      // Mise à jour persistante
       if (useLocalStorage) {
-          // Déjà fait via le useEffect de sauvegarde locale
+          // Local storage updated by effect
       } else {
           try {
               const watchRef = doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id);
               await setDoc(watchRef, { ...watch, publicVisible: newVal }, { merge: true });
           } catch (e) {
               console.error("Erreur toggle visibility", e);
-              // Rollback si erreur
               setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: !newVal } : w));
               alert("Erreur de sauvegarde");
           }
       }
   };
 
-  // --- ICONE APP (FAVICON) ---
   useEffect(() => {
+    document.title = "Mes Montres"; 
     const link = document.createElement('link');
     link.rel = 'icon';
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="#1e293b"/><circle cx="256" cy="256" r="180" fill="#f8fafc"/><rect x="246" y="80" width="20" height="40" rx="5" fill="#ef4444"/><rect x="240" y="100" width="32" height="160" rx="16" fill="#334155" transform="rotate(45 256 256)"/><rect x="240" y="100" width="32" height="120" rx="16" fill="#334155" transform="rotate(-60 256 256)"/><circle cx="256" cy="256" r="24" fill="#ef4444"/></svg>`;
@@ -637,7 +630,6 @@ export default function App() {
     document.head.appendChild(appleLink);
   }, []);
 
-  // --- GOOGLE LOGIN ---
   const handleGoogleLogin = async () => {
     if (!firebaseReady) {
         setShowConfigModal(true);
@@ -669,7 +661,6 @@ export default function App() {
     finally { setIsAuthLoading(false); }
   };
 
-  // --- AUTH EFFECT ---
   useEffect(() => {
     if (useLocalStorage && !isAuthLoading) {
         setLoading(false);
@@ -699,7 +690,6 @@ export default function App() {
     return () => unsubscribe();
   }, [useLocalStorage, isAuthLoading]);
 
-  // --- DATA LOADING ---
   useEffect(() => {
     if (!user && !useLocalStorage) return;
     if (useLocalStorage) {
@@ -747,24 +737,64 @@ export default function App() {
   }, [watches, bracelets, useLocalStorage]);
 
   // --- ACTIONS ---
+  // MODIFICATION : Support multi-upload pour les montres
   const handleImageUpload = async (e, type) => {
     const file = e.target.files[0];
-    if (file) {
-      try { 
-        const base64 = await compressImage(file); 
-        if (type === 'watch') setWatchForm(prev => ({ ...prev, image: base64 }));
-        else setBraceletForm(prev => ({ ...prev, image: base64 }));
-      } catch (err) { alert("Erreur image"); }
-    }
+    if (!file) return;
+
+    try { 
+      const base64 = await compressImage(file); 
+      
+      if (type === 'watch') {
+          // Gestion des 3 images max
+          setWatchForm(prev => {
+              const currentImages = prev.images || (prev.image ? [prev.image] : []);
+              if (currentImages.length >= 3) {
+                  alert("Maximum 3 photos par montre.");
+                  return prev;
+              }
+              // Ajout à la liste et mise à jour de l'image principale si c'est la première
+              const newImages = [...currentImages, base64];
+              return { ...prev, images: newImages, image: newImages[0] };
+          });
+      }
+      else {
+          setBraceletForm(prev => ({ ...prev, image: base64 }));
+      }
+    } catch (err) { alert("Erreur image : " + err.message); }
+  };
+
+  const removeImage = (index) => {
+      setWatchForm(prev => {
+          const currentImages = [...(prev.images || [])];
+          currentImages.splice(index, 1);
+          return { ...prev, images: currentImages, image: currentImages[0] || null };
+      });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const id = editingId || Date.now().toString();
     const isWatch = editingType === 'watch';
-    const data = isWatch 
-      ? { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice), sellingPrice: Number(watchForm.sellingPrice), dateAdded: new Date().toISOString() }
-      : { ...braceletForm, id, dateAdded: new Date().toISOString() };
+    
+    // Normalisation des données montre (legacy 'image' vs new 'images')
+    let data;
+    if (isWatch) {
+        const images = watchForm.images && watchForm.images.length > 0 
+                       ? watchForm.images 
+                       : (watchForm.image ? [watchForm.image] : []);
+        data = { 
+            ...watchForm, 
+            id, 
+            purchasePrice: Number(watchForm.purchasePrice), 
+            sellingPrice: Number(watchForm.sellingPrice), 
+            dateAdded: new Date().toISOString(),
+            images: images,
+            image: images[0] || null // Maintenir la rétrocompatibilité pour l'instant
+        };
+    } else {
+        data = { ...braceletForm, id, dateAdded: new Date().toISOString() };
+    }
 
     if (useLocalStorage) {
       if (isWatch) setWatches(prev => editingId ? prev.map(w => w.id === id ? data : w) : [data, ...prev]);
@@ -814,7 +844,10 @@ export default function App() {
 
   const closeForm = (data) => { 
     if (editingType === 'watch') {
-        if(selectedWatch) setSelectedWatch(data);
+        if(selectedWatch) {
+            setSelectedWatch(data);
+            setViewedImageIndex(0); // Reset galerie view
+        }
         setView(data.status === 'wishlist' ? 'wishlist' : 'list');
     } else {
         setView('list');
@@ -835,7 +868,11 @@ export default function App() {
   };
 
   const handleEdit = (item, type) => { 
-      if (type === 'watch') setWatchForm({ ...DEFAULT_WATCH_STATE, ...item });
+      if (type === 'watch') {
+          // Migration à la volée pour l'édition : s'assurer que images existe
+          const safeImages = item.images || (item.image ? [item.image] : []);
+          setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages });
+      }
       else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item });
       setEditingType(type);
       setEditingId(item.id); 
@@ -872,14 +909,12 @@ export default function App() {
     let sorted = [...filtered];
 
     if (sortOrder === 'priceAsc') {
-        // Tri prix croissant (dépend du status: achat pour collection, vente pour reste)
         sorted.sort((a, b) => {
             const priceA = a.status === 'collection' ? (a.purchasePrice || 0) : (a.sellingPrice || a.purchasePrice || 0);
             const priceB = b.status === 'collection' ? (b.purchasePrice || 0) : (b.sellingPrice || b.purchasePrice || 0);
             return priceA - priceB;
         });
     } else if (sortOrder === 'priceDesc') {
-        // Tri prix décroissant
         sorted.sort((a, b) => {
             const priceA = a.status === 'collection' ? (a.purchasePrice || 0) : (a.sellingPrice || a.purchasePrice || 0);
             const priceB = b.status === 'collection' ? (b.purchasePrice || 0) : (b.sellingPrice || b.purchasePrice || 0);
@@ -890,7 +925,6 @@ export default function App() {
     } else if (sortOrder === 'random') {
         sorted.sort(() => Math.random() - 0.5);
     } else {
-        // Default: Date (Décroissant)
         sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
     }
     return sorted;
@@ -930,7 +964,7 @@ export default function App() {
     return (
       <div className="pb-24 px-3 space-y-2">
         <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-100 mb-2">
-            <h1 className="text-xl font-bold text-slate-800 tracking-tight px-1">Finances</h1>
+            <h1 className="text-xl font-serif font-bold text-slate-800 tracking-wide px-1">Finances</h1>
         </div>
         {financeDetail === 'collection' && <FinanceDetailList title="Détail Collection" items={collectionWatches} onClose={() => setFinanceDetail(null)} />}
         {financeDetail === 'forsale' && <FinanceDetailList title="Détail En Vente" items={forSaleWatches} onClose={() => setFinanceDetail(null)} />}
@@ -948,21 +982,32 @@ export default function App() {
 
   // --- RENDER FRIENDS ---
   const renderFriendDetail = (watch) => {
+      // Compatibilité multi-images ami
+      const displayImages = watch.images && watch.images.length > 0 ? watch.images : (watch.image ? [watch.image] : []);
+      const [friendImgIndex, setFriendImgIndex] = useState(0);
+
       return (
           <div className="fixed inset-0 z-[70] bg-white flex flex-col animate-in slide-in-from-bottom-10">
               <div className="p-4 border-b flex items-center justify-between bg-slate-50">
-                  <h3 className="font-bold text-slate-800">Détail Montre</h3>
+                  <h3 className="font-serif font-bold text-slate-800 tracking-wide">Détail Montre</h3>
                   <button onClick={() => setSelectedWatch(null)} className="p-2 bg-white rounded-full shadow-sm"><X size={20}/></button>
               </div>
               <div className="p-6 flex-1 overflow-y-auto space-y-6">
                   <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden relative">
-                       {watch.image ? <img src={watch.image} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><Camera size={48} className="text-slate-300"/></div>}
+                       {displayImages[friendImgIndex] ? <img src={displayImages[friendImgIndex]} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><Camera size={48} className="text-slate-300"/></div>}
                   </div>
+                  {displayImages.length > 1 && (
+                      <div className="flex gap-2 justify-center">
+                          {displayImages.map((_, i) => (
+                              <button key={i} onClick={() => setFriendImgIndex(i)} className={`w-2 h-2 rounded-full transition-all ${i === friendImgIndex ? 'bg-indigo-600 w-4' : 'bg-slate-300'}`}/>
+                          ))}
+                      </div>
+                  )}
+
                   <div>
-                      <h2 className="text-2xl font-bold text-slate-900">{watch.brand}</h2>
-                      <p className="text-lg text-slate-600">{watch.model}</p>
+                      <h2 className="text-2xl font-serif font-bold text-slate-900 tracking-wide">{watch.brand}</h2>
+                      <p className="text-lg text-slate-600 font-light tracking-wide">{watch.model}</p>
                       {watch.reference && <div className="mt-1 text-xs text-slate-400 font-mono">{watch.reference}</div>}
-                      {/* LIMITEE AMI */}
                       {watch.isLimitedEdition && (
                         <div className="mt-2 inline-flex items-center px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">
                              EDITION LIMITÉE {watch.limitedNumber && watch.limitedTotal ? `${watch.limitedNumber} / ${watch.limitedTotal}` : ''}
@@ -974,11 +1019,8 @@ export default function App() {
                       <DetailItem icon={Calendar} label="Année" value={watch.year} />
                       <DetailItem icon={MovementIcon} label="Mouvement" value={watch.movement} />
                       <DetailItem icon={Droplets} label="Étanchéité" value={watch.waterResistance} />
-                      {watch.powerReserve && <DetailItem icon={Zap} label="Réserve" value={watch.powerReserve + ' h'} />}
-                      {watch.jewels && <DetailItem icon={Gem} label="Rubis" value={watch.jewels} />}
                   </div>
                   
-                  {/* PRIX VISIBLE UNIQUEMENT POUR SOUHAITS ET VENTE */}
                   {(watch.status === 'wishlist' || watch.status === 'forsale') && (
                     <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100 flex justify-between items-center">
                         <span className="text-xs font-bold uppercase text-slate-400">
@@ -988,13 +1030,6 @@ export default function App() {
                             {formatPrice(watch.status === 'forsale' ? (watch.sellingPrice || watch.purchasePrice) : watch.purchasePrice)}
                         </span>
                     </div>
-                  )}
-
-                  {/* LIEN WEB (Nouveauté v40.1) */}
-                  {watch.link && (
-                      <a href={watch.link} target="_blank" rel="noreferrer" className="mt-2 flex w-full items-center justify-center p-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-colors">
-                          <ExternalLink size={16} className="mr-2"/> Voir le site web
-                      </a>
                   )}
 
                   <div className="bg-blue-50 p-4 rounded-xl text-center text-sm text-blue-800 font-medium mt-4">
@@ -1007,7 +1042,6 @@ export default function App() {
 
   const renderFriends = () => {
       if (viewingFriend) {
-          // Vue collection ami
           const friendCollection = friendWatches.filter(w => w.status === 'collection');
           const friendSale = friendWatches.filter(w => w.status === 'forsale');
           const friendWish = friendWatches.filter(w => w.status === 'wishlist');
@@ -1017,7 +1051,7 @@ export default function App() {
                   <div className="sticky top-0 bg-white/95 backdrop-blur z-10 px-4 py-3 border-b border-slate-100 flex items-center gap-3">
                       <button onClick={() => setViewingFriend(null)} className="p-2 -ml-2 hover:bg-slate-100 rounded-full"><ChevronLeft/></button>
                       <div>
-                          <h1 className="font-bold text-slate-800 leading-tight">{viewingFriend.name}</h1>
+                          <h1 className="font-serif font-bold text-slate-800 leading-tight tracking-wide">{viewingFriend.name}</h1>
                           <p className="text-xs text-slate-500">Collection partagée</p>
                       </div>
                   </div>
@@ -1027,17 +1061,20 @@ export default function App() {
                       <div>
                           <h3 className="font-bold text-sm text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2"><Watch size={14}/> Collection ({friendCollection.length})</h3>
                           <div className="grid grid-cols-2 gap-3">
-                              {friendCollection.map(w => (
+                              {friendCollection.map(w => {
+                                  // Fallback ami image
+                                  const img = w.images?.[0] || w.image;
+                                  return (
                                   <div key={w.id} onClick={() => setSelectedWatch(w)} className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 active:scale-95 transition-transform">
                                       <div className="aspect-square bg-slate-50 relative">
-                                          {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Activity size={16}/></div>}
+                                          {img ? <img src={img} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Activity size={16}/></div>}
                                       </div>
                                       <div className="p-2">
                                           <div className="font-bold text-sm truncate">{w.brand}</div>
                                           <div className="text-xs text-slate-500 truncate">{w.model}</div>
                                       </div>
                                   </div>
-                              ))}
+                              )})}
                               {friendCollection.length === 0 && <div className="col-span-2 text-center text-xs text-slate-400 py-4 bg-slate-100 rounded-xl border border-dashed">Vide</div>}
                           </div>
                       </div>
@@ -1046,12 +1083,12 @@ export default function App() {
                       <div>
                           <h3 className="font-bold text-sm text-amber-600 uppercase tracking-wider mb-3 flex items-center gap-2"><TrendingUp size={14}/> En Vente ({friendSale.length})</h3>
                           <div className="grid grid-cols-2 gap-3">
-                              {friendSale.map(w => (
+                              {friendSale.map(w => {
+                                  const img = w.images?.[0] || w.image;
+                                  return (
                                   <div key={w.id} onClick={() => setSelectedWatch(w)} className="bg-white rounded-xl shadow-sm overflow-hidden border border-amber-100 active:scale-95 transition-transform">
                                       <div className="aspect-square bg-amber-50 relative">
-                                          {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-amber-300"><Activity size={16}/></div>}
-                                          
-                                          {/* MODIF: PRIX SUR LA PHOTO (Badge vert pour être visible) */}
+                                          {img ? <img src={img} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-amber-300"><Activity size={16}/></div>}
                                           <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm">
                                             {formatPrice(w.sellingPrice || w.purchasePrice)}
                                           </div>
@@ -1062,7 +1099,7 @@ export default function App() {
                                           <div className="text-xs text-slate-500 truncate">{w.model}</div>
                                       </div>
                                   </div>
-                              ))}
+                              )})}
                               {friendSale.length === 0 && <div className="col-span-2 text-center text-xs text-slate-400 py-4 bg-slate-100 rounded-xl border border-dashed">Rien à vendre</div>}
                           </div>
                       </div>
@@ -1071,21 +1108,22 @@ export default function App() {
                       <div>
                           <h3 className="font-bold text-sm text-rose-500 uppercase tracking-wider mb-3 flex items-center gap-2"><Heart size={14}/> Souhaits ({friendWish.length})</h3>
                           <div className="space-y-2">
-                              {friendWish.map(w => (
+                              {friendWish.map(w => {
+                                  const img = w.images?.[0] || w.image;
+                                  return (
                                   <div key={w.id} onClick={() => setSelectedWatch(w)} className="flex items-center bg-white p-2 rounded-xl border border-rose-100 shadow-sm cursor-pointer hover:bg-rose-50/50 transition-colors">
                                       <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 mr-3 relative">
-                                          {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={14}/></div>}
+                                          {img ? <img src={img} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={14}/></div>}
                                       </div>
                                       <div className="flex-1 min-w-0">
                                           <div className="font-bold text-sm text-slate-800 truncate">{w.brand}</div>
                                           <div className="text-xs text-slate-500 truncate">{w.model}</div>
                                       </div>
-                                      {/* MODIF: PRIX AFFICHE DANS LA LISTE */}
                                       <div className="font-bold text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg whitespace-nowrap ml-2">
                                         {formatPrice(w.purchasePrice)}
                                       </div>
                                   </div>
-                              ))}
+                              )})}
                               {friendWish.length === 0 && <div className="text-center text-xs text-slate-400 py-4 bg-slate-100 rounded-xl border border-dashed">Aucun souhait</div>}
                           </div>
                       </div>
@@ -1099,7 +1137,7 @@ export default function App() {
       return (
           <div className="pb-24 px-3">
               <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-100 mb-4">
-                  <h1 className="text-xl font-bold text-slate-800 tracking-tight px-1">Mes Amis</h1>
+                  <h1 className="text-xl font-serif font-bold text-slate-800 tracking-wide px-1">Mes Amis</h1>
               </div>
               
               {/* 1. LISTE DES DEMANDES EN ATTENTE */}
@@ -1151,7 +1189,7 @@ export default function App() {
                           onChange={(e) => setAddFriendId(e.target.value)}
                        />
                        <button 
-                          onClick={() => { if(addFriendId) saveFriend({id: addFriendId, name: `Ami ${addFriendId.substr(0,4)}...`}); }}
+                          onClick={() => { if(addFriendId) sendFriendRequest(); }}
                           className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800"
                        >
                            <UserPlus size={20} />
@@ -1210,7 +1248,7 @@ export default function App() {
               <button 
                 onClick={handleGoogleLogin} 
                 disabled={isAuthLoading}
-                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border border-white/20 text-xs font-medium transition-all active:scale-95 ${isConfigMissing ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border text-xs font-medium transition-all active:scale-95 ${isConfigMissing ? 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' : 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50'}`}
               >
                 {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : (isConfigMissing ? <Settings size={14} /> : <LogIn size={14} />)}
                 <span className="hidden sm:inline">{isConfigMissing ? 'Configurer Cloud' : 'Connexion'}</span>
@@ -1225,7 +1263,6 @@ export default function App() {
         ) : (
           <div className="relative">
             <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-white/50 transition-transform active:scale-95">
-              {/* Ajout du referrerPolicy pour éviter les 403 de Google */}
               {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
             </button>
             {showProfileMenu && (
@@ -1251,16 +1288,24 @@ export default function App() {
 
   const renderBox = () => (
     <div className="flex flex-col items-center justify-center h-full min-h-[80vh] px-8 relative bg-slate-50 text-slate-800 overflow-hidden">
-      {/* BACKGROUND GRAPHIQUE */}
       <GraphicBackground />
 
       {renderHeaderControls()}
-      <div className="mb-4 text-center z-10"><LiveClock /></div>
+      
+      <div className="z-10 mt-12 mb-2 text-center">
+          <h1 className="font-serif text-3xl sm:text-4xl text-slate-900 tracking-[0.3em] uppercase font-light">
+              Mes Montres
+          </h1>
+          <div className="w-16 h-0.5 bg-slate-900 mx-auto mt-4 opacity-20"></div>
+      </div>
+
+      <div className="mb-8 text-center z-10 scale-75 opacity-80"><LiveClock /></div>
+      
       <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10" title="Ouvrir">
         <WatchBoxLogo isOpen={isBoxOpening} />
       </div>
-      <div className="absolute bottom-24 flex flex-col items-center z-10">
-        <p className="text-slate-800 font-medium text-sm mb-2 tracking-wide shadow-sm">{activeWatchesCount} {activeWatchesCount > 1 ? 'montres' : 'montre'}</p>
+      <div className="mt-12 flex flex-col items-center z-10 pb-20">
+        <p className="text-slate-800 font-serif text-sm mb-2 tracking-widest shadow-sm uppercase opacity-70">{activeWatchesCount} {activeWatchesCount > 1 ? 'pièces' : 'pièce'}</p>
         {!firebaseReady && (<div className="inline-flex items-center justify-center text-amber-600 text-xs bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 backdrop-blur-sm"><WifiOff size={10} className="mr-1"/> Mode Local</div>)}
         
         {error && !useLocalStorage && (
@@ -1281,9 +1326,8 @@ export default function App() {
   const renderHeader = (title, withFilters = false) => (
     <div className="sticky top-0 bg-white z-10 pt-2 pb-2 px-1 shadow-sm border-b border-slate-100">
       <div className="flex justify-between items-center px-2 mb-2">
-        <h1 className="text-xl font-bold text-slate-800 tracking-tight">{title}</h1>
+        <h1 className="text-xl font-serif font-bold text-slate-800 tracking-wide">{title}</h1>
         <div className="flex items-center gap-2">
-            {/* NOUVEAU SELECTEUR DE TRI (V40.4) */}
             {(title === "Collection" || title === "Inventaire" || title === "Galerie") && (
                 <div className="relative">
                     <select 
@@ -1353,19 +1397,21 @@ export default function App() {
       <div className="pb-24">
         {renderHeader("Collection", true)}
         <div className="grid grid-cols-2 gap-3 px-3 mt-3">
-          {displayWatches.map(w => (
-            <Card key={w.id} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
+          {displayWatches.map(w => {
+            // Priorité à la première image de la liste, sinon fallback sur l'ancienne propriété single image
+            const displayImage = w.images && w.images.length > 0 ? w.images[0] : w.image;
+
+            return (
+            <Card key={w.id} onClick={() => { setSelectedWatch(w); setViewedImageIndex(0); setView('detail'); }}>
               <div className="aspect-square bg-slate-50 relative">
-                {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
+                {displayImage ? <img src={displayImage} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
                 
-                {/* PRIX D'ACHAT (Badge noir haut-gauche) - POUR TOUS LES STATUTS SI DISPO */}
                 {(w.purchasePrice) && (
                     <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-white/20">
                         {formatPrice(w.purchasePrice)}
                     </div>
                 )}
 
-                {/* PRIX DE VENTE / STATUT (Haut Droite) */}
                 <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm border border-slate-100 flex flex-col items-end">
                     {w.status === 'sold' ? (
                         <>
@@ -1373,26 +1419,30 @@ export default function App() {
                             <span className="text-[9px] text-emerald-600 leading-none">{formatPrice(w.sellingPrice)}</span>
                         </>
                     ) : (
-                        // Pour Collection et En Vente : on affiche le prix de vente (ou achat si pas de vente)
                         formatPrice(w.sellingPrice || w.purchasePrice)
                     )}
                 </div>
 
-                {/* VISIBILITÉ INSTANTANÉE (BAS DROITE) - V41.3 */}
-                {/* On utilise un z-index élevé et stopPropagation pour que le clic sur l'oeil ne déclenche pas l'ouverture de la fiche */}
                 <div 
                     className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer hover:scale-110 transition-transform z-10"
                     onClick={(e) => { e.stopPropagation(); toggleVisibility(w); }}
                 >
                     {w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}
                 </div>
+                
+                {/* INDICATEUR MULTI-PHOTOS */}
+                {w.images && w.images.length > 1 && (
+                    <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                        <ImageIcon size={10} /> {w.images.length}
+                    </div>
+                )}
               </div>
               <div className="p-3">
-                  <div className="font-bold text-sm truncate text-slate-800">{w.brand}</div>
+                  <div className="font-bold font-serif text-sm truncate text-slate-800 tracking-wide">{w.brand}</div>
                   <div className="text-xs text-slate-500 truncate">{w.model}</div>
               </div>
             </Card>
-          ))}
+          )})}
         </div>
       </div>
     );
@@ -1404,7 +1454,6 @@ export default function App() {
       <div className="pb-24">
         {renderHeader("Souhaits")}
         <div className="space-y-3 px-3 mt-3">
-          {/* BOUTON D'AJOUT EXPLICITE EN HAUT DE LISTE */}
           <button 
             onClick={() => openAdd()}
             className="w-full py-4 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center text-slate-400 font-medium hover:border-rose-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
@@ -1412,16 +1461,17 @@ export default function App() {
             <Plus className="mr-2" size={20}/> Ajouter un souhait
           </button>
 
-          {wishes.map(w => (
+          {wishes.map(w => {
+            const displayImage = w.images && w.images.length > 0 ? w.images[0] : w.image;
+            return (
             <Card key={w.id} className="flex p-3 gap-3 relative" onClick={() => { setSelectedWatch(w); setView('detail'); }}>
                 <div className="w-20 h-20 bg-slate-100 rounded-lg flex-shrink-0 overflow-hidden">
-                    {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}
+                    {displayImage ? <img src={displayImage} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}
                 </div>
                 <div className="flex-1 flex flex-col justify-between py-1">
-                    <div><h3 className="font-bold text-slate-800">{w.brand}</h3><p className="text-xs text-slate-500">{w.model}</p></div>
+                    <div><h3 className="font-bold font-serif text-slate-800 tracking-wide">{w.brand}</h3><p className="text-xs text-slate-500">{w.model}</p></div>
                     <div className="flex justify-between items-end">
                         <div className="font-semibold text-emerald-600">{formatPrice(w.purchasePrice)}</div>
-                        {/* Sécurisation du bouton lien externe : z-index plus élevé et gestion d'événement stricte */}
                         {w.link && (
                             <a 
                                 href={w.link} 
@@ -1436,7 +1486,7 @@ export default function App() {
                     </div>
                 </div>
             </Card>
-          ))}
+          )})}
         </div>
       </div>
     );
@@ -1445,14 +1495,16 @@ export default function App() {
   const renderDetail = () => {
     if(!selectedWatch) return null;
     const w = selectedWatch;
+    // Construction de la liste d'images unifiée (support ancien format et nouveau format)
+    const displayImages = w.images && w.images.length > 0 ? w.images : (w.image ? [w.image] : []);
     const compatibleBracelets = w.strapWidth ? bracelets.filter(b => b.width === w.strapWidth) : [];
+    
     return (
       <div className="pb-24 bg-white min-h-screen">
         <div className="sticky top-0 bg-white/90 backdrop-blur p-4 flex items-center justify-between border-b z-10">
           <button onClick={() => { setSelectedWatch(null); setView(w.status === 'wishlist' ? 'wishlist' : 'list'); }}><ChevronLeft/></button>
-          <span className="font-bold text-slate-800">Détails</span>
+          <span className="font-bold font-serif text-slate-800 tracking-wide">Détails</span>
           <div className="flex gap-2">
-            {/* TOGGLE VISIBILITÉ DANS LE DÉTAIL */}
             <button 
                 onClick={() => toggleVisibility(w)}
                 className={`p-2 rounded-full transition-colors ${w.publicVisible ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}
@@ -1465,15 +1517,44 @@ export default function App() {
         </div>
         <div className="p-4 space-y-6">
           <div className="space-y-4">
-              <div className="aspect-square bg-slate-50 rounded-2xl overflow-hidden shadow-sm border border-slate-100">
-                {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className="text-slate-300"/></div>}
+              {/* GALERIE PRINCIPALE */}
+              <div className="aspect-square bg-slate-50 rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative group">
+                {displayImages[viewedImageIndex] ? (
+                    <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"/>
+                ) : (
+                    <div className="flex h-full items-center justify-center"><Camera size={48} className="text-slate-300"/></div>
+                )}
+                
+                {/* INDICATEUR NOMBRE PHOTOS */}
+                {displayImages.length > 1 && (
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        {displayImages.map((_, i) => (
+                            <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === viewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>
+                        ))}
+                    </div>
+                )}
               </div>
+
+              {/* MINIATURES GALERIE (Si plus d'une photo) */}
+              {displayImages.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                      {displayImages.map((img, i) => (
+                          <div 
+                            key={i} 
+                            onClick={() => setViewedImageIndex(i)}
+                            className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 transition-all ${i === viewedImageIndex ? 'border-indigo-500 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                          >
+                              <img src={img} className="w-full h-full object-cover" />
+                          </div>
+                      ))}
+                  </div>
+              )}
+
               <div>
-                <h1 className="text-3xl font-bold text-slate-900 leading-tight">{w.brand}</h1>
-                <p className="text-xl text-slate-600 font-medium">{w.model}</p>
+                <h1 className="text-3xl font-serif font-bold text-slate-900 leading-tight tracking-wide">{w.brand}</h1>
+                <p className="text-xl text-slate-600 font-medium font-serif tracking-wide">{w.model}</p>
                 {w.reference && <span className="text-xs bg-slate-100 px-2 py-1 rounded mt-2 inline-block border font-mono text-slate-500">REF: {w.reference}</span>}
                 
-                {/* BADGE EDITION LIMITEE DANS DETAIL */}
                 {w.isLimitedEdition && (
                      <div className="mt-2 inline-flex items-center px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full shadow-sm">
                          EDITION LIMITÉE {w.limitedNumber && w.limitedTotal ? `${w.limitedNumber} / ${w.limitedTotal}` : ''}
@@ -1568,10 +1649,12 @@ export default function App() {
                             <span className="text-xs opacity-70 bg-white/50 px-2 py-0.5 rounded-full">{list.length}</span>
                         </div>
                         <div className="divide-y divide-slate-100">
-                            {list.map(w => (
+                            {list.map(w => {
+                                const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image;
+                                return (
                                 <div key={w.id} onClick={() => { setSelectedWatch(w); setView('detail'); }} className="flex items-center p-2 hover:bg-slate-50 cursor-pointer transition-colors">
                                     <div className="w-8 h-8 bg-slate-100 rounded-md overflow-hidden flex-shrink-0 mr-3 border border-slate-100">
-                                        {w.image ? <img src={w.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera size={14}/></div>}
+                                        {thumb ? <img src={thumb} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera size={14}/></div>}
                                     </div>
                                     <div className="flex-1 min-w-0 flex items-baseline gap-1 overflow-hidden">
                                         <span className="font-bold text-sm text-slate-900 whitespace-nowrap">{w.brand}</span>
@@ -1579,7 +1662,7 @@ export default function App() {
                                     </div>
                                     <ChevronLeft className="text-slate-300 rotate-180 flex-shrink-0 ml-1" size={14}/>
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </div>
                 );
@@ -1597,7 +1680,7 @@ export default function App() {
       <div className="sticky top-0 bg-white z-10 pt-2 pb-2 px-1 shadow-sm border-b border-slate-100 mb-2">
          {/* LIGNE 1 : TITRE + TRI + RECHERCHE */}
          <div className="flex justify-between items-center px-2 mb-2">
-            <h1 className="text-xl font-bold text-slate-800 tracking-tight">Galerie</h1>
+            <h1 className="text-xl font-serif font-bold text-slate-800 tracking-wide">Galerie</h1>
             <div className="flex items-center gap-2">
                 {/* SELECTEUR DE TRI RÉINTÉGRÉ */}
                 <div className="relative">
@@ -1654,20 +1737,22 @@ export default function App() {
 
       <div className="grid grid-cols-3 gap-1 mt-2 px-1">
           {filteredWatches.filter(w => {
-             if (!w.image) return false;
+             if (!w.image && (!w.images || w.images.length === 0)) return false;
              if (w.status === 'collection' && showGalleryCollection) return true;
              if (w.status === 'forsale' && showGalleryForsale) return true;
              if (w.status === 'wishlist' && showGalleryWishlist) return true;
              if (w.status === 'sold' && showGallerySold) return true;
              return false;
-          }).map(w => (
+          }).map(w => {
+              const displayImage = w.images && w.images.length > 0 ? w.images[0] : w.image;
+              return (
               <div key={w.id} className="aspect-square bg-slate-100 rounded overflow-hidden relative cursor-pointer" onClick={() => { setSelectedWatch(w); setView('detail'); }}>
-                  <img src={w.image} className="w-full h-full object-cover" />
+                  <img src={displayImage} className="w-full h-full object-cover" />
                   <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] p-1 truncate">
                     <span className="font-bold">{w.brand}</span> {w.model}
                   </div>
               </div>
-          ))}
+          )})}
           {filteredWatches.length === 0 && <div className="col-span-3 text-center text-slate-400 py-8 text-sm">Aucune photo disponible</div>}
       </div>
     </div>
@@ -1675,9 +1760,11 @@ export default function App() {
 
   const renderForm = () => {
       const isWatch = editingType === 'watch';
+      const currentImages = isWatch ? (watchForm.images || (watchForm.image ? [watchForm.image] : [])) : [];
+      
       return (
         <div className="pb-24 p-4">
-          <div className="flex justify-between items-center mb-6 mt-2"><h1 className="text-2xl font-bold">{editingId ? 'Modifier' : 'Ajouter'} {isWatch ? 'Montre' : 'Bracelet'}</h1><button onClick={() => handleCancelForm()}><X/></button></div>
+          <div className="flex justify-between items-center mb-6 mt-2"><h1 className="text-2xl font-bold font-serif tracking-wide">{editingId ? 'Modifier' : 'Ajouter'} {isWatch ? 'Montre' : 'Bracelet'}</h1><button onClick={() => handleCancelForm()}><X/></button></div>
           {!editingId && filter === 'all' && (
               <div className="flex mb-6 p-1 bg-slate-100 rounded-lg">
                   <button onClick={() => setEditingType('watch')} className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${isWatch ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Montre</button>
@@ -1685,10 +1772,43 @@ export default function App() {
               </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <label className="block w-full aspect-video bg-slate-100 rounded-xl flex items-center justify-center border-2 border-dashed cursor-pointer overflow-hidden hover:bg-slate-50">
-              {(isWatch ? watchForm.image : braceletForm.image) ? <img src={isWatch ? watchForm.image : braceletForm.image} className="w-full h-full object-cover"/> : <div className="text-center text-slate-400"><Camera className="mx-auto mb-2"/><span className="text-xs">Ajouter Photo</span></div>}
-              <input type="file" onChange={(e) => handleImageUpload(e, isWatch ? 'watch' : 'bracelet')} className="hidden"/>
-            </label>
+            
+            {/* GESTION MULTI-PHOTOS POUR MONTRES */}
+            {isWatch ? (
+                <div className="grid grid-cols-3 gap-3">
+                    {/* Affiche les images existantes */}
+                    {currentImages.map((img, idx) => (
+                        <div key={idx} className="aspect-square rounded-xl overflow-hidden relative border border-slate-200 group">
+                            <img src={img} className="w-full h-full object-cover" />
+                            <button 
+                                type="button" 
+                                onClick={() => removeImage(idx)}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-80 hover:opacity-100"
+                            >
+                                <X size={12}/>
+                            </button>
+                            {idx === 0 && <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] text-center py-0.5 font-bold">PRINCIPALE</div>}
+                        </div>
+                    ))}
+                    
+                    {/* Bouton d'ajout si < 3 photos */}
+                    {currentImages.length < 3 && (
+                        <label className="aspect-square bg-slate-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300 cursor-pointer hover:bg-slate-100 hover:border-indigo-400 transition-colors">
+                            <Camera className="text-slate-400 mb-1" size={24}/>
+                            <span className="text-[10px] font-bold text-slate-500">Ajouter</span>
+                            <span className="text-[9px] text-slate-400">{currentImages.length}/3</span>
+                            <input type="file" onChange={(e) => handleImageUpload(e, 'watch')} className="hidden" accept="image/*"/>
+                        </label>
+                    )}
+                </div>
+            ) : (
+                // GESTION SIMPLE POUR BRACELET
+                <label className="block w-full aspect-video bg-slate-100 rounded-xl flex items-center justify-center border-2 border-dashed cursor-pointer overflow-hidden hover:bg-slate-50">
+                  {braceletForm.image ? <img src={braceletForm.image} className="w-full h-full object-cover"/> : <div className="text-center text-slate-400"><Camera className="mx-auto mb-2"/><span className="text-xs">Ajouter Photo</span></div>}
+                  <input type="file" onChange={(e) => handleImageUpload(e, 'bracelet')} className="hidden"/>
+                </label>
+            )}
+
             {isWatch ? (
                 <>
                     <div className="space-y-3">
@@ -1859,7 +1979,6 @@ export default function App() {
             {view === 'friends' && renderFriends()}
         </div>
         
-        {/* BANNIÈRE AIDE DOMAINE */}
         {authDomainError && (
             <div className="fixed inset-0 z-[150] bg-black/80 flex items-center justify-center p-6">
                 <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
@@ -1900,10 +2019,7 @@ export default function App() {
           </nav>
         )}
         
-        {/* MODALE CONFIG */}
         {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} />}
-        
-        {/* MODALE AIDE REGLES */}
         {showRulesHelp && <RulesHelpModal onClose={() => setShowRulesHelp(false)} />}
       </div>
     </div>
