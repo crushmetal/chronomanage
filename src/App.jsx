@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v42.0"; // Version avec Galerie Multi-Photos HD
+const APP_VERSION = "v42.1"; // Ajout Scroll Fix
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -446,7 +446,7 @@ export default function App() {
   const [editingType, setEditingType] = useState('watch');
 
   const [selectedWatch, setSelectedWatch] = useState(null);
-  const [viewedImageIndex, setViewedImageIndex] = useState(0); // NOUVEAU: Index image vue en détail
+  const [viewedImageIndex, setViewedImageIndex] = useState(0); 
 
   const [financeDetail, setFinanceDetail] = useState(null);
 
@@ -464,6 +464,16 @@ export default function App() {
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
+
+  // SCROLL REF
+  const scrollRef = useRef(null);
+
+  // --- AUTO SCROLL TOP ON VIEW CHANGE ---
+  useEffect(() => {
+    if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+    }
+  }, [view, viewingFriend, financeDetail]);
 
   // --- RE-TENTATIVE INIT AU MONTAGE ---
   useEffect(() => {
@@ -578,6 +588,8 @@ export default function App() {
       const myPublicWatches = watches.filter(w => w.publicVisible !== false);
       setFriendWatches(myPublicWatches);
       setViewingFriend({ id: user.uid, name: 'Mon Profil Public' });
+      // FORCE SCROLL UP
+      if(scrollRef.current) scrollRef.current.scrollTop = 0;
   };
 
   const loadFriendCollection = async (friend) => {
@@ -1967,7 +1979,7 @@ export default function App() {
   return (
     <div className="bg-slate-50 min-h-screen font-sans text-slate-900">
       <div className="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative">
-        <div className="h-full overflow-y-auto p-4 scrollbar-hide">
+        <div ref={scrollRef} className="h-full overflow-y-auto p-4 scrollbar-hide">
             {view === 'box' && renderBox()}
             {view === 'finance' && renderFinance()}
             {view === 'list' && renderList()}
