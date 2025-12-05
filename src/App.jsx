@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v42.1"; // Ajout Scroll Fix
+const APP_VERSION = "v42.2"; // Ajout Lightbox
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -44,8 +44,8 @@ const DEFAULT_WATCH_STATE = {
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', 
-    image: null, // Legacy (gardé pour compatibilité)
-    images: []   // Nouveau : Liste des photos (max 3)
+    image: null, 
+    images: []   
 };
 
 const DEFAULT_BRACELET_STATE = {
@@ -115,7 +115,6 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
 };
 
-// MODIFICATION : Amélioration de la qualité et taille
 const compressImage = (file) => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -125,7 +124,6 @@ const compressImage = (file) => {
       img.src = event.target.result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        // AUGMENTATION DE LA TAILLE MAX (600 -> 800)
         const MAX_WIDTH = 800; 
         let width = img.width;
         let height = img.height;
@@ -139,7 +137,6 @@ const compressImage = (file) => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        // AUGMENTATION DE LA QUALITÉ JPEG (0.7 -> 0.85)
         resolve(canvas.toDataURL('image/jpeg', 0.85));
       };
     };
@@ -274,7 +271,6 @@ const FinanceDetailList = ({ title, items, onClose }) => {
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
              {sortedItems.map(w => {
-               // Fallback image : Priorité au tableau 'images', sinon champ 'image'
                const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image;
                const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
                return (
@@ -438,6 +434,9 @@ export default function App() {
   const [showGalleryForsale, setShowGalleryForsale] = useState(true);
   const [showGallerySold, setShowGallerySold] = useState(false);
   const [showGalleryWishlist, setShowGalleryWishlist] = useState(false);
+
+  // NOUVEAU ETAT LIGHTBOX (PLEIN ECRAN)
+  const [fullScreenImage, setFullScreenImage] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('box'); 
@@ -951,6 +950,21 @@ export default function App() {
   const filteredWatches = getFilteredAndSortedWatches;
   const filteredBracelets = getFilteredBracelets();
 
+  // --- COMPOSANT RENDER PLEIN ECRAN ---
+  const renderFullScreenImage = () => {
+    if (!fullScreenImage) return null;
+    return (
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-2 animate-in fade-in duration-200" onClick={() => setFullScreenImage(null)}>
+            <button className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/50 rounded-full p-2"><X size={32}/></button>
+            <img 
+                src={fullScreenImage} 
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" 
+                onClick={(e) => e.stopPropagation()} 
+            />
+        </div>
+    );
+  };
+
   // --- RENDER FINANCE ---
   const renderFinance = () => {
     const collectionWatches = watches.filter(w => w.status === 'collection');
@@ -1005,8 +1019,14 @@ export default function App() {
                   <button onClick={() => setSelectedWatch(null)} className="p-2 bg-white rounded-full shadow-sm"><X size={20}/></button>
               </div>
               <div className="p-6 flex-1 overflow-y-auto space-y-6">
-                  <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden relative">
+                  {/* AJOUT CLICK FULLSCREEN ICI AUSSI */}
+                  <div 
+                    className="aspect-square bg-slate-100 rounded-xl overflow-hidden relative cursor-pointer"
+                    onClick={() => setFullScreenImage(displayImages[friendImgIndex])}
+                  >
                        {displayImages[friendImgIndex] ? <img src={displayImages[friendImgIndex]} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><Camera size={48} className="text-slate-300"/></div>}
+                       {/* Icone Loupe pour indiquer cliquable */}
+                       {displayImages[friendImgIndex] && <div className="absolute top-2 right-2 bg-black/40 p-1.5 rounded-full text-white/80 pointer-events-none"><ZoomIn size={16}/></div>}
                   </div>
                   {displayImages.length > 1 && (
                       <div className="flex gap-2 justify-center">
@@ -1530,11 +1550,22 @@ export default function App() {
         <div className="p-4 space-y-6">
           <div className="space-y-4">
               {/* GALERIE PRINCIPALE */}
-              <div className="aspect-square bg-slate-50 rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative group">
+              {/* AJOUTER LE HANDLER DE CLIC POUR LE FULLSCREEN */}
+              <div 
+                className="aspect-square bg-slate-50 rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative group cursor-pointer"
+                onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}
+              >
                 {displayImages[viewedImageIndex] ? (
                     <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"/>
                 ) : (
                     <div className="flex h-full items-center justify-center"><Camera size={48} className="text-slate-300"/></div>
+                )}
+                
+                {/* ICONE ZOOM INDICATEUR */}
+                {displayImages[viewedImageIndex] && (
+                    <div className="absolute top-2 right-2 bg-black/30 p-2 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ZoomIn size={20}/>
+                    </div>
                 )}
                 
                 {/* INDICATEUR NOMBRE PHOTOS */}
@@ -1991,6 +2022,9 @@ export default function App() {
             {view === 'friends' && renderFriends()}
         </div>
         
+        {/* NOUVEAU: RENDER DU MODAL PLEIN ECRAN */}
+        {renderFullScreenImage()}
+
         {authDomainError && (
             <div className="fixed inset-0 z-[150] bg-black/80 flex items-center justify-center p-6">
                 <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
