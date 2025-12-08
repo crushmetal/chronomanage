@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,13 +33,14 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v42.2"; // Ajout Lightbox
+const APP_VERSION = "v42.3"; // Ajout gestion Piles
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '',
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
     dialColor: '', 
+    batteryModel: '', // NOUVEAU CHAMP
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
@@ -824,11 +825,12 @@ export default function App() {
     const sep = ";";
     let csvContent = "\uFEFF"; 
     csvContent += "sep=;\n"; 
-    const headers = ["Marque", "Modele", "Reference", "Couleur Cadran", "Diametre (mm)", "Entre-corne (mm)", "Annee", "Mouvement", "Pays", "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Prix Achat", "Prix Vente", "Estimation", "Statut", "Notes", "Lien", "Edition Limitee", "Num", "Total"];
+    const headers = ["Marque", "Modele", "Reference", "Couleur Cadran", "Diametre (mm)", "Entre-corne (mm)", "Annee", "Mouvement", "Pays", "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Prix Achat", "Prix Vente", "Estimation", "Statut", "Modele Pile", "Notes", "Lien", "Edition Limitee", "Num", "Total"];
     csvContent += headers.join(sep) + "\n";
     watches.forEach(w => {
       const row = [
         w.brand, w.model, w.reference, w.dialColor, w.diameter, w.strapWidth, w.year, w.movement, w.country, w.waterResistance, w.glass, w.box, w.warrantyDate, w.revision, w.purchasePrice, w.sellingPrice, w.status, 
+        w.batteryModel,
         w.conditionNotes ? w.conditionNotes.replace(/(\r\n|\n|\r|;)/gm, " ") : "", 
         w.link,
         w.isLimitedEdition ? "Oui" : "Non", w.limitedNumber, w.limitedTotal
@@ -837,7 +839,7 @@ export default function App() {
     });
     bracelets.forEach(b => {
       const row = [
-        "BRACELET", b.type, "", "", "", b.width, "", "", "", "", "", "", "", "", "", "", "actif", 
+        "BRACELET", b.type, "", "", "", b.width, "", "", "", "", "", "", "", "", "", "", "actif", "",
         (b.notes + (b.quickRelease ? " (Quick Release)" : "")).replace(/(\r\n|\n|\r|;)/gm, " "), 
         "", "", "", ""
       ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`);
@@ -1624,6 +1626,8 @@ export default function App() {
                      <DetailItem icon={Search} label="Verre" value={w.glass} />
                      <DetailItem icon={MapPin} label="Pays" value={w.country} />
                      <DetailItem icon={Calendar} label="Année" value={w.year} />
+                     {/* AFFICHAGE DU MODÈLE DE PILE DANS LE DÉTAIL */}
+                     {w.batteryModel && <DetailItem icon={Battery} label="Pile" value={w.batteryModel} />}
                   </div>
               </div>
               {compatibleBracelets.length > 0 && (
@@ -1929,6 +1933,35 @@ export default function App() {
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Mouvement" value={watchForm.movement} onChange={e => setWatchForm({...watchForm, movement: e.target.value})} />
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Verre" value={watchForm.glass} onChange={e => setWatchForm({...watchForm, glass: e.target.value})} />
                                 </div>
+                                
+                                {/* NOUVEAU : DETECTION PILE POUR QUARTZ */}
+                                {['quartz', 'pile', 'battery', 'electronic', 'électronique'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
+                                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 animate-in slide-in-from-top-1">
+                                        <div className="flex items-center gap-2 mb-2 text-blue-800 text-xs font-bold uppercase tracking-wider">
+                                            <Battery size={14}/> Alimentation
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input 
+                                                className="w-full p-3 border rounded-lg text-sm" 
+                                                placeholder="Modèle de pile (ex: 377, CR2032...)" 
+                                                value={watchForm.batteryModel || ''} 
+                                                onChange={e => setWatchForm({...watchForm, batteryModel: e.target.value})} 
+                                            />
+                                            {watchForm.batteryModel && (
+                                                <a 
+                                                    href={`https://www.amazon.fr/s?k=pile+${watchForm.batteryModel}`} 
+                                                    target="_blank" 
+                                                    rel="noreferrer"
+                                                    className="bg-blue-600 text-white px-3 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors"
+                                                    title="Commander"
+                                                >
+                                                    <ShoppingCart size={18} />
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* NOUVEAU : DETAILS AUTO/MECA (V41.0) */}
                                 {['auto', 'meca', 'automatic', 'automatique', 'mécanique', 'mechanic'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
                                     <div className="grid grid-cols-2 gap-3 animate-in slide-in-from-top-1">
