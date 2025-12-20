@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v43.2"; // Fix crash ami & Justification texte
+const APP_VERSION = "v43.3"; // Détails complets amis
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -1056,11 +1056,25 @@ export default function App() {
                         </div>
                       )}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                      <DetailItem icon={Ruler} label="Diamètre" value={watch.diameter ? watch.diameter + ' mm' : ''} />
-                      <DetailItem icon={Calendar} label="Année" value={watch.year} />
-                      <DetailItem icon={MovementIcon} label="Mouvement" value={watch.movement} />
-                      <DetailItem icon={Droplets} label="Étanchéité" value={watch.waterResistance} />
+                  
+                  {/* SPECIFICATIONS COMPLETES (COPIÉ DEPUIS renderDetail) */}
+                  <div>
+                      <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Spécifications</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                          <DetailItem icon={Ruler} label="Diamètre" value={watch.diameter ? watch.diameter + ' mm' : ''} />
+                          <DetailItem icon={Layers} label="Épaisseur" value={watch.thickness ? watch.thickness + ' mm' : ''} />
+                          <DetailItem icon={Activity} label="Bracelet" value={watch.strapWidth ? watch.strapWidth + ' mm' : ''} />
+                          {watch.dialColor && <DetailItem icon={Palette} label="Cadran" value={watch.dialColor} />}
+                          <DetailItem icon={Droplets} label="Étanchéité" value={watch.waterResistance ? watch.waterResistance + ' ATM' : ''} />
+                          <DetailItem icon={MovementIcon} label="Mouvement" value={watch.movement} />
+                          {watch.movementModel && <DetailItem icon={Settings} label="Modèle Mvmt" value={watch.movementModel} />}
+                          {watch.powerReserve && <DetailItem icon={Zap} label="Réserve" value={watch.powerReserve + ' h'} />}
+                          {watch.jewels && <DetailItem icon={Gem} label="Rubis" value={watch.jewels} />}
+                          <DetailItem icon={Search} label="Verre" value={watch.glass} />
+                          <DetailItem icon={MapPin} label="Pays" value={watch.country} />
+                          <DetailItem icon={Calendar} label="Année" value={watch.year} />
+                          {watch.batteryModel && <DetailItem icon={Battery} label="Pile" value={watch.batteryModel} />}
+                      </div>
                   </div>
                   
                   {(watch.status === 'wishlist' || watch.status === 'forsale') && (
@@ -1072,6 +1086,28 @@ export default function App() {
                             {formatPrice(watch.status === 'forsale' ? (watch.sellingPrice || watch.purchasePrice) : watch.purchasePrice)}
                         </span>
                     </div>
+                  )}
+
+                  {/* AJOUT DES HISTOIRES - TEXTE JUSTIFIÉ + SAUTS DE LIGNES (VISIBLE PAR AMIS) */}
+                  {(watch.historyBrand || watch.historyModel) && (
+                      <div className="space-y-4 pt-4 border-t border-slate-100">
+                          {watch.historyBrand && (
+                              <div>
+                                  <h3 className="text-xs font-bold uppercase text-indigo-600 mb-2 tracking-wider flex items-center gap-1"><BookOpen size={14}/> Histoire de la Marque</h3>
+                                  <div className="text-sm text-slate-600 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 whitespace-pre-wrap text-justify">
+                                      {watch.historyBrand}
+                                  </div>
+                              </div>
+                          )}
+                          {watch.historyModel && (
+                              <div>
+                                  <h3 className="text-xs font-bold uppercase text-indigo-600 mb-2 tracking-wider flex items-center gap-1"><BookOpen size={14}/> Histoire du Modèle</h3>
+                                  <div className="text-sm text-slate-600 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 whitespace-pre-wrap text-justify">
+                                      {watch.historyModel}
+                                  </div>
+                              </div>
+                          )}
+                      </div>
                   )}
 
                   <div className="bg-blue-50 p-4 rounded-xl text-center text-sm text-blue-800 font-medium mt-4">
