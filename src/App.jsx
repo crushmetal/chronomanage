@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v43.1"; // Update détail bracelets compatibles
+const APP_VERSION = "v43.2"; // Fix crash ami & Justification texte
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -1019,7 +1019,8 @@ export default function App() {
   const renderFriendDetail = (watch) => {
       // Compatibilité multi-images ami
       const displayImages = watch.images && watch.images.length > 0 ? watch.images : (watch.image ? [watch.image] : []);
-      const [friendImgIndex, setFriendImgIndex] = useState(0);
+      // CORRECTION : Suppression du hook useState local qui causait le crash (Page Blanche)
+      // On utilise désormais viewedImageIndex/setViewedImageIndex gérés par le composant App
 
       return (
           <div className="fixed inset-0 z-[70] bg-white flex flex-col animate-in slide-in-from-bottom-10">
@@ -1031,16 +1032,16 @@ export default function App() {
                   {/* AJOUT CLICK FULLSCREEN ICI AUSSI */}
                   <div 
                     className="aspect-square bg-slate-100 rounded-xl overflow-hidden relative cursor-pointer"
-                    onClick={() => setFullScreenImage(displayImages[friendImgIndex])}
+                    onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}
                   >
-                       {displayImages[friendImgIndex] ? <img src={displayImages[friendImgIndex]} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><Camera size={48} className="text-slate-300"/></div>}
+                       {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><Camera size={48} className="text-slate-300"/></div>}
                        {/* Icone Loupe pour indiquer cliquable */}
-                       {displayImages[friendImgIndex] && <div className="absolute top-2 right-2 bg-black/40 p-1.5 rounded-full text-white/80 pointer-events-none"><ZoomIn size={16}/></div>}
+                       {displayImages[viewedImageIndex] && <div className="absolute top-2 right-2 bg-black/40 p-1.5 rounded-full text-white/80 pointer-events-none"><ZoomIn size={16}/></div>}
                   </div>
                   {displayImages.length > 1 && (
                       <div className="flex gap-2 justify-center">
                           {displayImages.map((_, i) => (
-                              <button key={i} onClick={() => setFriendImgIndex(i)} className={`w-2 h-2 rounded-full transition-all ${i === friendImgIndex ? 'bg-indigo-600 w-4' : 'bg-slate-300'}`}/>
+                              <button key={i} onClick={() => setViewedImageIndex(i)} className={`w-2 h-2 rounded-full transition-all ${i === viewedImageIndex ? 'bg-indigo-600 w-4' : 'bg-slate-300'}`}/>
                           ))}
                       </div>
                   )}
@@ -1106,7 +1107,7 @@ export default function App() {
                                   // Fallback ami image
                                   const img = w.images?.[0] || w.image;
                                   return (
-                                  <div key={w.id} onClick={() => setSelectedWatch(w)} className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 active:scale-95 transition-transform">
+                                  <div key={w.id} onClick={() => { setSelectedWatch(w); setViewedImageIndex(0); }} className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 active:scale-95 transition-transform">
                                       <div className="aspect-square bg-slate-50 relative">
                                           {img ? <img src={img} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Activity size={16}/></div>}
                                       </div>
@@ -1127,7 +1128,7 @@ export default function App() {
                               {friendSale.map(w => {
                                   const img = w.images?.[0] || w.image;
                                   return (
-                                  <div key={w.id} onClick={() => setSelectedWatch(w)} className="bg-white rounded-xl shadow-sm overflow-hidden border border-amber-100 active:scale-95 transition-transform">
+                                  <div key={w.id} onClick={() => { setSelectedWatch(w); setViewedImageIndex(0); }} className="bg-white rounded-xl shadow-sm overflow-hidden border border-amber-100 active:scale-95 transition-transform">
                                       <div className="aspect-square bg-amber-50 relative">
                                           {img ? <img src={img} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-amber-300"><Activity size={16}/></div>}
                                           <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm">
@@ -1152,7 +1153,7 @@ export default function App() {
                               {friendWish.map(w => {
                                   const img = w.images?.[0] || w.image;
                                   return (
-                                  <div key={w.id} onClick={() => setSelectedWatch(w)} className="flex items-center bg-white p-2 rounded-xl border border-rose-100 shadow-sm cursor-pointer hover:bg-rose-50/50 transition-colors">
+                                  <div key={w.id} onClick={() => { setSelectedWatch(w); setViewedImageIndex(0); }} className="flex items-center bg-white p-2 rounded-xl border border-rose-100 shadow-sm cursor-pointer hover:bg-rose-50/50 transition-colors">
                                       <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 mr-3 relative">
                                           {img ? <img src={img} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={14}/></div>}
                                       </div>
@@ -1669,13 +1670,13 @@ export default function App() {
             )}
           </div>
           
-          {/* AJOUT DES HISTOIRES */}
+          {/* AJOUT DES HISTOIRES - TEXTE JUSTIFIÉ + SAUTS DE LIGNES */}
           {(w.historyBrand || w.historyModel) && (
               <div className="space-y-4 pt-4 border-t border-slate-100">
                   {w.historyBrand && (
                       <div>
                           <h3 className="text-xs font-bold uppercase text-indigo-600 mb-2 tracking-wider flex items-center gap-1"><BookOpen size={14}/> Histoire de la Marque</h3>
-                          <div className="text-sm text-slate-600 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
+                          <div className="text-sm text-slate-600 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 whitespace-pre-wrap text-justify">
                               {w.historyBrand}
                           </div>
                       </div>
@@ -1683,7 +1684,7 @@ export default function App() {
                   {w.historyModel && (
                       <div>
                           <h3 className="text-xs font-bold uppercase text-indigo-600 mb-2 tracking-wider flex items-center gap-1"><BookOpen size={14}/> Histoire du Modèle</h3>
-                          <div className="text-sm text-slate-600 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
+                          <div className="text-sm text-slate-600 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 whitespace-pre-wrap text-justify">
                               {w.historyModel}
                           </div>
                       </div>
