@@ -33,11 +33,11 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v43.0"; // Ajout Histoires & Détails Mouvements & Bracelets Complets
+const APP_VERSION = "v43.1"; // Update détail bracelets compatibles
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
-    diameter: '', year: '', movement: '', movementModel: '', // AJOUT movementModel
+    diameter: '', year: '', movement: '', movementModel: '', 
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
     dialColor: '', 
     batteryModel: '', 
@@ -45,13 +45,13 @@ const DEFAULT_WATCH_STATE = {
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', 
-    historyBrand: '', historyModel: '', // AJOUT HISTOIRES
+    historyBrand: '', historyModel: '', 
     image: null, 
     images: []   
 };
 
 const DEFAULT_BRACELET_STATE = {
-    width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' // AJOUT brand, material, color
+    width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' 
 };
 
 // Fonction pour tenter d'initialiser Firebase avec une config donnée
@@ -1644,7 +1644,8 @@ export default function App() {
                                       {b.brand && <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] p-0.5 truncate text-center">{b.brand}</div>}
                                   </div>
                                   <div className="p-2 text-center">
-                                      <div className="text-[10px] font-bold truncate">{b.type}</div>
+                                      <div className="text-[10px] font-bold truncate text-slate-800">{b.material || b.type}</div>
+                                      {b.color && <div className="text-[9px] text-slate-500 truncate">{b.color}</div>}
                                   </div>
                               </div>
                           ))}
