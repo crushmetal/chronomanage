@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,24 +33,25 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v42.3"; // Ajout gestion Piles
+const APP_VERSION = "v43.0"; // Ajout Histoires & Détails Mouvements & Bracelets Complets
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
-    diameter: '', year: '', movement: '',
+    diameter: '', year: '', movement: '', movementModel: '', // AJOUT movementModel
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
     dialColor: '', 
-    batteryModel: '', // NOUVEAU CHAMP
+    batteryModel: '', 
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', 
+    historyBrand: '', historyModel: '', // AJOUT HISTOIRES
     image: null, 
     images: []   
 };
 
 const DEFAULT_BRACELET_STATE = {
-    width: '', type: 'Standard', material: '', color: '', quickRelease: false, image: null, notes: ''
+    width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' // AJOUT brand, material, color
 };
 
 // Fonction pour tenter d'initialiser Firebase avec une config donnée
@@ -749,7 +750,6 @@ export default function App() {
   }, [watches, bracelets, useLocalStorage]);
 
   // --- ACTIONS ---
-  // MODIFICATION : Support multi-upload pour les montres
   const handleImageUpload = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -825,11 +825,11 @@ export default function App() {
     const sep = ";";
     let csvContent = "\uFEFF"; 
     csvContent += "sep=;\n"; 
-    const headers = ["Marque", "Modele", "Reference", "Couleur Cadran", "Diametre (mm)", "Entre-corne (mm)", "Annee", "Mouvement", "Pays", "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Prix Achat", "Prix Vente", "Estimation", "Statut", "Modele Pile", "Notes", "Lien", "Edition Limitee", "Num", "Total"];
+    const headers = ["Marque", "Modele", "Reference", "Couleur Cadran", "Diametre (mm)", "Entre-corne (mm)", "Annee", "Mouvement", "Modele Mouvement", "Pays", "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Prix Achat", "Prix Vente", "Estimation", "Statut", "Modele Pile", "Notes", "Lien", "Edition Limitee", "Num", "Total"];
     csvContent += headers.join(sep) + "\n";
     watches.forEach(w => {
       const row = [
-        w.brand, w.model, w.reference, w.dialColor, w.diameter, w.strapWidth, w.year, w.movement, w.country, w.waterResistance, w.glass, w.box, w.warrantyDate, w.revision, w.purchasePrice, w.sellingPrice, w.status, 
+        w.brand, w.model, w.reference, w.dialColor, w.diameter, w.strapWidth, w.year, w.movement, w.movementModel, w.country, w.waterResistance, w.glass, w.box, w.warrantyDate, w.revision, w.purchasePrice, w.sellingPrice, w.status, 
         w.batteryModel,
         w.conditionNotes ? w.conditionNotes.replace(/(\r\n|\n|\r|;)/gm, " ") : "", 
         w.link,
@@ -946,7 +946,14 @@ export default function App() {
   const getFilteredBracelets = () => {
     if (!searchTerm) return bracelets;
     const lower = searchTerm.toLowerCase();
-    return bracelets.filter(b => (b.type && b.type.toLowerCase().includes(lower)) || (b.width && b.width.includes(lower)));
+    // MISE A JOUR FILTRE RECHERCHE BRACELET
+    return bracelets.filter(b => 
+        (b.type && b.type.toLowerCase().includes(lower)) || 
+        (b.width && b.width.includes(lower)) ||
+        (b.brand && b.brand.toLowerCase().includes(lower)) ||
+        (b.material && b.material.toLowerCase().includes(lower)) ||
+        (b.color && b.color.toLowerCase().includes(lower))
+    );
   };
   
   const filteredWatches = getFilteredAndSortedWatches;
@@ -1413,8 +1420,12 @@ export default function App() {
                                 <div className="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm border border-slate-100">{b.width}mm</div>
                             </div>
                             <div className="p-3">
+                                {b.brand && <div className="text-[10px] uppercase font-bold text-indigo-600 truncate">{b.brand}</div>}
                                 <div className="font-bold text-sm truncate text-slate-800">{b.type}</div>
-                                <div className="text-xs text-slate-500 truncate">{b.quickRelease ? 'Quick Release' : 'Standard'}</div>
+                                <div className="text-xs text-slate-500 flex gap-1 items-center flex-wrap">
+                                    {b.material && <span>{b.material}</span>}
+                                    {b.color && <span className="opacity-70">• {b.color}</span>}
+                                </div>
                             </div>
                         </Card>
                     ))}
@@ -1432,7 +1443,6 @@ export default function App() {
         {renderHeader("Collection", true)}
         <div className="grid grid-cols-2 gap-3 px-3 mt-3">
           {displayWatches.map(w => {
-            // Priorité à la première image de la liste, sinon fallback sur l'ancienne propriété single image
             const displayImage = w.images && w.images.length > 0 ? w.images[0] : w.image;
 
             return (
@@ -1464,7 +1474,6 @@ export default function App() {
                     {w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}
                 </div>
                 
-                {/* INDICATEUR MULTI-PHOTOS */}
                 {w.images && w.images.length > 1 && (
                     <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-md flex items-center gap-1">
                         <ImageIcon size={10} /> {w.images.length}
@@ -1529,7 +1538,6 @@ export default function App() {
   const renderDetail = () => {
     if(!selectedWatch) return null;
     const w = selectedWatch;
-    // Construction de la liste d'images unifiée (support ancien format et nouveau format)
     const displayImages = w.images && w.images.length > 0 ? w.images : (w.image ? [w.image] : []);
     const compatibleBracelets = w.strapWidth ? bracelets.filter(b => b.width === w.strapWidth) : [];
     
@@ -1551,8 +1559,6 @@ export default function App() {
         </div>
         <div className="p-4 space-y-6">
           <div className="space-y-4">
-              {/* GALERIE PRINCIPALE */}
-              {/* AJOUTER LE HANDLER DE CLIC POUR LE FULLSCREEN */}
               <div 
                 className="aspect-square bg-slate-50 rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative group cursor-pointer"
                 onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}
@@ -1563,14 +1569,12 @@ export default function App() {
                     <div className="flex h-full items-center justify-center"><Camera size={48} className="text-slate-300"/></div>
                 )}
                 
-                {/* ICONE ZOOM INDICATEUR */}
                 {displayImages[viewedImageIndex] && (
                     <div className="absolute top-2 right-2 bg-black/30 p-2 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
                         <ZoomIn size={20}/>
                     </div>
                 )}
                 
-                {/* INDICATEUR NOMBRE PHOTOS */}
                 {displayImages.length > 1 && (
                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
                         {displayImages.map((_, i) => (
@@ -1580,7 +1584,6 @@ export default function App() {
                 )}
               </div>
 
-              {/* MINIATURES GALERIE (Si plus d'une photo) */}
               {displayImages.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                       {displayImages.map((img, i) => (
@@ -1621,12 +1624,12 @@ export default function App() {
                      {w.dialColor && <DetailItem icon={Palette} label="Cadran" value={w.dialColor} />}
                      <DetailItem icon={Droplets} label="Étanchéité" value={w.waterResistance ? w.waterResistance + ' ATM' : ''} />
                      <DetailItem icon={MovementIcon} label="Mouvement" value={w.movement} />
+                     {w.movementModel && <DetailItem icon={Settings} label="Modèle Mvmt" value={w.movementModel} />} {/* AJOUT */}
                      {w.powerReserve && <DetailItem icon={Zap} label="Réserve" value={w.powerReserve + ' h'} />}
                      {w.jewels && <DetailItem icon={Gem} label="Rubis" value={w.jewels} />}
                      <DetailItem icon={Search} label="Verre" value={w.glass} />
                      <DetailItem icon={MapPin} label="Pays" value={w.country} />
                      <DetailItem icon={Calendar} label="Année" value={w.year} />
-                     {/* AFFICHAGE DU MODÈLE DE PILE DANS LE DÉTAIL */}
                      {w.batteryModel && <DetailItem icon={Battery} label="Pile" value={w.batteryModel} />}
                   </div>
               </div>
@@ -1636,8 +1639,9 @@ export default function App() {
                       <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                           {compatibleBracelets.map(b => (
                               <div key={b.id} className="flex-shrink-0 w-24 bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm">
-                                  <div className="h-24 bg-slate-50">
+                                  <div className="h-24 bg-slate-50 relative">
                                       {b.image ? <img src={b.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Activity size={16}/></div>}
+                                      {b.brand && <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] p-0.5 truncate text-center">{b.brand}</div>}
                                   </div>
                                   <div className="p-2 text-center">
                                       <div className="text-[10px] font-bold truncate">{b.type}</div>
@@ -1663,6 +1667,29 @@ export default function App() {
                 <div className="p-3 bg-slate-50 rounded-lg border"><div className="text-xs text-slate-400 uppercase">{w.status === 'sold' ? 'Vente' : 'Estim.'}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.status === 'sold' ? w.sellingPrice : (w.sellingPrice || w.purchasePrice))}</div>{w.status === 'sold' && <div className="text-xs text-emerald-600 mt-1">Profit: {formatPrice(w.sellingPrice - w.purchasePrice)}</div>}</div>
             )}
           </div>
+          
+          {/* AJOUT DES HISTOIRES */}
+          {(w.historyBrand || w.historyModel) && (
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                  {w.historyBrand && (
+                      <div>
+                          <h3 className="text-xs font-bold uppercase text-indigo-600 mb-2 tracking-wider flex items-center gap-1"><BookOpen size={14}/> Histoire de la Marque</h3>
+                          <div className="text-sm text-slate-600 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
+                              {w.historyBrand}
+                          </div>
+                      </div>
+                  )}
+                  {w.historyModel && (
+                      <div>
+                          <h3 className="text-xs font-bold uppercase text-indigo-600 mb-2 tracking-wider flex items-center gap-1"><BookOpen size={14}/> Histoire du Modèle</h3>
+                          <div className="text-sm text-slate-600 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
+                              {w.historyModel}
+                          </div>
+                      </div>
+                  )}
+              </div>
+          )}
+
           {w.conditionNotes && <div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> Notes</div>{w.conditionNotes}</div>}
         </div>
       </div>
@@ -1931,8 +1958,10 @@ export default function App() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Mouvement" value={watchForm.movement} onChange={e => setWatchForm({...watchForm, movement: e.target.value})} />
-                                    <input className="p-3 border rounded-lg text-sm" placeholder="Verre" value={watchForm.glass} onChange={e => setWatchForm({...watchForm, glass: e.target.value})} />
+                                    {/* AJOUT INPUT MODELE MOUVEMENT */}
+                                    <input className="p-3 border rounded-lg text-sm" placeholder="Modèle Mouvement" value={watchForm.movementModel || ''} onChange={e => setWatchForm({...watchForm, movementModel: e.target.value})} />
                                 </div>
+                                <input className="w-full p-3 border rounded-lg text-sm" placeholder="Verre" value={watchForm.glass} onChange={e => setWatchForm({...watchForm, glass: e.target.value})} />
                                 
                                 {/* NOUVEAU : DETECTION PILE POUR QUARTZ */}
                                 {['quartz', 'pile', 'battery', 'electronic', 'électronique'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
@@ -1962,8 +1991,8 @@ export default function App() {
                                     </div>
                                 )}
 
-                                {/* NOUVEAU : DETAILS AUTO/MECA (V41.0) */}
-                                {['auto', 'meca', 'automatic', 'automatique', 'mécanique', 'mechanic'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
+                                {/* MISE A JOUR : DETECTION MECA (AUTO OU MANUEL) */}
+                                {['auto', 'meca', 'automatic', 'automatique', 'mécanique', 'mechanic', 'manuel', 'manual'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
                                     <div className="grid grid-cols-2 gap-3 animate-in slide-in-from-top-1">
                                         <div className="relative">
                                             <input className="w-full p-3 pl-8 border rounded-lg text-sm" placeholder="Réserve (h)" value={watchForm.powerReserve || ''} onChange={e => setWatchForm({...watchForm, powerReserve: e.target.value})} />
@@ -2003,26 +2032,35 @@ export default function App() {
                         </div>
                     </div>
                     <div className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Notes & Commentaires</h3>
-                        <textarea className="w-full p-3 border rounded-lg min-h-[100px]" placeholder="État, histoire, détails..." value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
+                        <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Notes & Histoires</h3>
+                        <textarea className="w-full p-3 border rounded-lg min-h-[80px]" placeholder="État, histoire, détails..." value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
+                        {/* AJOUT CHAMPS HISTOIRES */}
+                        <textarea className="w-full p-3 border rounded-lg min-h-[80px]" placeholder="Histoire de la Marque..." value={watchForm.historyBrand || ''} onChange={e => setWatchForm({...watchForm, historyBrand: e.target.value})} />
+                        <textarea className="w-full p-3 border rounded-lg min-h-[80px]" placeholder="Histoire du Modèle..." value={watchForm.historyModel || ''} onChange={e => setWatchForm({...watchForm, historyModel: e.target.value})} />
                     </div>
                 </>
             ) : (
                 <>
                     <div className="space-y-3">
                         <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Caractéristiques</h3>
+                        {/* AJOUT CHAMPS BRACELETS */}
+                        <input className="w-full p-3 border rounded-lg text-sm mb-3" placeholder="Marque du bracelet" value={braceletForm.brand || ''} onChange={e => setBraceletForm({...braceletForm, brand: e.target.value})} />
                         <div className="grid grid-cols-2 gap-3">
                              <input className="p-3 border rounded-lg text-sm" placeholder="Largeur (mm)" type="number" value={braceletForm.width} onChange={e => setBraceletForm({...braceletForm, width: e.target.value})} required />
                              <input className="p-3 border rounded-lg text-sm" placeholder="Type (Nato, Cuir...)" value={braceletForm.type} onChange={e => setBraceletForm({...braceletForm, type: e.target.value})} />
                         </div>
-                        <div className="flex items-center gap-2 p-3 border rounded-lg bg-slate-50">
+                        <div className="grid grid-cols-2 gap-3 mt-3">
+                             <input className="p-3 border rounded-lg text-sm" placeholder="Matière" value={braceletForm.material || ''} onChange={e => setBraceletForm({...braceletForm, material: e.target.value})} />
+                             <input className="p-3 border rounded-lg text-sm" placeholder="Couleur" value={braceletForm.color || ''} onChange={e => setBraceletForm({...braceletForm, color: e.target.value})} />
+                        </div>
+                        <div className="flex items-center gap-2 p-3 border rounded-lg bg-slate-50 mt-3">
                             <input type="checkbox" checked={braceletForm.quickRelease} onChange={e => setBraceletForm({...braceletForm, quickRelease: e.target.checked})} className="w-4 h-4 text-slate-800 rounded"/>
                             <span className="text-sm text-slate-700">Pompe Flash (Changement rapide) ?</span>
                         </div>
                     </div>
                     <div className="space-y-3">
                          <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Notes</h3>
-                         <textarea className="w-full p-3 border rounded-lg min-h-[80px]" placeholder="Couleur, matière, boucle..." value={braceletForm.notes} onChange={e => setBraceletForm({...braceletForm, notes: e.target.value})} />
+                         <textarea className="w-full p-3 border rounded-lg min-h-[80px]" placeholder="Boucle, état..." value={braceletForm.notes} onChange={e => setBraceletForm({...braceletForm, notes: e.target.value})} />
                     </div>
                 </>
             )}
