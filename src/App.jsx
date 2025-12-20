@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v43.3"; // Détails complets amis
+const APP_VERSION = "v44.1"; // Final fix compilation
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -630,6 +630,31 @@ export default function App() {
       }
   };
 
+  // --- NOUVEAU : BASCULER SOUHAIT VERS COLLECTION ---
+  const handleMoveToCollection = async (watch) => {
+      if (!confirm("Félicitations ! Voulez-vous déplacer cette montre vers votre collection ?")) return;
+      
+      const updatedWatch = { 
+          ...watch, 
+          status: 'collection',
+          dateAdded: new Date().toISOString() 
+      };
+
+      // Optimistic update
+      setWatches(prev => prev.map(w => w.id === watch.id ? updatedWatch : w));
+      setSelectedWatch(updatedWatch);
+
+      if (!useLocalStorage) {
+          try {
+              const watchRef = doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id);
+              await setDoc(watchRef, updatedWatch, { merge: true });
+          } catch (e) {
+              console.error("Erreur déplacement collection", e);
+              alert("Erreur lors de la sauvegarde.");
+          }
+      }
+  };
+
   useEffect(() => {
     document.title = "Mes Montres"; 
     const link = document.createElement('link');
@@ -758,14 +783,12 @@ export default function App() {
       const base64 = await compressImage(file); 
       
       if (type === 'watch') {
-          // Gestion des 3 images max
           setWatchForm(prev => {
               const currentImages = prev.images || (prev.image ? [prev.image] : []);
               if (currentImages.length >= 3) {
                   alert("Maximum 3 photos par montre.");
                   return prev;
               }
-              // Ajout à la liste et mise à jour de l'image principale si c'est la première
               const newImages = [...currentImages, base64];
               return { ...prev, images: newImages, image: newImages[0] };
           });
@@ -789,7 +812,6 @@ export default function App() {
     const id = editingId || Date.now().toString();
     const isWatch = editingType === 'watch';
     
-    // Normalisation des données montre (legacy 'image' vs new 'images')
     let data;
     if (isWatch) {
         const images = watchForm.images && watchForm.images.length > 0 
@@ -802,7 +824,7 @@ export default function App() {
             sellingPrice: Number(watchForm.sellingPrice), 
             dateAdded: new Date().toISOString(),
             images: images,
-            image: images[0] || null // Maintenir la rétrocompatibilité pour l'instant
+            image: images[0] || null 
         };
     } else {
         data = { ...braceletForm, id, dateAdded: new Date().toISOString() };
@@ -859,7 +881,7 @@ export default function App() {
     if (editingType === 'watch') {
         if(selectedWatch) {
             setSelectedWatch(data);
-            setViewedImageIndex(0); // Reset galerie view
+            setViewedImageIndex(0); 
         }
         setView(data.status === 'wishlist' ? 'wishlist' : 'list');
     } else {
@@ -882,7 +904,6 @@ export default function App() {
 
   const handleEdit = (item, type) => { 
       if (type === 'watch') {
-          // Migration à la volée pour l'édition : s'assurer que images existe
           const safeImages = item.images || (item.image ? [item.image] : []);
           setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages });
       }
@@ -918,7 +939,6 @@ export default function App() {
         filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower)));
     }
     
-    // Copie pour le tri
     let sorted = [...filtered];
 
     if (sortOrder === 'priceAsc') {
@@ -946,7 +966,6 @@ export default function App() {
   const getFilteredBracelets = () => {
     if (!searchTerm) return bracelets;
     const lower = searchTerm.toLowerCase();
-    // MISE A JOUR FILTRE RECHERCHE BRACELET
     return bracelets.filter(b => 
         (b.type && b.type.toLowerCase().includes(lower)) || 
         (b.width && b.width.includes(lower)) ||
@@ -982,7 +1001,10 @@ export default function App() {
 
     const calculateStats = (list, isSold = false) => {
         const buy = list.reduce((acc, w) => acc + (Number(w.purchasePrice) || 0), 0);
-        const val = list.reduce((acc, w) => acc + (Number(w.sellingPrice) || Number(w.purchasePrice) || 0), 0);
+        const val = list.reduce((acc, w) => {
+            const price = Number(w.sellingPrice) || Number(w.purchasePrice) || 0;
+            return acc + price;
+        }, 0);
         return { buy, val, profit: val - buy };
     };
 
@@ -1017,10 +1039,9 @@ export default function App() {
 
   // --- RENDER FRIENDS ---
   const renderFriendDetail = (watch) => {
-      // Compatibilité multi-images ami
-      const displayImages = watch.images && watch.images.length > 0 ? watch.images : (watch.image ? [watch.image] : []);
-      // CORRECTION : Suppression du hook useState local qui causait le crash (Page Blanche)
-      // On utilise désormais viewedImageIndex/setViewedImageIndex gérés par le composant App
+      const allImages = watch.images && watch.images.length > 0 ? watch.images : (watch.image ? [watch.image] : []);
+      // LIMITATION: Seulement les 2 premières photos pour les amis
+      const displayImages = allImages.slice(0, 2);
 
       return (
           <div className="fixed inset-0 z-[70] bg-white flex flex-col animate-in slide-in-from-bottom-10">
@@ -1029,13 +1050,11 @@ export default function App() {
                   <button onClick={() => setSelectedWatch(null)} className="p-2 bg-white rounded-full shadow-sm"><X size={20}/></button>
               </div>
               <div className="p-6 flex-1 overflow-y-auto space-y-6">
-                  {/* AJOUT CLICK FULLSCREEN ICI AUSSI */}
                   <div 
                     className="aspect-square bg-slate-100 rounded-xl overflow-hidden relative cursor-pointer"
                     onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}
                   >
                        {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><Camera size={48} className="text-slate-300"/></div>}
-                       {/* Icone Loupe pour indiquer cliquable */}
                        {displayImages[viewedImageIndex] && <div className="absolute top-2 right-2 bg-black/40 p-1.5 rounded-full text-white/80 pointer-events-none"><ZoomIn size={16}/></div>}
                   </div>
                   {displayImages.length > 1 && (
@@ -1057,7 +1076,6 @@ export default function App() {
                       )}
                   </div>
                   
-                  {/* SPECIFICATIONS COMPLETES (COPIÉ DEPUIS renderDetail) */}
                   <div>
                       <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Spécifications</h3>
                       <div className="grid grid-cols-2 gap-3">
@@ -1088,7 +1106,6 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* AJOUT DES HISTOIRES - TEXTE JUSTIFIÉ + SAUTS DE LIGNES (VISIBLE PAR AMIS) */}
                   {(watch.historyBrand || watch.historyModel) && (
                       <div className="space-y-4 pt-4 border-t border-slate-100">
                           {watch.historyBrand && (
@@ -1406,7 +1423,7 @@ export default function App() {
       <div className="flex justify-between items-center px-2 mb-2">
         <h1 className="text-xl font-serif font-bold text-slate-800 tracking-wide">{title}</h1>
         <div className="flex items-center gap-2">
-            {(title === "Collection" || title === "Inventaire" || title === "Galerie") && (
+            {(title === "Collection" || title === "Inventaire" || title === "Galerie" || title === "Souhaits") && (
                 <div className="relative">
                     <select 
                         value={sortOrder} 
@@ -1529,6 +1546,7 @@ export default function App() {
   };
 
   const renderWishlist = () => {
+    // Utilisation de filteredWatches pour bénéficier du tri
     const wishes = filteredWatches.filter(w => w.status === 'wishlist');
     return (
       <div className="pb-24">
@@ -1647,11 +1665,23 @@ export default function App() {
                 )}
               </div>
           </div>
+
+          {/* BOUTON TRANSFERT SOUHAIT VERS COLLECTION */}
+          {w.status === 'wishlist' && (
+              <button 
+                  onClick={() => handleMoveToCollection(w)}
+                  className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-transform active:scale-95 mb-4"
+              >
+                  <Gift size={20} /> J'ai obtenu cette montre !
+              </button>
+          )}
+
           {w.status === 'wishlist' && w.link && (
               <a href={w.link} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full py-3 bg-indigo-50 text-indigo-700 rounded-lg font-bold text-sm border border-indigo-100 hover:bg-indigo-100 transition-colors"><ExternalLink size={16} className="mr-2" /> Voir le site web</a>
           )}
-          {w.status !== 'wishlist' && (
-            <>
+          
+          {/* AFFICHAGE DES DETAILS POUR TOUS LES STATUTS (SOUHAITS INCLUS) */}
+          <>
               <div>
                   <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Spécifications</h3>
                   <div className="grid grid-cols-2 gap-3">
@@ -1661,7 +1691,7 @@ export default function App() {
                      {w.dialColor && <DetailItem icon={Palette} label="Cadran" value={w.dialColor} />}
                      <DetailItem icon={Droplets} label="Étanchéité" value={w.waterResistance ? w.waterResistance + ' ATM' : ''} />
                      <DetailItem icon={MovementIcon} label="Mouvement" value={w.movement} />
-                     {w.movementModel && <DetailItem icon={Settings} label="Modèle Mvmt" value={w.movementModel} />} {/* AJOUT */}
+                     {w.movementModel && <DetailItem icon={Settings} label="Modèle Mvmt" value={w.movementModel} />}
                      {w.powerReserve && <DetailItem icon={Zap} label="Réserve" value={w.powerReserve + ' h'} />}
                      {w.jewels && <DetailItem icon={Gem} label="Rubis" value={w.jewels} />}
                      <DetailItem icon={Search} label="Verre" value={w.glass} />
@@ -1697,8 +1727,8 @@ export default function App() {
                      <DetailItem icon={Wrench} label="Révision" value={w.revision} />
                   </div>
               </div>
-            </>
-          )}
+          </>
+          
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
             <div className="p-3 bg-slate-50 rounded-lg border"><div className="text-xs text-slate-400 uppercase">Prix</div><div className="text-lg font-bold">{formatPrice(w.purchasePrice)}</div></div>
             {w.status !== 'wishlist' && (
@@ -1982,10 +2012,11 @@ export default function App() {
                             <p className="text-[10px] text-slate-400 mt-1 pl-8">Si décoché, cette montre restera privée dans votre coffre.</p>
                         </div>
                     </div>
-                    {watchForm.status === 'wishlist' ? (
-                        <div className="space-y-3"><h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Lien Web</h3><input className="w-full p-3 border rounded-lg" placeholder="https://..." value={watchForm.link} onChange={e => setWatchForm({...watchForm, link: e.target.value})} /></div>
-                    ) : (
+                    {/* FORMULAIRE UNIFIÉ : TOUS LES CHAMPS SONT MAINTENANT VISIBLES MEME POUR LES SOUHAITS */}
                         <>
+                            {watchForm.status === 'wishlist' && (
+                                <div className="space-y-3"><h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Lien Web</h3><input className="w-full p-3 border rounded-lg" placeholder="https://..." value={watchForm.link} onChange={e => setWatchForm({...watchForm, link: e.target.value})} /></div>
+                            )}
                             <div className="space-y-3">
                                 <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Technique</h3>
                                 <div className="grid grid-cols-2 gap-3">
@@ -2056,7 +2087,6 @@ export default function App() {
                                 </div>
                             </div>
                         </>
-                    )}
                     <div className="space-y-3">
                         <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Finances & Statut</h3>
                         <div className="grid grid-cols-2 gap-4">
