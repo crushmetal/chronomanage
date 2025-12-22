@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v44.4"; // Restauration complète et Debug
+const APP_VERSION = "v44.7"; // Fix compilation error & renderFriends
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -244,7 +244,7 @@ const GraphicBackground = () => (
 // --- COMPOSANTS EXTERNALISÉS (FINANCE) ---
 
 const FinanceDetailList = ({ title, items, onClose }) => {
-    const [localSort, setLocalSort] = useState('date'); 
+    const [localSort, setLocalSort] = useState('alpha'); // Default A-Z
 
     const sortedItems = useMemo(() => {
         let sorted = [...items];
@@ -453,7 +453,10 @@ export default function App() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState('date');
+  
+  // MODIF: TRI INITIAL A-Z
+  const [sortOrder, setSortOrder] = useState('alpha');
+  
   const [error, setError] = useState(null); 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isBoxOpening, setIsBoxOpening] = useState(false);
@@ -653,6 +656,21 @@ export default function App() {
               alert("Erreur lors de la sauvegarde.");
           }
       }
+  };
+  
+  // NOUVEAU : DEFINIR IMAGE PRINCIPALE
+  const setAsMainImage = (index) => {
+      setWatchForm(prev => {
+          const currentImages = [...(prev.images || [])];
+          if (index >= currentImages.length) return prev;
+          
+          // Swap
+          const temp = currentImages[0];
+          currentImages[0] = currentImages[index];
+          currentImages[index] = temp;
+          
+          return { ...prev, images: currentImages, image: currentImages[0] };
+      });
   };
 
   useEffect(() => {
@@ -1017,15 +1035,27 @@ export default function App() {
   }, [watches, searchTerm, sortOrder]);
 
   const getFilteredBracelets = () => {
-    if (!searchTerm) return bracelets;
-    const lower = searchTerm.toLowerCase();
-    return bracelets.filter(b => 
-        (b.type && b.type.toLowerCase().includes(lower)) || 
-        (b.width && b.width.includes(lower)) ||
-        (b.brand && b.brand.toLowerCase().includes(lower)) ||
-        (b.material && b.material.toLowerCase().includes(lower)) ||
-        (b.color && b.color.toLowerCase().includes(lower))
-    );
+    let filtered = bracelets;
+    if (searchTerm) {
+        const lower = searchTerm.toLowerCase();
+        filtered = bracelets.filter(b => 
+            (b.type && b.type.toLowerCase().includes(lower)) || 
+            (b.width && b.width.includes(lower)) ||
+            (b.brand && b.brand.toLowerCase().includes(lower)) ||
+            (b.material && b.material.toLowerCase().includes(lower)) ||
+            (b.color && b.color.toLowerCase().includes(lower))
+        );
+    }
+
+    // AJOUT TRI POUR BRACELETS (A-Z par défaut si alpha)
+    const sorted = [...filtered];
+    if (sortOrder === 'alpha') {
+        sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || (a.type || '').localeCompare(b.type || ''));
+    } else {
+        // Date par défaut si autre
+         sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+    }
+    return sorted;
   };
   
   const filteredWatches = getFilteredAndSortedWatches;
@@ -1529,6 +1559,13 @@ export default function App() {
                             <div className="aspect-square bg-slate-50 relative">
                                 {b.image ? <img src={b.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Activity/></div>}
                                 <div className="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm border border-slate-100">{b.width}mm</div>
+                                
+                                {/* NOUVEAU : INDICATEUR POMPE FLASH */}
+                                {b.quickRelease && (
+                                    <div className="absolute top-1 left-1 bg-yellow-400 text-white p-1 rounded-full shadow-sm z-10" title="Pompe Flash (Changement Rapide)">
+                                        <Zap size={10} fill="currentColor" />
+                                    </div>
+                                )}
                             </div>
                             <div className="p-3">
                                 {b.brand && <div className="text-[10px] uppercase font-bold text-indigo-600 truncate">{b.brand}</div>}
@@ -1672,7 +1709,7 @@ export default function App() {
         <div className="p-4 space-y-6">
           <div className="space-y-4">
               <div 
-                className="aspect-square bg-slate-50 rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative group cursor-pointer"
+                className="aspect-square bg-slate-50 rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative group cursor-zoom-in"
                 onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}
               >
                 {displayImages[viewedImageIndex] ? (
@@ -1762,10 +1799,16 @@ export default function App() {
                       <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Bracelets Compatibles ({w.strapWidth}mm)</h3>
                       <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                           {compatibleBracelets.map(b => (
-                              <div key={b.id} className="flex-shrink-0 w-24 bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm">
+                              <div key={b.id} className="flex-shrink-0 w-24 bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm relative">
                                   <div className="h-24 bg-slate-50 relative">
                                       {b.image ? <img src={b.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Activity size={16}/></div>}
                                       {b.brand && <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] p-0.5 truncate text-center">{b.brand}</div>}
+                                      {/* NOUVEAU : ICONE POMPE FLASH COMPATIBLE */}
+                                      {b.quickRelease && (
+                                          <div className="absolute top-1 left-1 bg-yellow-400 text-white p-1 rounded-full shadow-sm z-10" title="Pompe Flash">
+                                              <Zap size={8} fill="currentColor" />
+                                          </div>
+                                      )}
                                   </div>
                                   <div className="p-2 text-center">
                                       <div className="text-[10px] font-bold truncate text-slate-800">{b.material || b.type}</div>
@@ -1994,7 +2037,18 @@ export default function App() {
                             >
                                 <X size={12}/>
                             </button>
-                            {idx === 0 && <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] text-center py-0.5 font-bold">PRINCIPALE</div>}
+                            {/* BADGE PRINCIPALE OU BOUTON DEFINIR PRINCIPALE */}
+                            {idx === 0 ? (
+                                <div className="absolute bottom-0 left-0 right-0 bg-emerald-500/90 text-white text-[9px] text-center py-1 font-bold backdrop-blur-sm">PRINCIPALE</div>
+                            ) : (
+                                <button 
+                                    type="button"
+                                    onClick={() => setAsMainImage(idx)}
+                                    className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-white/90 text-indigo-600 text-[9px] px-2 py-0.5 rounded-full font-bold shadow-sm hover:bg-indigo-50 border border-indigo-100"
+                                >
+                                    Définir principale
+                                </button>
+                            )}
                         </div>
                     ))}
                     
@@ -2159,7 +2213,7 @@ export default function App() {
                         {watchForm.status !== 'wishlist' && <input type="number" className="w-full p-3 border rounded-lg" placeholder={watchForm.status === 'sold' ? "Prix de Vente Final (€)" : "Estimation (€)"} value={watchForm.sellingPrice} onChange={e => setWatchForm({...watchForm, sellingPrice: e.target.value})} />}
                         </div>
                         <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
-                        {[{id: 'collection', label: 'Ma Collection'}, {id: 'forsale', label: 'En Vente'}, {id: 'sold', label: 'Vendu'}, {id: 'wishlist', label: 'Souhait ❤️'}].map(s => (
+                        {[{id: 'collection', label: 'Ma Collection'}, {id: 'forsale', label: 'En Vente'}, {id: 'sold', label: 'Vendue'}, {id: 'wishlist', label: 'Souhait ❤️'}].map(s => (
                             <button key={s.id} type="button" onClick={() => setWatchForm({...watchForm, status: s.id})} className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold border whitespace-nowrap ${watchForm.status === s.id ? 'bg-slate-800 text-white' : 'bg-white'}`}>{s.label}</button>
                         ))}
                         </div>
