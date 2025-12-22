@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v44.2"; // Export avancé & Notes justifiées
+const APP_VERSION = "v44.4"; // Restauration complète et Debug
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -875,8 +875,6 @@ export default function App() {
     sortedWatches.forEach(w => {
       const buy = Number(w.purchasePrice) || 0;
       const sell = Number(w.sellingPrice) || 0;
-      // Calcul difference : Si vendue -> Vente - Achat. Si en vente -> Vente - Achat. Si collection -> 0 ou Estim - Achat (ici on met 0 par defaut ou estim)
-      // Logique simple : (Prix Vente ou Estim) - Prix Achat
       const profit = (sell || buy) - buy; 
 
       const row = [
@@ -908,7 +906,6 @@ export default function App() {
       csvContent += row.join(sep) + "\n";
     });
 
-    // Ajout des bracelets à la fin si nécessaire ou dans un autre fichier, ici on les met à la suite
     bracelets.forEach(b => {
       const row = [
         "ACCESSOIRE", 
@@ -990,7 +987,6 @@ export default function App() {
   // --- FILTRAGE ET TRI ---
   const getFilteredAndSortedWatches = useMemo(() => {
     let filtered = watches;
-    // Filtre de recherche
     if (searchTerm) {
         const lower = searchTerm.toLowerCase();
         filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower)));
@@ -1097,7 +1093,6 @@ export default function App() {
   // --- RENDER FRIENDS ---
   const renderFriendDetail = (watch) => {
       const allImages = watch.images && watch.images.length > 0 ? watch.images : (watch.image ? [watch.image] : []);
-      // LIMITATION: Seulement les 2 premières photos pour les amis
       const displayImages = allImages.slice(0, 2);
 
       return (
@@ -1426,6 +1421,11 @@ export default function App() {
                   </div>
                   <p className="text-sm font-medium text-slate-800 truncate">{user.email || 'Utilisateur Anonyme'}</p>
                 </div>
+                {/* NOUVEAU : LIEN VERS INVENTAIRE/EXPORT */}
+                <button onClick={() => { setView('summary'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors border-b border-slate-50">
+                    <ClipboardList size={16} /> 
+                    Inventaire & Export
+                </button>
                 <button onClick={() => { handleLogout(); }} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
                     {isAuthLoading ? <Loader2 size={16} className="animate-spin"/> : <LogOut size={16} />} 
                     Déconnexion
