@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v44.1"; // Final fix compilation
+const APP_VERSION = "v44.2"; // Export avancé & Notes justifiées
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -847,11 +847,59 @@ export default function App() {
     const sep = ";";
     let csvContent = "\uFEFF"; 
     csvContent += "sep=;\n"; 
-    const headers = ["Marque", "Modele", "Reference", "Couleur Cadran", "Diametre (mm)", "Entre-corne (mm)", "Annee", "Mouvement", "Modele Mouvement", "Pays", "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Prix Achat", "Prix Vente", "Estimation", "Statut", "Modele Pile", "Notes", "Lien", "Edition Limitee", "Num", "Total"];
+    
+    // NOUVEL ORDRE DES COLONNES POUR EXPORT COMPLET
+    const headers = [
+        "Statut", "Marque", "Modele", "Prix Achat", "Prix Vente/Estim", "Plus-Value", 
+        "Diametre (mm)", "Hauteur/Epaisseur (mm)", "Entre-corne (mm)", "Mouvement", 
+        "Modele Mouvement", "Annee", "Pays", "Reference", "Couleur Cadran", 
+        "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Modele Pile", 
+        "Notes", "Lien", "Edition Limitee", "Num", "Total"
+    ];
     csvContent += headers.join(sep) + "\n";
-    watches.forEach(w => {
+
+    // Fonction helper pour le statut
+    const getStatusLabel = (s) => {
+        switch(s) {
+            case 'collection': return 'Ma Collection';
+            case 'forsale': return 'En Vente';
+            case 'sold': return 'Vendue';
+            case 'wishlist': return 'Souhait';
+            default: return s;
+        }
+    };
+
+    // Tri par statut pour regrouper les zones
+    const sortedWatches = [...watches].sort((a,b) => a.status.localeCompare(b.status));
+
+    sortedWatches.forEach(w => {
+      const buy = Number(w.purchasePrice) || 0;
+      const sell = Number(w.sellingPrice) || 0;
+      // Calcul difference : Si vendue -> Vente - Achat. Si en vente -> Vente - Achat. Si collection -> 0 ou Estim - Achat (ici on met 0 par defaut ou estim)
+      // Logique simple : (Prix Vente ou Estim) - Prix Achat
+      const profit = (sell || buy) - buy; 
+
       const row = [
-        w.brand, w.model, w.reference, w.dialColor, w.diameter, w.strapWidth, w.year, w.movement, w.movementModel, w.country, w.waterResistance, w.glass, w.box, w.warrantyDate, w.revision, w.purchasePrice, w.sellingPrice, w.status, 
+        getStatusLabel(w.status),
+        w.brand, 
+        w.model, 
+        buy,
+        sell,
+        profit,
+        w.diameter, 
+        w.thickness, // Hauteur
+        w.strapWidth, 
+        w.movement, 
+        w.movementModel, 
+        w.year, 
+        w.country, 
+        w.reference, 
+        w.dialColor, 
+        w.waterResistance, 
+        w.glass, 
+        w.box, 
+        w.warrantyDate, 
+        w.revision, 
         w.batteryModel,
         w.conditionNotes ? w.conditionNotes.replace(/(\r\n|\n|\r|;)/gm, " ") : "", 
         w.link,
@@ -859,19 +907,28 @@ export default function App() {
       ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`); 
       csvContent += row.join(sep) + "\n";
     });
+
+    // Ajout des bracelets à la fin si nécessaire ou dans un autre fichier, ici on les met à la suite
     bracelets.forEach(b => {
       const row = [
-        "BRACELET", b.type, "", "", "", b.width, "", "", "", "", "", "", "", "", "", "", "actif", "",
-        (b.notes + (b.quickRelease ? " (Quick Release)" : "")).replace(/(\r\n|\n|\r|;)/gm, " "), 
+        "ACCESSOIRE", 
+        b.brand || "BRACELET", 
+        b.type, 
+        "", "", "", 
+        "", "", b.width, "", 
+        "", "", "", "", "", 
+        "", "", "", "", "", "",
+        (b.notes + (b.quickRelease ? " (Quick Release)" : "") + (b.material ? " " + b.material : "")).replace(/(\r\n|\n|\r|;)/gm, " "), 
         "", "", "", ""
       ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`);
       csvContent += row.join(sep) + "\n";
     });
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "ma_collection_horlogere.csv");
+    link.setAttribute("download", "ma_collection_complete.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1758,7 +1815,15 @@ export default function App() {
               </div>
           )}
 
-          {w.conditionNotes && <div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> Notes</div>{w.conditionNotes}</div>}
+          {/* NOTES AVEC JUSTIFICATION ET SAUTS DE LIGNES */}
+          {w.conditionNotes && (
+              <div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100 mt-4">
+                  <div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> Notes</div>
+                  <div className="whitespace-pre-wrap text-justify leading-relaxed">
+                      {w.conditionNotes}
+                  </div>
+              </div>
+          )}
         </div>
       </div>
     );
