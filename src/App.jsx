@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -33,12 +33,12 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v44.7"; // Fix compilation error & renderFriends
+const APP_VERSION = "v44.8"; // Ajout du Poids
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '', movementModel: '', 
-    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', 
+    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', // AJOUT weight
     dialColor: '', 
     batteryModel: '', 
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
@@ -244,7 +244,7 @@ const GraphicBackground = () => (
 // --- COMPOSANTS EXTERNALISÉS (FINANCE) ---
 
 const FinanceDetailList = ({ title, items, onClose }) => {
-    const [localSort, setLocalSort] = useState('alpha'); // Default A-Z
+    const [localSort, setLocalSort] = useState('alpha'); 
 
     const sortedItems = useMemo(() => {
         let sorted = [...items];
@@ -871,7 +871,7 @@ export default function App() {
         "Statut", "Marque", "Modele", "Prix Achat", "Prix Vente/Estim", "Plus-Value", 
         "Diametre (mm)", "Hauteur/Epaisseur (mm)", "Entre-corne (mm)", "Mouvement", 
         "Modele Mouvement", "Annee", "Pays", "Reference", "Couleur Cadran", 
-        "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Modele Pile", 
+        "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Modele Pile", "Poids (g)",
         "Notes", "Lien", "Edition Limitee", "Num", "Total"
     ];
     csvContent += headers.join(sep) + "\n";
@@ -917,6 +917,7 @@ export default function App() {
         w.warrantyDate, 
         w.revision, 
         w.batteryModel,
+        w.weight,
         w.conditionNotes ? w.conditionNotes.replace(/(\r\n|\n|\r|;)/gm, " ") : "", 
         w.link,
         w.isLimitedEdition ? "Oui" : "Non", w.limitedNumber, w.limitedTotal
@@ -932,7 +933,7 @@ export default function App() {
         "", "", "", 
         "", "", b.width, "", 
         "", "", "", "", "", 
-        "", "", "", "", "", "",
+        "", "", "", "", "", "", "",
         (b.notes + (b.quickRelease ? " (Quick Release)" : "") + (b.material ? " " + b.material : "")).replace(/(\r\n|\n|\r|;)/gm, " "), 
         "", "", "", ""
       ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`);
@@ -1123,6 +1124,7 @@ export default function App() {
   // --- RENDER FRIENDS ---
   const renderFriendDetail = (watch) => {
       const allImages = watch.images && watch.images.length > 0 ? watch.images : (watch.image ? [watch.image] : []);
+      // LIMITATION: Seulement les 2 premières photos pour les amis
       const displayImages = allImages.slice(0, 2);
 
       return (
@@ -1174,6 +1176,7 @@ export default function App() {
                           <DetailItem icon={MapPin} label="Pays" value={watch.country} />
                           <DetailItem icon={Calendar} label="Année" value={watch.year} />
                           {watch.batteryModel && <DetailItem icon={Battery} label="Pile" value={watch.batteryModel} />}
+                          {watch.weight && <DetailItem icon={Scale} label="Poids" value={watch.weight + ' g'} />} {/* AJOUT POIDS AMI */}
                       </div>
                   </div>
                   
@@ -1792,6 +1795,7 @@ export default function App() {
                      <DetailItem icon={MapPin} label="Pays" value={w.country} />
                      <DetailItem icon={Calendar} label="Année" value={w.year} />
                      {w.batteryModel && <DetailItem icon={Battery} label="Pile" value={w.batteryModel} />}
+                     {w.weight && <DetailItem icon={Scale} label="Poids" value={w.weight + ' g'} />} {/* AJOUT POIDS */}
                   </div>
               </div>
               {compatibleBracelets.length > 0 && (
@@ -2143,6 +2147,7 @@ export default function App() {
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Épaisseur (mm)" type="number" value={watchForm.thickness} onChange={e => setWatchForm({...watchForm, thickness: e.target.value})} />
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Entre-corne (mm)" type="number" value={watchForm.strapWidth} onChange={e => setWatchForm({...watchForm, strapWidth: e.target.value})} />
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Étanchéité (ATM)" type="number" value={watchForm.waterResistance} onChange={e => setWatchForm({...watchForm, waterResistance: e.target.value})} />
+                                    <input className="p-3 border rounded-lg text-sm" placeholder="Poids (g)" type="number" value={watchForm.weight || ''} onChange={e => setWatchForm({...watchForm, weight: e.target.value})} /> {/* AJOUT INPUT POIDS */}
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Mouvement" value={watchForm.movement} onChange={e => setWatchForm({...watchForm, movement: e.target.value})} />
