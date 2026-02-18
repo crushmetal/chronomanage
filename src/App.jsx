@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -31,23 +31,25 @@ let globalInitError = null;
 
 const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
+const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v44.8"; // Ajout du Poids
+const APP_VERSION = "v45.2"; // Fix Amis Visible
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
     diameter: '', year: '', movement: '', movementModel: '', 
-    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', // AJOUT weight
+    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '',
     dialColor: '', 
     batteryModel: '', 
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
-    purchasePrice: '', sellingPrice: '', status: 'collection', conditionNotes: '', link: '', 
+    purchasePrice: '', sellingPrice: '', minPrice: '', // AJOUT minPrice
+    status: 'collection', conditionNotes: '', link: '', 
     historyBrand: '', historyModel: '', 
     image: null, 
-    images: []   
+    images: []    
 };
 
 const DEFAULT_BRACELET_STATE = {
@@ -422,6 +424,7 @@ export default function App() {
   
   const [watches, setWatches] = useState([]);
   const [bracelets, setBracelets] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]); // { date: 'YYYY-MM-DD', watches: ['id1', 'id2'] }
   
   // ÉTAT AMIS
   const [friends, setFriends] = useState([]); 
@@ -453,6 +456,11 @@ export default function App() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // STATS / CALENDAR STATES
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
+  const [selectedCalendarWatches, setSelectedCalendarWatches] = useState([]);
   
   // MODIF: TRI INITIAL A-Z
   const [sortOrder, setSortOrder] = useState('alpha');
@@ -673,6 +681,52 @@ export default function App() {
       });
   };
 
+  // --- CALENDAR LOGIC ---
+  const handleCalendarDayClick = (dateStr) => {
+      setSelectedCalendarDate(dateStr);
+      const existing = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
+      setSelectedCalendarWatches(existing ? (existing.watches || []) : []);
+  };
+
+  const handleCalendarSave = async () => {
+      if (!selectedCalendarDate) return;
+      
+      // Update local state
+      let updatedEvents = [...calendarEvents];
+      const existingIdx = updatedEvents.findIndex(e => e.id === selectedCalendarDate || e.date === selectedCalendarDate);
+      
+      const eventData = {
+          date: selectedCalendarDate,
+          watches: selectedCalendarWatches
+      };
+
+      if (selectedCalendarWatches.length === 0) {
+          // Remove if empty
+          if (existingIdx >= 0) updatedEvents.splice(existingIdx, 1);
+      } else {
+          // Update or add
+          if (existingIdx >= 0) updatedEvents[existingIdx] = { ...updatedEvents[existingIdx], ...eventData };
+          else updatedEvents.push({ id: selectedCalendarDate, ...eventData });
+      }
+      
+      setCalendarEvents(updatedEvents);
+      setSelectedCalendarDate(null);
+
+      // Persist
+      if (useLocalStorage) {
+          // Local storage updated by effect
+      } else {
+          try {
+              const docRef = doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar', selectedCalendarDate);
+              if (selectedCalendarWatches.length === 0) {
+                  await deleteDoc(docRef);
+              } else {
+                  await setDoc(docRef, eventData);
+              }
+          } catch(e) { console.error("Calendar Save Error", e); }
+      }
+  };
+
   useEffect(() => {
     document.title = "Mes Montres"; 
     const link = document.createElement('link');
@@ -754,6 +808,8 @@ export default function App() {
         if (localWatches) setWatches(JSON.parse(localWatches));
         let localBracelets = localStorage.getItem(LOCAL_STORAGE_BRACELETS_KEY);
         if (localBracelets) setBracelets(JSON.parse(localBracelets));
+        let localCalendar = localStorage.getItem(LOCAL_STORAGE_CALENDAR_KEY);
+        if (localCalendar) setCalendarEvents(JSON.parse(localCalendar));
       } catch(e){}
       setLoading(false);
     } else {
@@ -776,7 +832,11 @@ export default function App() {
 
         const qB = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'bracelets'));
         const unsubB = onSnapshot(qB, (snap) => setBracelets(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.dateAdded)-new Date(a.dateAdded))));
-        return () => { unsubW(); unsubB(); };
+        
+        const qC = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar'));
+        const unsubC = onSnapshot(qC, (snap) => setCalendarEvents(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+
+        return () => { unsubW(); unsubB(); unsubC(); };
       } catch(e) { 
           console.error("Erreur Setup Query:", e);
           if (user?.isAnonymous) setUseLocalStorage(true);
@@ -789,8 +849,9 @@ export default function App() {
     if (useLocalStorage) {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(watches));
       localStorage.setItem(LOCAL_STORAGE_BRACELETS_KEY, JSON.stringify(bracelets));
+      localStorage.setItem(LOCAL_STORAGE_CALENDAR_KEY, JSON.stringify(calendarEvents));
     }
-  }, [watches, bracelets, useLocalStorage]);
+  }, [watches, bracelets, calendarEvents, useLocalStorage]);
 
   // --- ACTIONS ---
   const handleImageUpload = async (e, type) => {
@@ -833,13 +894,14 @@ export default function App() {
     let data;
     if (isWatch) {
         const images = watchForm.images && watchForm.images.length > 0 
-                       ? watchForm.images 
-                       : (watchForm.image ? [watchForm.image] : []);
+                        ? watchForm.images 
+                        : (watchForm.image ? [watchForm.image] : []);
         data = { 
             ...watchForm, 
             id, 
             purchasePrice: Number(watchForm.purchasePrice), 
             sellingPrice: Number(watchForm.sellingPrice), 
+            minPrice: Number(watchForm.minPrice), // Save minPrice
             dateAdded: new Date().toISOString(),
             images: images,
             image: images[0] || null 
@@ -868,7 +930,7 @@ export default function App() {
     
     // NOUVEL ORDRE DES COLONNES POUR EXPORT COMPLET
     const headers = [
-        "Statut", "Marque", "Modele", "Prix Achat", "Prix Vente/Estim", "Plus-Value", 
+        "Statut", "Marque", "Modele", "Prix Achat", "Prix Vente/Estim", "Prix Min (Privé)", "Plus-Value", 
         "Diametre (mm)", "Hauteur/Epaisseur (mm)", "Entre-corne (mm)", "Mouvement", 
         "Modele Mouvement", "Annee", "Pays", "Reference", "Couleur Cadran", 
         "Etanch.", "Verre", "Boite", "Garantie", "Revision", "Modele Pile", "Poids (g)",
@@ -901,6 +963,7 @@ export default function App() {
         w.model, 
         buy,
         sell,
+        w.minPrice || '', // Export Min Price
         profit,
         w.diameter, 
         w.thickness, // Hauteur
@@ -930,7 +993,7 @@ export default function App() {
         "ACCESSOIRE", 
         b.brand || "BRACELET", 
         b.type, 
-        "", "", "", 
+        "", "", "", "", 
         "", "", b.width, "", 
         "", "", "", "", "", 
         "", "", "", "", "", "", "",
@@ -1048,13 +1111,11 @@ export default function App() {
         );
     }
 
-    // AJOUT TRI POUR BRACELETS (A-Z par défaut si alpha)
     const sorted = [...filtered];
     if (sortOrder === 'alpha') {
         sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || (a.type || '').localeCompare(b.type || ''));
     } else {
-        // Date par défaut si autre
-         sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+          sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
     }
     return sorted;
   };
@@ -1073,6 +1134,173 @@ export default function App() {
                 className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" 
                 onClick={(e) => e.stopPropagation()} 
             />
+        </div>
+    );
+  };
+
+  // --- STATS VIEW ---
+  const renderStats = () => {
+    const getTopWatches = () => {
+        const counts = {};
+        calendarEvents.forEach(evt => {
+            if (evt.watches && Array.isArray(evt.watches)) {
+                evt.watches.forEach(wId => {
+                    counts[wId] = (counts[wId] || 0) + 1;
+                });
+            }
+        });
+        
+        return Object.entries(counts)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3)
+            .map(([wId, count]) => {
+                const w = watches.find(watch => watch.id === wId);
+                return w ? { ...w, count } : null;
+            }).filter(Boolean);
+    };
+
+    const renderCalendarGrid = () => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Mon=0
+
+        const days = [];
+        // Padding
+        for (let i = 0; i < startDay; i++) {
+            days.push(<div key={`pad-${i}`} className="bg-transparent"></div>);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const event = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
+            const wornCount = event?.watches?.length || 0;
+            const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
+
+            days.push(
+                <div 
+                    key={d} 
+                    onClick={() => handleCalendarDayClick(dateStr)}
+                    className={`aspect-square border rounded-lg p-1 relative cursor-pointer hover:border-indigo-400 transition-colors ${isToday ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 bg-white'}`}
+                >
+                    <span className={`text-[10px] font-bold ${isToday ? 'text-indigo-700' : 'text-slate-400'}`}>{d}</span>
+                    <div className="flex flex-wrap gap-0.5 mt-1">
+                        {event?.watches?.slice(0, 4).map((wId, idx) => {
+                            const w = watches.find(wa => wa.id === wId);
+                            if (!w) return null;
+                            const img = w.images?.[0] || w.image;
+                            return (
+                                <div key={idx} className="w-1.5 h-1.5 rounded-full bg-slate-300 overflow-hidden">
+                                     {img && <img src={img} className="w-full h-full object-cover" />}
+                                </div>
+                            );
+                        })}
+                        {wornCount > 4 && <div className="w-1.5 h-1.5 rounded-full bg-slate-200 text-[4px] flex items-center justify-center">+</div>}
+                    </div>
+                    {wornCount > 0 && <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>}
+                </div>
+            );
+        }
+        return days;
+    };
+
+    const topWatches = getTopWatches();
+
+    return (
+        <div className="pb-24 px-3">
+             <div className="sticky top-0 bg-white/95 backdrop-blur z-10 py-3 border-b border-slate-100 mb-4 flex justify-between items-center">
+                <h1 className="text-xl font-serif font-bold text-slate-800 tracking-wide px-1">Statistiques</h1>
+             </div>
+
+             <div className="space-y-6">
+                 {/* Top 3 */}
+                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                     <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2 mb-4">
+                         <TrendingUp className="text-emerald-500" size={16} /> Top Portées (Global)
+                     </h3>
+                     <div className="space-y-3">
+                         {topWatches.map((w, i) => (
+                             <div key={w.id} className="flex items-center gap-3">
+                                 <div className="font-black text-slate-200 text-xl w-6">#{i+1}</div>
+                                 <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden border border-slate-100">
+                                     <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
+                                 </div>
+                                 <div className="flex-1">
+                                     <div className="font-bold text-sm text-slate-800 truncate">{w.brand}</div>
+                                     <div className="text-xs text-slate-500 truncate">{w.model}</div>
+                                 </div>
+                                 <div className="text-right">
+                                     <div className="font-bold text-indigo-600">{w.count}</div>
+                                     <div className="text-[9px] uppercase text-slate-400 font-bold">Jours</div>
+                                 </div>
+                             </div>
+                         ))}
+                         {topWatches.length === 0 && <div className="text-center text-xs text-slate-400 py-4 italic">Utilisez le calendrier pour voir vos stats.</div>}
+                     </div>
+                 </div>
+
+                 {/* Calendar */}
+                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                     <div className="flex justify-between items-center mb-4">
+                         <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                             <Calendar className="text-indigo-600" size={16} /> Calendrier
+                         </h3>
+                         <div className="flex gap-2">
+                             <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-1 hover:bg-slate-100 rounded"><ChevronLeft size={16}/></button>
+                             <span className="text-xs font-bold capitalize w-24 text-center">{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+                             <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-1 hover:bg-slate-100 rounded"><ChevronRight size={16}/></button>
+                         </div>
+                     </div>
+                     
+                     <div className="grid grid-cols-7 gap-1 mb-2">
+                         {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+                             <div key={i} className="text-center text-[10px] font-bold text-slate-400">{d}</div>
+                         ))}
+                     </div>
+                     <div className="grid grid-cols-7 gap-1">
+                         {renderCalendarGrid()}
+                     </div>
+                 </div>
+             </div>
+
+             {/* Modal Date Selection */}
+             {selectedCalendarDate && (
+                 <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+                     <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+                         <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
+                             <h3 className="font-bold text-slate-800">Porté le {new Date(selectedCalendarDate).toLocaleDateString()}</h3>
+                             <button onClick={() => setSelectedCalendarDate(null)}><X size={20} className="text-slate-400"/></button>
+                         </div>
+                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                             {watches.filter(w => w.status === 'collection').map(w => {
+                                 const isSelected = selectedCalendarWatches.includes(w.id);
+                                 return (
+                                     <div 
+                                        key={w.id} 
+                                        onClick={() => setSelectedCalendarWatches(prev => isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id])}
+                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${isSelected ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500' : 'border-slate-100 hover:bg-slate-50'}`}
+                                     >
+                                         <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-300'}`}>
+                                             {isSelected && <Check size={12} className="text-white" />}
+                                         </div>
+                                         <img src={w.images?.[0] || w.image} className="w-10 h-10 rounded bg-slate-200 object-cover" />
+                                         <div>
+                                             <div className="font-bold text-sm text-slate-800">{w.brand}</div>
+                                             <div className="text-xs text-slate-500">{w.model}</div>
+                                         </div>
+                                     </div>
+                                 );
+                             })}
+                             {watches.filter(w => w.status === 'collection').length === 0 && <p className="text-center text-slate-400 py-4 text-sm">Ajoutez des montres à votre collection d'abord.</p>}
+                         </div>
+                         <div className="p-4 border-t bg-slate-50">
+                             <button onClick={handleCalendarSave} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">Enregistrer</button>
+                         </div>
+                     </div>
+                 </div>
+             )}
         </div>
     );
   };
@@ -1138,8 +1366,8 @@ export default function App() {
                     className="aspect-square bg-slate-100 rounded-xl overflow-hidden relative cursor-pointer"
                     onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}
                   >
-                       {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><Camera size={48} className="text-slate-300"/></div>}
-                       {displayImages[viewedImageIndex] && <div className="absolute top-2 right-2 bg-black/40 p-1.5 rounded-full text-white/80 pointer-events-none"><ZoomIn size={16}/></div>}
+                        {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><Camera size={48} className="text-slate-300"/></div>}
+                        {displayImages[viewedImageIndex] && <div className="absolute top-2 right-2 bg-black/40 p-1.5 rounded-full text-white/80 pointer-events-none"><ZoomIn size={16}/></div>}
                   </div>
                   {displayImages.length > 1 && (
                       <div className="flex gap-2 justify-center">
@@ -1176,7 +1404,7 @@ export default function App() {
                           <DetailItem icon={MapPin} label="Pays" value={watch.country} />
                           <DetailItem icon={Calendar} label="Année" value={watch.year} />
                           {watch.batteryModel && <DetailItem icon={Battery} label="Pile" value={watch.batteryModel} />}
-                          {watch.weight && <DetailItem icon={Scale} label="Poids" value={watch.weight + ' g'} />} {/* AJOUT POIDS AMI */}
+                          {watch.weight && <DetailItem icon={Scale} label="Poids" value={watch.weight + ' g'} />} 
                       </div>
                   </div>
                   
@@ -1221,6 +1449,25 @@ export default function App() {
   };
 
   const renderFriends = () => {
+      // SI PAS CONNECTÉ : AFFICHE UNE INVITATION À SE CONNECTER
+      if (user?.isAnonymous || user?.uid === 'local-user') {
+          return (
+              <div className="pb-24 px-6 flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 animate-in fade-in zoom-in duration-300">
+                  <div className="p-6 bg-indigo-50 rounded-full text-indigo-600 border border-indigo-100 shadow-sm"><Users size={48}/></div>
+                  <div>
+                      <h2 className="text-xl font-bold text-slate-800 mb-2">Fonctionnalité Cloud</h2>
+                      <p className="text-slate-500 text-sm max-w-xs mx-auto leading-relaxed">Pour ajouter des amis et partager votre collection, vous devez synchroniser votre coffre avec le Cloud.</p>
+                  </div>
+                  <div className="space-y-3 w-full max-w-xs">
+                      <button onClick={handleGoogleLogin} className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center gap-2">
+                          <LogIn size={18}/> Se connecter
+                      </button>
+                      <button onClick={() => setView('box')} className="w-full text-slate-400 text-sm hover:text-slate-600 py-2">Retour au coffre</button>
+                  </div>
+              </div>
+          );
+      }
+
       if (viewingFriend) {
           const friendCollection = friendWatches.filter(w => w.status === 'collection');
           const friendSale = friendWatches.filter(w => w.status === 'forsale');
@@ -1359,22 +1606,22 @@ export default function App() {
               </button>
 
               <div className="mb-6">
-                   <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Ajouter</h3>
-                   <div className="flex gap-2">
-                       <input 
+                    <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Ajouter</h3>
+                    <div className="flex gap-2">
+                        <input 
                           type="text" 
                           placeholder="Coller le code ami ici..." 
                           className="flex-1 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           value={addFriendId}
                           onChange={(e) => setAddFriendId(e.target.value)}
-                       />
-                       <button 
+                        />
+                        <button 
                           onClick={() => { if(addFriendId) sendFriendRequest(); }}
                           className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800"
-                       >
-                           <UserPlus size={20} />
-                       </button>
-                   </div>
+                        >
+                            <UserPlus size={20} />
+                        </button>
+                    </div>
               </div>
 
               <div>
@@ -1388,7 +1635,7 @@ export default function App() {
                                   </div>
                                   <div>
                                       <div className="font-bold text-slate-800">{friend.name}</div>
-                                      <div className="text-[10px] text-slate-400 font-mono truncate w-32">ID: {friend.id}</div>
+                                      <div className="text-xs text-slate-400 font-mono truncate w-32">ID: {friend.id}</div>
                                   </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1422,7 +1669,7 @@ export default function App() {
     const isAnonymous = user?.isAnonymous || user?.uid === 'local-user';
 
     return (
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
         {(!user || isAnonymous) ? (
           <div className="flex flex-col items-end">
               <button 
@@ -1474,6 +1721,17 @@ export default function App() {
   const renderBox = () => (
     <div className="flex flex-col items-center justify-center h-full min-h-[80vh] px-8 relative bg-slate-50 text-slate-800 overflow-hidden">
       <GraphicBackground />
+
+      {/* BOUTON AMIS (GAUCHE - TOUJOURS VISIBLE) */}
+      <div className="absolute top-4 left-4 z-20">
+        <button 
+            onClick={() => setView('friends')} 
+            className="w-10 h-10 bg-white text-slate-600 rounded-full flex items-center justify-center border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors relative"
+        >
+            <Users size={18} />
+            {friendRequests.length > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}
+        </button>
+      </div>
 
       {renderHeaderControls()}
       
@@ -1630,6 +1888,13 @@ export default function App() {
                         <ImageIcon size={10} /> {w.images.length}
                     </div>
                 )}
+                
+                {/* INDICATEUR PRIX MIN POUR VENTE */}
+                {w.status === 'forsale' && w.minPrice && (
+                    <div className="absolute bottom-8 right-1 bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5 border border-amber-200" title="Prix Min. (Privé)">
+                        <Lock size={8} /> {formatPrice(w.minPrice)}
+                    </div>
+                )}
               </div>
               <div className="p-3">
                   <div className="font-bold font-serif text-sm truncate text-slate-800 tracking-wide">{w.brand}</div>
@@ -1756,9 +2021,9 @@ export default function App() {
                 {w.reference && <span className="text-xs bg-slate-100 px-2 py-1 rounded mt-2 inline-block border font-mono text-slate-500">REF: {w.reference}</span>}
                 
                 {w.isLimitedEdition && (
-                     <div className="mt-2 inline-flex items-center px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full shadow-sm">
-                         EDITION LIMITÉE {w.limitedNumber && w.limitedTotal ? `${w.limitedNumber} / ${w.limitedTotal}` : ''}
-                     </div>
+                      <div className="mt-2 inline-flex items-center px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full shadow-sm">
+                          EDITION LIMITÉE {w.limitedNumber && w.limitedTotal ? `${w.limitedNumber} / ${w.limitedTotal}` : ''}
+                      </div>
                 )}
               </div>
           </div>
@@ -1782,20 +2047,20 @@ export default function App() {
               <div>
                   <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Spécifications</h3>
                   <div className="grid grid-cols-2 gap-3">
-                     <DetailItem icon={Ruler} label="Diamètre" value={w.diameter ? w.diameter + ' mm' : ''} />
-                     <DetailItem icon={Layers} label="Épaisseur" value={w.thickness ? w.thickness + ' mm' : ''} />
-                     <DetailItem icon={Activity} label="Bracelet" value={w.strapWidth ? w.strapWidth + ' mm' : ''} />
-                     {w.dialColor && <DetailItem icon={Palette} label="Cadran" value={w.dialColor} />}
-                     <DetailItem icon={Droplets} label="Étanchéité" value={w.waterResistance ? w.waterResistance + ' ATM' : ''} />
-                     <DetailItem icon={MovementIcon} label="Mouvement" value={w.movement} />
-                     {w.movementModel && <DetailItem icon={Settings} label="Modèle Mvmt" value={w.movementModel} />}
-                     {w.powerReserve && <DetailItem icon={Zap} label="Réserve" value={w.powerReserve + ' h'} />}
-                     {w.jewels && <DetailItem icon={Gem} label="Rubis" value={w.jewels} />}
-                     <DetailItem icon={Search} label="Verre" value={w.glass} />
-                     <DetailItem icon={MapPin} label="Pays" value={w.country} />
-                     <DetailItem icon={Calendar} label="Année" value={w.year} />
-                     {w.batteryModel && <DetailItem icon={Battery} label="Pile" value={w.batteryModel} />}
-                     {w.weight && <DetailItem icon={Scale} label="Poids" value={w.weight + ' g'} />} {/* AJOUT POIDS */}
+                      <DetailItem icon={Ruler} label="Diamètre" value={w.diameter ? w.diameter + ' mm' : ''} />
+                      <DetailItem icon={Layers} label="Épaisseur" value={w.thickness ? w.thickness + ' mm' : ''} />
+                      <DetailItem icon={Activity} label="Bracelet" value={w.strapWidth ? w.strapWidth + ' mm' : ''} />
+                      {w.dialColor && <DetailItem icon={Palette} label="Cadran" value={w.dialColor} />}
+                      <DetailItem icon={Droplets} label="Étanchéité" value={w.waterResistance ? w.waterResistance + ' ATM' : ''} />
+                      <DetailItem icon={MovementIcon} label="Mouvement" value={w.movement} />
+                      {w.movementModel && <DetailItem icon={Settings} label="Modèle Mvmt" value={w.movementModel} />}
+                      {w.powerReserve && <DetailItem icon={Zap} label="Réserve" value={w.powerReserve + ' h'} />}
+                      {w.jewels && <DetailItem icon={Gem} label="Rubis" value={w.jewels} />}
+                      <DetailItem icon={Search} label="Verre" value={w.glass} />
+                      <DetailItem icon={MapPin} label="Pays" value={w.country} />
+                      <DetailItem icon={Calendar} label="Année" value={w.year} />
+                      {w.batteryModel && <DetailItem icon={Battery} label="Pile" value={w.batteryModel} />}
+                      {w.weight && <DetailItem icon={Scale} label="Poids" value={w.weight + ' g'} />} 
                   </div>
               </div>
               {compatibleBracelets.length > 0 && (
@@ -1807,7 +2072,6 @@ export default function App() {
                                   <div className="h-24 bg-slate-50 relative">
                                       {b.image ? <img src={b.image} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Activity size={16}/></div>}
                                       {b.brand && <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] p-0.5 truncate text-center">{b.brand}</div>}
-                                      {/* NOUVEAU : ICONE POMPE FLASH COMPATIBLE */}
                                       {b.quickRelease && (
                                           <div className="absolute top-1 left-1 bg-yellow-400 text-white p-1 rounded-full shadow-sm z-10" title="Pompe Flash">
                                               <Zap size={8} fill="currentColor" />
@@ -1826,9 +2090,9 @@ export default function App() {
               <div>
                   <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Origine & Entretien</h3>
                   <div className="grid grid-cols-2 gap-3">
-                     <DetailItem icon={Package} label="Boîte" value={w.box} />
-                     <DetailItem icon={ShieldCheck} label="Garantie" value={w.warrantyDate} />
-                     <DetailItem icon={Wrench} label="Révision" value={w.revision} />
+                      <DetailItem icon={Package} label="Boîte" value={w.box} />
+                      <DetailItem icon={ShieldCheck} label="Garantie" value={w.warrantyDate} />
+                      <DetailItem icon={Wrench} label="Révision" value={w.revision} />
                   </div>
               </div>
           </>
@@ -1836,7 +2100,17 @@ export default function App() {
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
             <div className="p-3 bg-slate-50 rounded-lg border"><div className="text-xs text-slate-400 uppercase">Prix</div><div className="text-lg font-bold">{formatPrice(w.purchasePrice)}</div></div>
             {w.status !== 'wishlist' && (
-                <div className="p-3 bg-slate-50 rounded-lg border"><div className="text-xs text-slate-400 uppercase">{w.status === 'sold' ? 'Vente' : 'Estim.'}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.status === 'sold' ? w.sellingPrice : (w.sellingPrice || w.purchasePrice))}</div>{w.status === 'sold' && <div className="text-xs text-emerald-600 mt-1">Profit: {formatPrice(w.sellingPrice - w.purchasePrice)}</div>}</div>
+                <div className="p-3 bg-slate-50 rounded-lg border">
+                    <div className="text-xs text-slate-400 uppercase">{w.status === 'sold' ? 'Vente' : 'Estim.'}</div>
+                    <div className="text-lg font-bold text-emerald-600">{formatPrice(w.status === 'sold' ? w.sellingPrice : (w.sellingPrice || w.purchasePrice))}</div>
+                    {w.status === 'sold' && <div className="text-xs text-emerald-600 mt-1">Profit: {formatPrice(w.sellingPrice - w.purchasePrice)}</div>}
+                    {/* AFFICHAGE PRIX MIN POUR DETAIL */}
+                    {w.status === 'forsale' && w.minPrice && (
+                        <div className="flex items-center gap-1 mt-1 text-amber-600 text-xs font-bold">
+                            <Lock size={10} /> Min: {formatPrice(w.minPrice)}
+                        </div>
+                    )}
+                </div>
             )}
           </div>
           
@@ -2147,7 +2421,7 @@ export default function App() {
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Épaisseur (mm)" type="number" value={watchForm.thickness} onChange={e => setWatchForm({...watchForm, thickness: e.target.value})} />
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Entre-corne (mm)" type="number" value={watchForm.strapWidth} onChange={e => setWatchForm({...watchForm, strapWidth: e.target.value})} />
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Étanchéité (ATM)" type="number" value={watchForm.waterResistance} onChange={e => setWatchForm({...watchForm, waterResistance: e.target.value})} />
-                                    <input className="p-3 border rounded-lg text-sm" placeholder="Poids (g)" type="number" value={watchForm.weight || ''} onChange={e => setWatchForm({...watchForm, weight: e.target.value})} /> {/* AJOUT INPUT POIDS */}
+                                    <input className="p-3 border rounded-lg text-sm" placeholder="Poids (g)" type="number" value={watchForm.weight || ''} onChange={e => setWatchForm({...watchForm, weight: e.target.value})} /> 
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <input className="p-3 border rounded-lg text-sm" placeholder="Mouvement" value={watchForm.movement} onChange={e => setWatchForm({...watchForm, movement: e.target.value})} />
@@ -2217,6 +2491,20 @@ export default function App() {
                         <input type="number" className="w-full p-3 border rounded-lg" placeholder={watchForm.status === 'wishlist' ? "Prix (Optionnel)" : "Prix Achat (€)"} value={watchForm.purchasePrice} onChange={e => setWatchForm({...watchForm, purchasePrice: e.target.value})} />
                         {watchForm.status !== 'wishlist' && <input type="number" className="w-full p-3 border rounded-lg" placeholder={watchForm.status === 'sold' ? "Prix de Vente Final (€)" : "Estimation (€)"} value={watchForm.sellingPrice} onChange={e => setWatchForm({...watchForm, sellingPrice: e.target.value})} />}
                         </div>
+                        {/* NOUVEAU CHAMP PRIX MIN */}
+                        {watchForm.status !== 'wishlist' && (
+                            <div className="bg-amber-50 p-2 rounded-lg border border-amber-100 flex items-center gap-2">
+                                <Lock size={16} className="text-amber-600" />
+                                <input 
+                                    type="number" 
+                                    className="w-full p-2 bg-transparent border-none focus:ring-0 text-sm placeholder:text-amber-700/50 text-amber-900" 
+                                    placeholder="Prix minimum souhaité (Privé)" 
+                                    value={watchForm.minPrice || ''} 
+                                    onChange={e => setWatchForm({...watchForm, minPrice: e.target.value})} 
+                                />
+                            </div>
+                        )}
+
                         <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
                         {[{id: 'collection', label: 'Ma Collection'}, {id: 'forsale', label: 'En Vente'}, {id: 'sold', label: 'Vendue'}, {id: 'wishlist', label: 'Souhait ❤️'}].map(s => (
                             <button key={s.id} type="button" onClick={() => setWatchForm({...watchForm, status: s.id})} className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold border whitespace-nowrap ${watchForm.status === s.id ? 'bg-slate-800 text-white' : 'bg-white'}`}>{s.label}</button>
@@ -2283,6 +2571,7 @@ export default function App() {
             {view === 'summary' && renderSummary()}
             {view === 'profile' && renderProfile()}
             {view === 'friends' && renderFriends()}
+            {view === 'stats' && renderStats()}
         </div>
         
         {/* NOUVEAU: RENDER DU MODAL PLEIN ECRAN */}
@@ -2323,7 +2612,8 @@ export default function App() {
             <button onClick={() => setView('wishlist')} className={`flex flex-col items-center w-1/6 ${view === 'wishlist' ? 'text-rose-600' : ''}`}><Heart size={20}/><span className="mt-1">Souhaits</span></button>
             <button onClick={() => openAdd()} className="flex-none flex items-center justify-center w-12 h-12 bg-slate-900 text-white rounded-full shadow-lg -mt-4 border-2 border-slate-50"><Plus size={24}/></button>
             <button onClick={() => setView('finance')} className={`flex flex-col items-center w-1/6 ${view === 'finance' ? 'text-emerald-700' : ''}`}><TrendingUp size={20}/><span className="mt-1">Finance</span></button>
-            <button onClick={() => setView('friends')} className={`flex flex-col items-center w-1/6 ${view === 'friends' ? 'text-indigo-600' : ''}`}><Users size={20}/><span className="mt-1">Amis</span></button>
+            {/* STATS BUTTON (Replaces Friends) */}
+            <button onClick={() => setView('stats')} className={`flex flex-col items-center w-1/6 ${view === 'stats' ? 'text-indigo-600' : ''}`}><BarChart2 size={20}/><span className="mt-1">Stats</span></button>
             <button onClick={() => setView('profile')} className={`flex flex-col items-center w-1/6 ${view === 'profile' ? 'text-slate-900' : ''}`}><Grid size={20}/><span className="mt-1">Galerie</span></button>
           </nav>
         )}
