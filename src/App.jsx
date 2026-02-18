@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -34,7 +34,7 @@ const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v45.2"; // Fix Amis Visible
+const APP_VERSION = "v46.4"; // Fix Clock Alignment
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -45,7 +45,7 @@ const DEFAULT_WATCH_STATE = {
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
-    purchasePrice: '', sellingPrice: '', minPrice: '', // AJOUT minPrice
+    purchasePrice: '', sellingPrice: '', minPrice: '', 
     status: 'collection', conditionNotes: '', link: '', 
     historyBrand: '', historyModel: '', 
     image: null, 
@@ -115,8 +115,10 @@ const DetailItem = ({ icon: Icon, label, value }) => (
 );
 
 const formatPrice = (price) => {
-  if (!price) return '0 €';
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
+  if (price === undefined || price === null || price === '') return '0 €';
+  const numPrice = Number(price);
+  if (isNaN(numPrice)) return '0 €';
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(numPrice);
 };
 
 const compressImage = (file) => {
@@ -219,6 +221,44 @@ const WatchBoxLogo = ({ isOpen }) => (
   </div>
 );
 
+// NOUVEAU COMPOSANT : Horloge Analogique (Corrigé)
+const AnalogClock = () => {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const secondsRatio = time.getSeconds() / 60;
+  const minutesRatio = (secondsRatio + time.getMinutes()) / 60;
+  const hoursRatio = (minutesRatio + time.getHours()) / 12;
+
+  return (
+    <div className="w-40 h-40 relative mx-auto mb-6">
+       {/* Cadran */}
+       <div className="w-full h-full rounded-full border-4 border-slate-800 bg-white shadow-inner flex items-center justify-center relative">
+          {/* Index */}
+          {[...Array(12)].map((_, i) => (
+             <div key={i} className="absolute w-1 h-2 bg-slate-400 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-42px)` }}></div>
+          ))}
+          {[0, 3, 6, 9].map((i) => (
+             <div key={i} className="absolute w-1.5 h-3 bg-slate-800 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-42px)` }}></div>
+          ))}
+          
+          {/* Aiguille Heures */}
+          <div className="absolute w-1.5 h-10 bg-slate-900 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)` }}></div>
+          {/* Aiguille Minutes */}
+          <div className="absolute w-1 h-14 bg-slate-600 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)` }}></div>
+          {/* Aiguille Secondes */}
+          <div className="absolute w-0.5 h-16 bg-red-500 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)` }}></div>
+          
+          {/* Centre */}
+          <div className="absolute w-3 h-3 bg-slate-900 rounded-full border-2 border-white z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+       </div>
+    </div>
+  );
+};
+
 const LiveClock = () => {
   const [time, setTime] = useState(new Date());
   useEffect(() => {
@@ -226,7 +266,7 @@ const LiveClock = () => {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div className="font-serif text-3xl font-light text-slate-500 tracking-widest mb-2 opacity-80">
+    <div className="font-serif text-5xl font-extralight text-slate-800 tracking-widest mb-2 opacity-90">
       {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
     </div>
   );
@@ -461,6 +501,9 @@ export default function App() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
   const [selectedCalendarWatches, setSelectedCalendarWatches] = useState([]);
+  // NOUVEAU: ETATS STATS
+  const [statsTimeframe, setStatsTimeframe] = useState('month'); // month, year, all
+  const [calendarSearchTerm, setCalendarSearchTerm] = useState(''); // Recherche dans la modal
   
   // MODIF: TRI INITIAL A-Z
   const [sortOrder, setSortOrder] = useState('alpha');
@@ -684,6 +727,7 @@ export default function App() {
   // --- CALENDAR LOGIC ---
   const handleCalendarDayClick = (dateStr) => {
       setSelectedCalendarDate(dateStr);
+      setCalendarSearchTerm(''); // Reset search
       const existing = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
       setSelectedCalendarWatches(existing ? (existing.watches || []) : []);
   };
@@ -1140,22 +1184,49 @@ export default function App() {
 
   // --- STATS VIEW ---
   const renderStats = () => {
+    // Calcul des Top Montres avec Période et Coût par Port (CPP)
     const getTopWatches = () => {
-        const counts = {};
+        const periodCounts = {};
+        const totalCounts = {}; // Pour le CPP (All Time)
+
         calendarEvents.forEach(evt => {
+            const evtDate = new Date(evt.date);
+            
+            // Compte Global pour le CPP
             if (evt.watches && Array.isArray(evt.watches)) {
                 evt.watches.forEach(wId => {
-                    counts[wId] = (counts[wId] || 0) + 1;
+                    totalCounts[wId] = (totalCounts[wId] || 0) + 1;
+                });
+            }
+
+            // Vérification de la Période sélectionnée
+            let inPeriod = false;
+            if (statsTimeframe === 'all') {
+                inPeriod = true;
+            } else if (statsTimeframe === 'year') {
+                inPeriod = evtDate.getFullYear() === currentMonth.getFullYear();
+            } else { // month
+                inPeriod = evtDate.getMonth() === currentMonth.getMonth() && evtDate.getFullYear() === currentMonth.getFullYear();
+            }
+
+            if (inPeriod && evt.watches && Array.isArray(evt.watches)) {
+                evt.watches.forEach(wId => {
+                    periodCounts[wId] = (periodCounts[wId] || 0) + 1;
                 });
             }
         });
         
-        return Object.entries(counts)
+        return Object.entries(periodCounts)
             .sort(([,a], [,b]) => b - a)
-            .slice(0, 3)
+            .slice(0, 5) // Top 5
             .map(([wId, count]) => {
                 const w = watches.find(watch => watch.id === wId);
-                return w ? { ...w, count } : null;
+                if (!w) return null;
+                // Calcul CPP : Prix Achat / Nombre Total de Ports (All Time)
+                const totalWears = totalCounts[wId] || 0;
+                const cpw = (w.purchasePrice && totalWears > 0) ? (w.purchasePrice / totalWears) : null;
+                
+                return { ...w, count, cpw };
             }).filter(Boolean);
     };
 
@@ -1217,27 +1288,46 @@ export default function App() {
              <div className="space-y-6">
                  {/* Top 3 */}
                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                     <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2 mb-4">
-                         <TrendingUp className="text-emerald-500" size={16} /> Top Portées (Global)
-                     </h3>
+                     <div className="flex justify-between items-center mb-4">
+                         <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                             <TrendingUp className="text-emerald-500" size={16} /> Top Portées
+                         </h3>
+                         {/* SELECTEUR PERIODE */}
+                         <div className="flex bg-slate-100 rounded-lg p-0.5">
+                             {[{id: 'month', label: 'Mois'}, {id: 'year', label: 'Année'}, {id: 'all', label: 'Tout'}].map(t => (
+                                 <button 
+                                    key={t.id} 
+                                    onClick={() => setStatsTimeframe(t.id)}
+                                    className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${statsTimeframe === t.id ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                                 >
+                                     {t.label}
+                                 </button>
+                             ))}
+                         </div>
+                     </div>
+                     
                      <div className="space-y-3">
                          {topWatches.map((w, i) => (
-                             <div key={w.id} className="flex items-center gap-3">
-                                 <div className="font-black text-slate-200 text-xl w-6">#{i+1}</div>
-                                 <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden border border-slate-100">
+                             <div key={w.id} className="flex items-center gap-3 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+                                 <div className="font-black text-slate-300 text-xl w-6 text-center">#{i+1}</div>
+                                 <div className="w-10 h-10 bg-white rounded-lg overflow-hidden border border-slate-200 flex-shrink-0">
                                      <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
                                  </div>
-                                 <div className="flex-1">
+                                 <div className="flex-1 min-w-0">
                                      <div className="font-bold text-sm text-slate-800 truncate">{w.brand}</div>
                                      <div className="text-xs text-slate-500 truncate">{w.model}</div>
                                  </div>
-                                 <div className="text-right">
-                                     <div className="font-bold text-indigo-600">{w.count}</div>
-                                     <div className="text-[9px] uppercase text-slate-400 font-bold">Jours</div>
+                                 <div className="text-right flex flex-col items-end">
+                                     <div className="font-bold text-indigo-600 text-sm">{w.count} <span className="text-[9px] uppercase text-slate-400">Jours</span></div>
+                                     {w.cpw && (
+                                         <div className="text-[10px] font-medium text-emerald-600 flex items-center gap-1 bg-emerald-50 px-1.5 py-0.5 rounded-full mt-1 border border-emerald-100" title="Coût par port (Total)">
+                                             <Coins size={10}/> {formatPrice(w.cpw)}/port
+                                         </div>
+                                     )}
                                  </div>
                              </div>
                          ))}
-                         {topWatches.length === 0 && <div className="text-center text-xs text-slate-400 py-4 italic">Utilisez le calendrier pour voir vos stats.</div>}
+                         {topWatches.length === 0 && <div className="text-center text-xs text-slate-400 py-6 italic border border-dashed border-slate-200 rounded-lg">Aucune donnée pour cette période.</div>}
                      </div>
                  </div>
 
@@ -1269,12 +1359,33 @@ export default function App() {
              {selectedCalendarDate && (
                  <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
                      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-                         <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
-                             <h3 className="font-bold text-slate-800">Porté le {new Date(selectedCalendarDate).toLocaleDateString()}</h3>
-                             <button onClick={() => setSelectedCalendarDate(null)}><X size={20} className="text-slate-400"/></button>
+                         <div className="p-4 border-b bg-slate-50">
+                             <div className="flex justify-between items-center mb-3">
+                                 <h3 className="font-bold text-slate-800">Porté le {new Date(selectedCalendarDate).toLocaleDateString()}</h3>
+                                 <button onClick={() => setSelectedCalendarDate(null)}><X size={20} className="text-slate-400"/></button>
+                             </div>
+                             {/* BARRE DE RECHERCHE DANS LA MODAL */}
+                             <div className="relative">
+                                 <Search className="absolute left-3 top-2.5 text-slate-400" size={16}/>
+                                 <input 
+                                    autoFocus
+                                    type="text" 
+                                    placeholder="Rechercher une montre..." 
+                                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    value={calendarSearchTerm}
+                                    onChange={(e) => setCalendarSearchTerm(e.target.value)}
+                                 />
+                             </div>
                          </div>
                          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                             {watches.filter(w => w.status === 'collection').map(w => {
+                             {watches
+                                .filter(w => w.status === 'collection')
+                                .filter(w => {
+                                    if(!calendarSearchTerm) return true;
+                                    const search = calendarSearchTerm.toLowerCase();
+                                    return w.brand.toLowerCase().includes(search) || w.model.toLowerCase().includes(search);
+                                })
+                                .map(w => {
                                  const isSelected = selectedCalendarWatches.includes(w.id);
                                  return (
                                      <div 
@@ -1735,19 +1846,24 @@ export default function App() {
 
       {renderHeaderControls()}
       
-      <div className="z-10 mt-12 mb-2 text-center">
+      <div className="z-10 mt-8 mb-2 text-center">
           <h1 className="font-serif text-3xl sm:text-4xl text-slate-900 tracking-[0.3em] uppercase font-light">
               Mes Montres
           </h1>
           <div className="w-16 h-0.5 bg-slate-900 mx-auto mt-4 opacity-20"></div>
       </div>
 
-      <div className="mb-8 text-center z-10 scale-75 opacity-80"><LiveClock /></div>
+      <div className="mb-4 text-center z-10 scale-90 opacity-90"><LiveClock /></div>
       
-      <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10" title="Ouvrir">
+      {/* NOUVELLE HORLOGE ANALOGIQUE */}
+      <div className="z-10">
+          <AnalogClock />
+      </div>
+      
+      <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10 -mt-10" title="Ouvrir">
         <WatchBoxLogo isOpen={isBoxOpening} />
       </div>
-      <div className="mt-12 flex flex-col items-center z-10 pb-20">
+      <div className="mt-4 flex flex-col items-center z-10 pb-20">
         <p className="text-slate-800 font-serif text-sm mb-2 tracking-widest shadow-sm uppercase opacity-70">{activeWatchesCount} {activeWatchesCount > 1 ? 'pièces' : 'pièce'}</p>
         {!firebaseReady && (<div className="inline-flex items-center justify-center text-amber-600 text-xs bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 backdrop-blur-sm"><WifiOff size={10} className="mr-1"/> Mode Local</div>)}
         
