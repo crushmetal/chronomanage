@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -87,6 +87,7 @@ const TRANSLATIONS = {
     set_main_image: "Définir principale",
     add_photo: "Ajouter",
     link_web: "Lien Web",
+    visit_site: "Visiter le site marchand",
     purchase_price: "Prix Achat",
     selling_price: "Prix Vente/Estim",
     min_price: "Prix Min (Privé)",
@@ -122,7 +123,12 @@ const TRANSLATIONS = {
     export_sheet: "Fiches & Documents",
     sheet_insurance: "Fiche Assurance",
     sheet_sale: "Fiche de Vente",
-    print: "Imprimer"
+    print: "Imprimer",
+    condition_rating: "État (1-10)",
+    condition_comment: "Commentaire sur l'état",
+    show_history: "Voir tout l'historique",
+    show_less: "Réduire",
+    year_summary: "Bilan Année"
   },
   en: {
     box: "Box",
@@ -196,6 +202,7 @@ const TRANSLATIONS = {
     set_main_image: "Set as main",
     add_photo: "Add",
     link_web: "Web Link",
+    visit_site: "Visit Website",
     purchase_price: "Purchase Price",
     selling_price: "Selling/Estim Price",
     min_price: "Min Price (Private)",
@@ -231,7 +238,12 @@ const TRANSLATIONS = {
     export_sheet: "Sheets & Docs",
     sheet_insurance: "Insurance Sheet",
     sheet_sale: "Sale Sheet",
-    print: "Print"
+    print: "Print",
+    condition_rating: "Condition (1-10)",
+    condition_comment: "Condition Details",
+    show_history: "Show Full History",
+    show_less: "Show Less",
+    year_summary: "Year Summary"
   }
 };
 
@@ -257,11 +269,11 @@ const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v52.0";
+const APP_VERSION = "v53.0";
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
-    diameter: '', year: '', releaseDate: '', // NEW
+    diameter: '', year: '', releaseDate: '',
     movement: '', movementModel: '', 
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '',
     dialColor: '', 
@@ -270,9 +282,10 @@ const DEFAULT_WATCH_STATE = {
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', minPrice: '', 
-    purchaseDate: '', soldDate: '', // NEW
+    purchaseDate: '', soldDate: '',
     status: 'collection', conditionNotes: '', link: '', 
     historyBrand: '', historyModel: '', 
+    conditionRating: '', conditionComment: '', // NEW
     image: null, 
     images: []    
 };
@@ -537,6 +550,24 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                         )}
                     </div>
                 </div>
+
+                {/* NEW: History in Sale Sheet */}
+                {isSale && (watch.historyBrand || watch.historyModel) && (
+                    <div className="space-y-4">
+                        {watch.historyBrand && (
+                            <div>
+                                <h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_brand')}</h3>
+                                <p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyBrand}</p>
+                            </div>
+                        )}
+                        {watch.historyModel && (
+                            <div>
+                                <h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_model')}</h3>
+                                <p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyModel}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
                 
                 {isSale && (
                    <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500">
@@ -788,7 +819,10 @@ export default function App() {
   const [authDomainError, setAuthDomainError] = useState(null); 
   const [showRulesHelp, setShowRulesHelp] = useState(false); 
   const [isAuthLoading, setIsAuthLoading] = useState(false); 
-  const [exportType, setExportType] = useState(null); // 'insurance' | 'sale'
+  const [exportType, setExportType] = useState(null); 
+
+  // NEW: Timeline filter state
+  const [timelineFilter, setTimelineFilter] = useState('default'); // 'default' | 'all'
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
@@ -1262,8 +1296,9 @@ export default function App() {
           </div>
 
           {/* EXPORT BUTTONS */}
+          {/* Hide Insurance Sheet for Wishlist items */}
           <div className="flex gap-2">
-               <button onClick={() => setExportType('insurance')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><ShieldCheck size={16}/> {t('sheet_insurance')}</button>
+               {w.status !== 'wishlist' && <button onClick={() => setExportType('insurance')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><ShieldCheck size={16}/> {t('sheet_insurance')}</button>}
                {w.status !== 'wishlist' && <button onClick={() => setExportType('sale')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><DollarSign size={16}/> {t('sheet_sale')}</button>}
           </div>
 
@@ -1271,17 +1306,30 @@ export default function App() {
           <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{w.status === 'wishlist' ? t('find_used') : t('market_value')}</h3>
                <div className="grid grid-cols-2 gap-2">
-                   {marketLinks.map((link) => (
+                   {marketLinks.map((link) => {
+                       const LinkIconComponent = link.icon;
+                       return (
                        <a key={link.name} href={link.url} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-lg ${theme.bg} border ${theme.border} hover:bg-indigo-50 hover:border-indigo-200 transition-colors`}>
-                           <link.icon size={14} className="text-indigo-600"/>
+                           <LinkIconComponent size={14} className="text-indigo-600"/>
                            <span className={`text-xs font-bold ${theme.text}`}>{link.name}</span>
                            <ExternalLink size={10} className="ml-auto text-slate-400"/>
                        </a>
-                   ))}
+                   )})}
                </div>
           </div>
 
-          {w.status === 'wishlist' && (<button onClick={() => handleMoveToCollection(w)} className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-transform active:scale-95 mb-4"><Gift size={20} /> {t('move_collection')}</button>)}
+          {w.status === 'wishlist' && (
+              <>
+                  {w.link && (
+                      <a href={w.link} target="_blank" rel="noreferrer" className="w-full py-4 bg-indigo-50 text-indigo-700 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-indigo-100 transition-colors mb-4 border border-indigo-100">
+                          <LinkIcon size={20} /> {t('visit_site')}
+                      </a>
+                  )}
+                  <button onClick={() => handleMoveToCollection(w)} className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-transform active:scale-95 mb-4">
+                      <Gift size={20} /> {t('move_collection')}
+                  </button>
+              </>
+          )}
           
           {/* TECHNICAL SPECS */}
           <div>
@@ -1319,6 +1367,24 @@ export default function App() {
                   <DetailItem icon={Wrench} label={t('revision')} value={w.revision} theme={theme} />
                </div>
           </div>
+          
+          {/* CONDITION & RATING (NEW) */}
+          {(w.conditionRating || w.conditionComment) && (
+              <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
+                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>
+                  {w.conditionRating && (
+                      <div className="flex items-center gap-2 mb-2">
+                          <div className={`text-lg font-bold ${theme.text} bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg`}>{w.conditionRating}/10</div>
+                          <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-emerald-500" style={{ width: `${w.conditionRating * 10}%` }}></div>
+                          </div>
+                      </div>
+                  )}
+                  {w.conditionComment && (
+                      <p className={`text-sm ${theme.text} italic`}>"{w.conditionComment}"</p>
+                  )}
+              </div>
+          )}
 
           {/* FINANCE & DATES */}
           <div>
@@ -1341,6 +1407,40 @@ export default function App() {
       </div>
     );
   };
+  
+  // Re-added renderProfile function which was missing
+  const renderProfile = () => (
+    <div className="pb-24 px-2">
+      <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border} mb-2`}>
+         <div className="flex justify-between items-center px-2 mb-2">
+            <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{t('gallery')}</h1>
+         </div>
+         <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
+               <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button>
+               <button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button>
+               <button onClick={() => setShowGallerySold(!showGallerySold)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('sold')}</button>
+               <button onClick={() => setShowGalleryWishlist(!showGalleryWishlist)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('wishlist')}</button>
+         </div>
+      </div>
+      <div className="grid grid-cols-3 gap-1 mt-2 px-1">
+          {filteredWatches.filter(w => { 
+             if (!w.image && (!w.images || w.images.length === 0)) return false; 
+             if (w.status === 'collection' && showGalleryCollection) return true; 
+             if (w.status === 'forsale' && showGalleryForsale) return true; 
+             if (w.status === 'sold' && showGallerySold) return true; 
+             if (w.status === 'wishlist' && showGalleryWishlist) return true;
+             return false; 
+          }).map(w => (
+              <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
+                  <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
+              </div>
+          ))}
+          {filteredWatches.filter(w => { if (!w.image && (!w.images || w.images.length === 0)) return false; if (w.status === 'collection' && showGalleryCollection) return true; if (w.status === 'forsale' && showGalleryForsale) return true; if (w.status === 'sold' && showGallerySold) return true; if (w.status === 'wishlist' && showGalleryWishlist) return true; return false; }).length === 0 && (
+              <div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible.</div>
+          )}
+      </div>
+    </div>
+  );
 
   const renderStats = () => {
       // Logic for Calendar & Top Worn (unchanged)
@@ -1483,29 +1583,48 @@ export default function App() {
     const sSold = { buy: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
     const sTotal = { buy: sCol.buy+sSale.buy+sSold.buy, val: sCol.val+sSale.val+sSold.val, profit: sCol.profit+sSale.profit+sSold.profit };
 
-    // NEW: Timeline Logic
-    const timeline = watches.reduce((acc, w) => {
-        if (!w.dateAdded && !w.purchaseDate) return acc;
-        const date = new Date(w.dateAdded || w.purchaseDate); // Fallback
-        const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
-        if (!acc[key]) acc[key] = { date: key, spent: 0, gained: 0, count: 0 };
-        
-        // Expense: If in collection or for sale, calculate cost
-        if (w.purchasePrice) acc[key].spent += Number(w.purchasePrice);
-        
-        // Gain: If sold, we approximate gain date as add date (limitation without dedicated soldDate field in previous schema)
-        // Ideally, we'd have a 'soldDate'. For now, if status is sold, we show the Selling Price as 'Gained' in this timeline bucket? 
-        // No, that's confusing if sale happened later. 
-        // Let's keep it simple: Timeline tracks VALUE ADDED vs VALUE SOLD based on item creation date for now, 
-        // as a true ledger requires transaction history.
-        // Revised approach: "Spent" = Cost of items added this month.
-        if (w.status === 'sold' && w.sellingPrice) acc[key].gained += Number(w.sellingPrice);
-        
-        acc[key].count += 1;
+    // TIMELINE LOGIC (Revised: Group by Month, Filter by state)
+    // Create map of all months with activity
+    const timelineMap = watches.reduce((acc, w) => {
+        // Handle purchases
+        if (w.purchaseDate && w.purchasePrice) {
+            const d = new Date(w.purchaseDate);
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+            if (!acc[key]) acc[key] = { date: key, spent: 0, gained: 0, count: 0 };
+            acc[key].spent += Number(w.purchasePrice);
+            acc[key].count += 1; // Count activity
+        }
+        // Handle sales
+        if (w.status === 'sold' && w.soldDate && w.sellingPrice) {
+            const d = new Date(w.soldDate);
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+            if (!acc[key]) acc[key] = { date: key, spent: 0, gained: 0, count: 0 };
+            acc[key].gained += Number(w.sellingPrice);
+            // Don't double count if purchased and sold same month? keep simple count of transactions.
+        }
         return acc;
     }, {});
     
-    const sortedTimeline = Object.values(timeline).sort((a,b) => b.date.localeCompare(a.date));
+    let sortedTimeline = Object.values(timelineMap).sort((a,b) => b.date.localeCompare(a.date));
+
+    // FILTER LOGIC
+    // Default: Current Month, Previous Month, Current Year Summary (Separate block)
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+    const currentYearKey = String(now.getFullYear());
+
+    // Calculate Current Year Summary
+    const currentYearStats = sortedTimeline.filter(t => t.date.startsWith(currentYearKey)).reduce((acc, curr) => {
+        acc.spent += curr.spent;
+        acc.gained += curr.gained;
+        return acc;
+    }, { spent: 0, gained: 0 });
+
+    const displayedTimeline = timelineFilter === 'default' 
+        ? sortedTimeline.filter(t => t.date === currentMonthKey || t.date === prevMonthKey)
+        : sortedTimeline;
 
     return (
       <div className="pb-24 px-3 space-y-2">
@@ -1524,9 +1643,32 @@ export default function App() {
 
         {/* TIMELINE */}
         <div className="mt-6">
-            <h3 className={`font-bold text-sm ${theme.text} uppercase tracking-wider mb-3 flex items-center gap-2`}><Briefcase size={16}/> {t('finance_timeline')}</h3>
+            <div className="flex justify-between items-center mb-3">
+                <h3 className={`font-bold text-sm ${theme.text} uppercase tracking-wider flex items-center gap-2`}><Briefcase size={16}/> {t('finance_timeline')}</h3>
+                <button 
+                    onClick={() => setTimelineFilter(prev => prev === 'default' ? 'all' : 'default')}
+                    className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-colors ${timelineFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : `${theme.bgSecondary} ${theme.text} ${theme.border}`}`}
+                >
+                    {timelineFilter === 'default' ? t('show_history') : t('show_less')}
+                </button>
+            </div>
+
+            {/* Current Year Summary (Always visible in Default mode, or stick to top?) Let's put it at top in default mode */}
+            {timelineFilter === 'default' && (
+                <div className={`mb-4 p-3 rounded-xl border-2 border-indigo-100 bg-indigo-50/50`}>
+                    <div className="text-xs font-bold text-indigo-900 uppercase mb-2 text-center">{t('year_summary')} {currentYearKey}</div>
+                    <div className="flex justify-between text-sm">
+                        <div className="text-red-500 font-bold">- {formatPrice(currentYearStats.spent)}</div>
+                        <div className="font-mono font-bold text-slate-400">= {formatPrice(currentYearStats.gained - currentYearStats.spent)}</div>
+                        <div className="text-emerald-600 font-bold">+ {formatPrice(currentYearStats.gained)}</div>
+                    </div>
+                </div>
+            )}
+
             <div className="space-y-3">
-                {sortedTimeline.map((tItem) => (
+                {displayedTimeline.length === 0 && timelineFilter === 'default' && <div className={`text-center text-xs ${theme.textSub} py-4 italic`}>Aucune activité récente.</div>}
+                
+                {displayedTimeline.map((tItem) => (
                     <div key={tItem.date} className={`${theme.card} p-3 rounded-xl border ${theme.border} flex items-center justify-between`}>
                         <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-lg ${theme.bgSecondary} font-mono text-xs font-bold ${theme.textSub}`}>
@@ -1534,13 +1676,13 @@ export default function App() {
                             </div>
                             <div className="flex flex-col">
                                 <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
-                                <span className={`font-bold text-sm ${theme.text} ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : 'text-slate-500'}`}>
+                                <span className={`font-bold text-sm ${theme.text} ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
                                     {formatPrice(tItem.gained - tItem.spent)}
                                 </span>
                             </div>
                         </div>
                         <div className="text-right text-xs">
-                            <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>
+                            {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
                             {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
                         </div>
                     </div>
@@ -1550,74 +1692,6 @@ export default function App() {
       </div>
     );
   };
-
-  const renderProfile = () => (
-    <div className="pb-24 px-2">
-      <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border} mb-2`}>
-         <div className="flex justify-between items-center px-2 mb-2">
-            <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{t('gallery')}</h1>
-         </div>
-         <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
-               <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button>
-               <button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button>
-               <button onClick={() => setShowGallerySold(!showGallerySold)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('sold')}</button>
-         </div>
-      </div>
-      <div className="grid grid-cols-3 gap-1 mt-2 px-1">
-          {filteredWatches.filter(w => { if (!w.image && (!w.images || w.images.length === 0)) return false; if (w.status === 'collection' && showGalleryCollection) return true; if (w.status === 'forsale' && showGalleryForsale) return true; if (w.status === 'sold' && showGallerySold) return true; return false; }).map(w => (
-              <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
-                  <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
-              </div>
-          ))}
-      </div>
-    </div>
-  );
-
-  const renderFriendDetail = (watch) => (
-      <div className={`fixed inset-0 z-[70] ${theme.card} flex flex-col animate-in slide-in-from-bottom-10`}>
-          <div className={`p-4 border-b ${theme.border} flex items-center justify-between ${theme.bgSecondary}`}><h3 className={`font-serif font-bold ${theme.text}`}>Détail Ami</h3><button onClick={() => setSelectedWatch(null)}><X size={20} className={theme.text}/></button></div>
-          <div className="p-6 flex-1 overflow-y-auto space-y-6">
-              <div className={`aspect-square ${theme.bg} rounded-xl overflow-hidden`}><img src={watch.images?.[0] || watch.image} className="w-full h-full object-cover"/></div>
-              <div><h2 className={`text-2xl font-serif font-bold ${theme.text}`}>{watch.brand}</h2><p className={`text-lg ${theme.textSub}`}>{watch.model}</p></div>
-              <div className="bg-blue-50 p-4 rounded-xl text-center text-sm text-blue-800 font-medium mt-4">Cette montre appartient à {viewingFriend?.name}.</div>
-          </div>
-      </div>
-  );
-
-  const renderFriends = () => {
-      if (user?.isAnonymous || user?.uid === 'local-user') return (<div className="pb-24 px-6 flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6"><div className="p-6 bg-indigo-50 rounded-full text-indigo-600"><Users size={48}/></div><div><h2 className={`text-xl font-bold ${theme.text} mb-2`}>Cloud Requis</h2><p className={theme.textSub}>Connectez-vous pour ajouter des amis.</p></div><button onClick={handleGoogleLogin} className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold">{t('login_google')}</button></div>);
-      if (viewingFriend) return (
-          <div className={`pb-24 ${theme.bgSecondary} min-h-screen`}>
-              <div className={`sticky top-0 ${theme.bgSecondary}/95 backdrop-blur z-10 px-4 py-3 border-b ${theme.border} flex items-center gap-3`}><button onClick={() => setViewingFriend(null)} className={theme.text}><ChevronLeft/></button><div><h1 className={`font-serif font-bold ${theme.text}`}>{viewingFriend.name}</h1></div></div>
-              <div className="p-4 grid grid-cols-2 gap-3">{friendWatches.map(w => (<div key={w.id} onClick={() => setSelectedWatch(w)} className={`${theme.card} rounded-xl shadow-sm overflow-hidden border ${theme.border}`}><div className={`aspect-square ${theme.bg}`}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/></div><div className="p-2"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div></div></div>))}</div>
-              {selectedWatch && renderFriendDetail(selectedWatch)}
-          </div>
-      );
-      return (
-          <div className="pb-24 px-3">
-              <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-4`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('friends')}</h1></div>
-              {friendRequests.length > 0 && (<div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4"><h3 className="font-bold text-sm text-amber-700 uppercase mb-3">{t('requests')}</h3>{friendRequests.map(req => (<div key={req.id} className="bg-white p-3 rounded-lg shadow-sm flex justify-between"><span className="text-sm font-bold">{req.fromEmail}</span><div className="flex gap-2"><button onClick={() => acceptRequest(req)}><Check size={16}/></button></div></div>))}</div>)}
-              <div className="bg-indigo-600 rounded-xl p-4 text-white shadow-lg mb-6"><h3 className="font-bold text-lg mb-1">Code Ami</h3><div className="bg-white/10 p-3 rounded-lg flex justify-between"><code className="font-mono text-sm">{user?.uid}</code><button onClick={() => navigator.clipboard.writeText(user?.uid)}><Copy size={12}/></button></div></div>
-              <button onClick={handlePreviewOwnProfile} className="w-full mb-6 py-3 border-2 border-indigo-100 text-indigo-600 rounded-xl font-bold flex justify-center gap-2"><Eye size={18}/> Mon Profil</button>
-              <div className="mb-6"><div className="flex gap-2"><input type="text" placeholder="Code ami..." className={`flex-1 p-3 rounded-xl border ${theme.border} ${theme.input}`} value={addFriendId} onChange={(e) => setAddFriendId(e.target.value)}/><button onClick={sendFriendRequest} className="bg-slate-900 text-white p-3 rounded-xl"><UserPlus size={20}/></button></div></div>
-              <div><h3 className={`font-bold text-sm ${theme.textSub} uppercase mb-3`}>Mes Amis</h3>{friends.map(f => (<div key={f.id} onClick={() => loadFriendCollection(f)} className={`${theme.card} p-4 rounded-xl border ${theme.border} flex justify-between cursor-pointer`}><span className={`font-bold ${theme.text}`}>{f.name}</span><button onClick={(e) => {e.stopPropagation(); removeFriend(f.id)}}><Trash2 size={16} className="text-red-500"/></button></div>))}</div>
-          </div>
-      );
-  };
-
-  const renderSummary = () => (
-      <div className="pb-24 px-2">
-          {renderHeader(t('inventory'))}
-          <div className="space-y-6 px-1 mt-2">
-              <button className={`w-full p-4 text-left ${theme.card} border ${theme.border} rounded-lg shadow-sm`} onClick={exportCSV}><div className={`font-bold flex items-center ${theme.text}`}><Download className="mr-2" size={18}/> {t('export_csv')}</div></button>
-              {['collection', 'forsale', 'sold'].map(cat => {
-                  const list = filteredWatches.filter(w => w.status === cat);
-                  if (list.length === 0) return null;
-                  return (<div key={cat} className={`${theme.card} rounded-xl shadow-sm border ${theme.border}`}><div className={`px-4 py-2 border-b ${theme.border} font-bold text-sm ${theme.text}`}>{t(cat)} ({list.length})</div><div className={`divide-y ${theme.border}`}>{list.map(w => (<div key={w.id} className="flex items-center p-2"><div className={`font-bold text-sm ${theme.text} whitespace-nowrap mr-2`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div>))}</div></div>);
-              })}
-          </div>
-      </div>
-  );
 
   // --- RENDER FORM ---
   const renderForm = () => {
@@ -1630,6 +1704,7 @@ export default function App() {
               <button onClick={() => handleCancelForm()} className={theme.text}><X/></button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ... (Image Grid - Unchanged) ... */}
             <div className="grid grid-cols-3 gap-3">
                 {currentImages.map((img, idx) => (
                     <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
@@ -1703,7 +1778,6 @@ export default function App() {
                     <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('box_included')} value={watchForm.box} onChange={e => setWatchForm({...watchForm, box: e.target.value})} />
                  </div>
                  
-                 {/* NEW DATE FIELDS */}
                  <div className="grid grid-cols-2 gap-3">
                      <div>
                          <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_release')}</label>
@@ -1727,6 +1801,24 @@ export default function App() {
                  </div>
             </div>
 
+            {/* NEW: Condition Scale */}
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>État & Condition</h3>
+                 <div>
+                     <label className={`block text-xs ${theme.textSub} mb-1`}>{t('condition_rating')}: <span className="font-bold text-lg">{watchForm.conditionRating || '-'}</span>/10</label>
+                     <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        step="1" 
+                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                        value={watchForm.conditionRating || 0}
+                        onChange={e => setWatchForm({...watchForm, conditionRating: parseInt(e.target.value)})}
+                     />
+                 </div>
+                 <textarea className={`w-full p-3 rounded-lg min-h-[60px] ${theme.input}`} placeholder={t('condition_comment')} value={watchForm.conditionComment || ''} onChange={e => setWatchForm({...watchForm, conditionComment: e.target.value})} />
+            </div>
+
             {/* FINANCE & STATUS */}
             <div className="space-y-3">
                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('financial_status')}</h3>
@@ -1740,11 +1832,20 @@ export default function App() {
                         <input type="number" className={`w-full p-2 bg-transparent border-none focus:ring-0 text-sm ${theme.text}`} placeholder={t('min_price')} value={watchForm.minPrice || ''} onChange={e => setWatchForm({...watchForm, minPrice: e.target.value})} />
                     </div>
                 )}
+                
+                {/* STATUS SELECTOR */}
                 <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
                     {[{id: 'collection', label: t('collection')}, {id: 'forsale', label: t('forsale')}, {id: 'sold', label: t('sold')}, {id: 'wishlist', label: t('wishlist')}].map(s => (
                         <button key={s.id} type="button" onClick={() => setWatchForm({...watchForm, status: s.id})} className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold border whitespace-nowrap ${watchForm.status === s.id ? 'bg-slate-800 text-white' : `${theme.bg} ${theme.border} ${theme.text}`}`}>{s.label}</button>
                     ))}
                 </div>
+
+                {/* NEW: LINK INPUT (Always Visible, Emphasized for Wishlist) */}
+                <div className={`relative ${watchForm.status === 'wishlist' ? 'animate-pulse-slow' : ''}`}>
+                    <LinkIcon className={`absolute left-3 top-3.5 ${theme.textSub}`} size={18}/>
+                    <input className={`w-full p-3 pl-10 rounded-lg ${theme.input} ${watchForm.status === 'wishlist' ? 'border-indigo-300 ring-1 ring-indigo-100' : ''}`} placeholder={t('link_web')} value={watchForm.link || ''} onChange={e => setWatchForm({...watchForm, link: e.target.value})} />
+                </div>
+
                 <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
