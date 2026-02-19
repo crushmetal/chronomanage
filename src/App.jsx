@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -40,7 +40,7 @@ const TRANSLATIONS = {
     brand: "Marque",
     model: "Modèle",
     reference: "Référence",
-    year: "Année",
+    year: "Année Modèle", // Changed
     price: "Prix",
     add_new: "Ajouter",
     edit: "Modifier",
@@ -115,7 +115,6 @@ const TRANSLATIONS = {
     origin_maintenance: "Origine & Entretien",
     technical: "Technique",
     financial_status: "Finances & Statut",
-    date_release: "Date de Sortie",
     date_purchase: "Date d'Achat",
     date_sold: "Date de Vente",
     market_value: "Estimation du Marché",
@@ -128,7 +127,14 @@ const TRANSLATIONS = {
     condition_comment: "Commentaire sur l'état",
     show_history: "Voir tout l'historique",
     show_less: "Réduire",
-    year_summary: "Bilan Année"
+    year_summary: "Bilan Année",
+    stats_usage: "Statistiques d'Usage",
+    worn_this_month: "Ce mois",
+    worn_this_year: "Cette année",
+    worn_last_year: "Année dernière",
+    invoice: "Facture",
+    add_invoice: "Ajouter Facture",
+    view_invoice: "Voir Facture"
   },
   en: {
     box: "Box",
@@ -155,7 +161,7 @@ const TRANSLATIONS = {
     brand: "Brand",
     model: "Model",
     reference: "Reference",
-    year: "Year",
+    year: "Model Year", // Changed
     price: "Price",
     add_new: "Add New",
     edit: "Edit",
@@ -230,7 +236,6 @@ const TRANSLATIONS = {
     origin_maintenance: "Origin & Maintenance",
     technical: "Technical",
     financial_status: "Finances & Status",
-    date_release: "Release Date",
     date_purchase: "Purchase Date",
     date_sold: "Sold Date",
     market_value: "Market Estimation",
@@ -243,7 +248,14 @@ const TRANSLATIONS = {
     condition_comment: "Condition Details",
     show_history: "Show Full History",
     show_less: "Show Less",
-    year_summary: "Year Summary"
+    year_summary: "Year Summary",
+    stats_usage: "Usage Statistics",
+    worn_this_month: "This Month",
+    worn_this_year: "This Year",
+    worn_last_year: "Last Year",
+    invoice: "Invoice",
+    add_invoice: "Add Invoice",
+    view_invoice: "View Invoice"
   }
 };
 
@@ -269,11 +281,11 @@ const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v53.0";
+const APP_VERSION = "v54.0";
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
-    diameter: '', year: '', releaseDate: '',
+    diameter: '', year: '', // Now Model Year
     movement: '', movementModel: '', 
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '',
     dialColor: '', 
@@ -285,9 +297,10 @@ const DEFAULT_WATCH_STATE = {
     purchaseDate: '', soldDate: '',
     status: 'collection', conditionNotes: '', link: '', 
     historyBrand: '', historyModel: '', 
-    conditionRating: '', conditionComment: '', // NEW
+    conditionRating: '', conditionComment: '',
     image: null, 
-    images: []    
+    images: [],
+    invoice: null // NEW: Invoice Image
 };
 
 const DEFAULT_BRACELET_STATE = {
@@ -374,7 +387,6 @@ const MovementIcon = ({ size = 24, className = "" }) => (
 
 // --- ANIMATION COFFRE ---
 const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
-  // Colors from settings or defaults
   const leatherColor = settings.boxLeather || (isDark ? "#3E2723" : "#5D4037");
   const interiorColor = settings.boxInterior || (isDark ? "#424242" : "#f5f5f0");
   const cushionColor = settings.boxCushion || (isDark ? "#616161" : "#fdfbf7");
@@ -440,11 +452,10 @@ const AnalogClock = ({ isDark, settings }) => {
   const borderColor = isDark ? 'border-slate-600' : 'border-slate-800';
   const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
   
-  // Custom or Default Colors
-  const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); // slate-400 : slate-800
-  const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); // slate-300 : slate-900
-  const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); // slate-400 : slate-600
-  const sHandColor = settings.handSecond || '#ef4444'; // red-500
+  const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); 
+  const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); 
+  const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); 
+  const sHandColor = settings.handSecond || '#ef4444'; 
 
   return (
     <div className="w-32 h-32 relative mx-auto mb-2">
@@ -485,7 +496,7 @@ const Card = ({ children, className = "", onClick, theme }) => (
 const DetailItem = ({ icon: Icon, label, value, theme }) => (
     <div className={`${theme.bgSecondary} p-3 rounded-lg border ${theme.border} flex items-center`}>
         <div className={`${theme.bg} p-2 rounded-full border ${theme.border} mr-3 ${theme.textSub} flex-shrink-0`}>{Icon && <Icon size={16} />}</div>
-        <div className="min-w-0"><span className={`text-[10px] uppercase tracking-wider ${theme.textSub} block`}>{label}</span><span className={`font-serif text-sm ${theme.text} truncate block`}>{value || '-'}</span></div>
+        <div className="min-w-0"><span className={`text-[10px] font-bold uppercase tracking-wider ${theme.textSub} block opacity-70`}>{label}</span><span className={`font-serif text-sm ${theme.text} truncate block`}>{value || '-'}</span></div>
     </div>
 );
 
@@ -535,11 +546,15 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                         <div className="grid grid-cols-2 gap-y-2 text-sm">
                             <div className="text-slate-500">{t('year')}:</div><div>{watch.year || '-'}</div>
                             <div className="text-slate-500">{t('diameter')}:</div><div>{watch.diameter ? watch.diameter + ' mm' : '-'}</div>
+                            <div className="text-slate-500">{t('thickness')}:</div><div>{watch.thickness ? watch.thickness + ' mm' : '-'}</div>
+                            <div className="text-slate-500">{t('lug_width')}:</div><div>{watch.strapWidth ? watch.strapWidth + ' mm' : '-'}</div>
                             <div className="text-slate-500">{t('movement')}:</div><div>{watch.movement || '-'}</div>
                             <div className="text-slate-500">{t('dial')}:</div><div>{watch.dialColor || '-'}</div>
                             <div className="text-slate-500">{t('box_included')}:</div><div>{watch.box || '-'}</div>
                             <div className="text-slate-500">{t('warranty')}:</div><div>{watch.warrantyDate || '-'}</div>
                             <div className="text-slate-500">{t('country')}:</div><div>{watch.country || '-'}</div>
+                            <div className="text-slate-500">{t('weight')}:</div><div>{watch.weight ? watch.weight + ' g' : '-'}</div>
+                            {watch.batteryModel && <><div className="text-slate-500">{t('battery')}:</div><div>{watch.batteryModel}</div></>}
                         </div>
                         
                         {watch.conditionNotes && (
@@ -1004,6 +1019,8 @@ export default function App() {
               const newImages = [...currentImages, base64];
               return { ...prev, images: newImages, image: newImages[0] };
           });
+      } else if (type === 'invoice') { // NEW: Invoice
+          setWatchForm(prev => ({...prev, invoice: base64}));
       } else { setBraceletForm(prev => ({ ...prev, image: base64 })); }
     } catch (err) {}
   };
@@ -1270,6 +1287,34 @@ export default function App() {
         { name: "LeBonCoin", url: `https://www.leboncoin.fr/recherche?text=${searchQuery}`, icon: MapPin },
     ];
 
+    // Helper for Watch Usage Stats
+    const getWatchStats = (watchId) => {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        let monthCount = 0;
+        let yearCount = 0;
+        let lastYearCount = 0;
+
+        calendarEvents.forEach(evt => {
+            if (evt.watches && evt.watches.includes(watchId)) {
+                const d = new Date(evt.date);
+                const dy = d.getFullYear();
+                const dm = d.getMonth();
+                
+                if (dy === currentYear) {
+                    yearCount++;
+                    if (dm === currentMonth) monthCount++;
+                } else if (dy === currentYear - 1) {
+                    lastYearCount++;
+                }
+            }
+        });
+        return { monthCount, yearCount, lastYearCount };
+    };
+
+    const stats = getWatchStats(w.id);
+
     return (
       <div className={`pb-24 ${theme.bgSecondary} min-h-screen`}>
         <div className={`sticky top-0 ${theme.bgSecondary}/90 backdrop-blur p-4 flex items-center justify-between border-b ${theme.border} z-10`}>
@@ -1296,7 +1341,6 @@ export default function App() {
           </div>
 
           {/* EXPORT BUTTONS */}
-          {/* Hide Insurance Sheet for Wishlist items */}
           <div className="flex gap-2">
                {w.status !== 'wishlist' && <button onClick={() => setExportType('insurance')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><ShieldCheck size={16}/> {t('sheet_insurance')}</button>}
                {w.status !== 'wishlist' && <button onClick={() => setExportType('sale')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><DollarSign size={16}/> {t('sheet_sale')}</button>}
@@ -1330,6 +1374,29 @@ export default function App() {
                   </button>
               </>
           )}
+
+          {/* USAGE STATS */}
+          {w.status === 'collection' && (
+              <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
+                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider flex items-center gap-2`}>
+                      <BarChart2 size={14}/> {t('stats_usage')}
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className={`p-2 rounded-lg ${theme.bg}`}>
+                          <div className={`text-lg font-bold ${theme.text}`}>{stats.monthCount}</div>
+                          <div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_this_month')}</div>
+                      </div>
+                      <div className={`p-2 rounded-lg ${theme.bg}`}>
+                          <div className={`text-lg font-bold ${theme.text}`}>{stats.yearCount}</div>
+                          <div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_this_year')}</div>
+                      </div>
+                      <div className={`p-2 rounded-lg ${theme.bg}`}>
+                          <div className={`text-lg font-bold ${theme.text}`}>{stats.lastYearCount}</div>
+                          <div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_last_year')}</div>
+                      </div>
+                  </div>
+              </div>
+          )}
           
           {/* TECHNICAL SPECS */}
           <div>
@@ -1360,7 +1427,6 @@ export default function App() {
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('origin_maintenance')}</h3>
                <div className="grid grid-cols-2 gap-3">
                   <DetailItem icon={MapPin} label={t('country')} value={w.country} theme={theme} />
-                  <DetailItem icon={Calendar} label={t('date_release')} value={w.releaseDate} theme={theme} />
                   <DetailItem icon={Calendar} label={t('year')} value={w.year} theme={theme} />
                   <DetailItem icon={Package} label={t('box_included')} value={w.box} theme={theme} />
                   <DetailItem icon={ShieldCheck} label={t('warranty')} value={w.warrantyDate} theme={theme} />
@@ -1385,6 +1451,23 @@ export default function App() {
                   )}
               </div>
           )}
+
+          {/* DOCUMENTS & INVOICE */}
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>
+              {w.invoice ? (
+                  <div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer`} onClick={() => setFullScreenImage(w.invoice)}>
+                      <img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
+                              <Receipt size={14}/> {t('view_invoice')}
+                          </div>
+                      </div>
+                  </div>
+              ) : (
+                  <div className={`p-4 text-center text-sm ${theme.textSub} italic border border-dashed ${theme.border} rounded-xl`}>Aucune facture enregistrée</div>
+              )}
+          </div>
 
           {/* FINANCE & DATES */}
           <div>
@@ -1780,25 +1863,37 @@ export default function App() {
                  
                  <div className="grid grid-cols-2 gap-3">
                      <div>
-                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_release')}</label>
-                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.releaseDate || ''} onChange={e => setWatchForm({...watchForm, releaseDate: e.target.value})} />
-                     </div>
-                     <div>
                          <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_purchase')}</label>
                          <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.purchaseDate || ''} onChange={e => setWatchForm({...watchForm, purchaseDate: e.target.value})} />
                      </div>
+                     {watchForm.status === 'sold' && (
+                         <div>
+                             <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label>
+                             <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={e => setWatchForm({...watchForm, soldDate: e.target.value})} />
+                         </div>
+                     )}
                  </div>
-                 {watchForm.status === 'sold' && (
-                     <div>
-                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label>
-                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={e => setWatchForm({...watchForm, soldDate: e.target.value})} />
-                     </div>
-                 )}
                  
                  <div className="grid grid-cols-2 gap-3">
                     <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('warranty')} value={watchForm.warrantyDate} onChange={e => setWatchForm({...watchForm, warrantyDate: e.target.value})} />
                     <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('revision')} value={watchForm.revision} onChange={e => setWatchForm({...watchForm, revision: e.target.value})} />
                  </div>
+            </div>
+            
+            {/* INVOICE UPLOAD */}
+            <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
+                <div className={`flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider ${theme.textSub}`}><Receipt size={14}/> {t('invoice')}</div>
+                {watchForm.invoice ? (
+                     <div className="flex items-center gap-2">
+                         <div className="text-xs text-emerald-600 font-bold flex items-center gap-1"><Check size={12}/> Facture ajoutée</div>
+                         <button type="button" onClick={() => setWatchForm({...watchForm, invoice: null})} className="text-xs text-red-500 underline">Supprimer</button>
+                     </div>
+                ) : (
+                    <label className={`flex items-center gap-2 cursor-pointer text-xs font-bold ${theme.text}`}>
+                        <Plus size={14}/> {t('add_invoice')}
+                        <input type="file" onChange={(e) => handleImageUpload(e, 'invoice')} className="hidden" accept="image/*"/>
+                    </label>
+                )}
             </div>
 
             {/* NEW: Condition Scale */}
