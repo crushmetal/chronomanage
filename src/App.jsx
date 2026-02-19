@@ -3,7 +3,7 @@ import {
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
   Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase
+  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -39,6 +39,7 @@ const TRANSLATIONS = {
     profit: "Plus-value",
     brand: "Marque",
     model: "Modèle",
+    reference: "Référence",
     year: "Année",
     price: "Prix",
     add_new: "Ajouter",
@@ -48,6 +49,8 @@ const TRANSLATIONS = {
     cancel: "Annuler",
     notes: "Notes",
     history: "Histoire",
+    history_brand: "Histoire Marque",
+    history_model: "Histoire Modèle",
     specs: "Caractéristiques",
     unknown: "Inconnu",
     total_displayed: "montres affichées",
@@ -62,6 +65,7 @@ const TRANSLATIONS = {
     requests: "Demandes",
     limited_edition: "EDITION LIMITÉE",
     movement: "Mouvement",
+    movement_model: "Calibre/Modèle",
     manual: "Manuel",
     automatic: "Automatique",
     quartz: "Quartz",
@@ -70,6 +74,7 @@ const TRANSLATIONS = {
     lug_width: "Entre-corne",
     water_res: "Étanchéité",
     glass: "Verre",
+    dial: "Cadran",
     country: "Pays",
     box_included: "Boîte",
     warranty: "Garantie",
@@ -104,7 +109,20 @@ const TRANSLATIONS = {
     finance_timeline: "Chronologie Financière",
     spent: "Dépenses",
     gained: "Gains",
-    balance: "Bilan"
+    balance: "Bilan",
+    identity: "Identité",
+    origin_maintenance: "Origine & Entretien",
+    technical: "Technique",
+    financial_status: "Finances & Statut",
+    date_release: "Date de Sortie",
+    date_purchase: "Date d'Achat",
+    date_sold: "Date de Vente",
+    market_value: "Estimation du Marché",
+    find_used: "Trouver d'Occasion",
+    export_sheet: "Fiches & Documents",
+    sheet_insurance: "Fiche Assurance",
+    sheet_sale: "Fiche de Vente",
+    print: "Imprimer"
   },
   en: {
     box: "Box",
@@ -130,6 +148,7 @@ const TRANSLATIONS = {
     profit: "Profit",
     brand: "Brand",
     model: "Model",
+    reference: "Reference",
     year: "Year",
     price: "Price",
     add_new: "Add New",
@@ -139,6 +158,8 @@ const TRANSLATIONS = {
     cancel: "Cancel",
     notes: "Notes",
     history: "History",
+    history_brand: "Brand History",
+    history_model: "Model History",
     specs: "Specifications",
     unknown: "Unknown",
     total_displayed: "watches displayed",
@@ -153,6 +174,7 @@ const TRANSLATIONS = {
     requests: "Requests",
     limited_edition: "LIMITED EDITION",
     movement: "Movement",
+    movement_model: "Caliber/Model",
     manual: "Manual",
     automatic: "Automatic",
     quartz: "Quartz",
@@ -161,6 +183,7 @@ const TRANSLATIONS = {
     lug_width: "Lug Width",
     water_res: "Water Res.",
     glass: "Glass",
+    dial: "Dial",
     country: "Country",
     box_included: "Box",
     warranty: "Warranty",
@@ -195,7 +218,20 @@ const TRANSLATIONS = {
     finance_timeline: "Financial Timeline",
     spent: "Spent",
     gained: "Gained",
-    balance: "Balance"
+    balance: "Balance",
+    identity: "Identity",
+    origin_maintenance: "Origin & Maintenance",
+    technical: "Technical",
+    financial_status: "Finances & Status",
+    date_release: "Release Date",
+    date_purchase: "Purchase Date",
+    date_sold: "Sold Date",
+    market_value: "Market Estimation",
+    find_used: "Find Used",
+    export_sheet: "Sheets & Docs",
+    sheet_insurance: "Insurance Sheet",
+    sheet_sale: "Sale Sheet",
+    print: "Print"
   }
 };
 
@@ -221,11 +257,12 @@ const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v50.0";
+const APP_VERSION = "v52.0";
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
-    diameter: '', year: '', movement: '', movementModel: '', 
+    diameter: '', year: '', releaseDate: '', // NEW
+    movement: '', movementModel: '', 
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '',
     dialColor: '', 
     batteryModel: '', 
@@ -233,6 +270,7 @@ const DEFAULT_WATCH_STATE = {
     publicVisible: true, 
     box: '', warrantyDate: '', revision: '',
     purchasePrice: '', sellingPrice: '', minPrice: '', 
+    purchaseDate: '', soldDate: '', // NEW
     status: 'collection', conditionNotes: '', link: '', 
     historyBrand: '', historyModel: '', 
     image: null, 
@@ -437,6 +475,85 @@ const DetailItem = ({ icon: Icon, label, value, theme }) => (
         <div className="min-w-0"><span className={`text-[10px] uppercase tracking-wider ${theme.textSub} block`}>{label}</span><span className={`font-serif text-sm ${theme.text} truncate block`}>{value || '-'}</span></div>
     </div>
 );
+
+// NEW: Export / Print View Component
+const ExportView = ({ watch, type, onClose, theme, t }) => {
+    const isSale = type === 'sale';
+    return (
+        <div className="fixed inset-0 z-[200] bg-white flex flex-col overflow-auto text-black">
+            {/* Header Toolbar (Hidden when printing) */}
+            <div className="print:hidden p-4 border-b flex justify-between items-center bg-slate-100 sticky top-0 z-50">
+                <h2 className="font-bold text-lg">{isSale ? t('sheet_sale') : t('sheet_insurance')}</h2>
+                <div className="flex gap-2">
+                    <button onClick={() => window.print()} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700"><Printer size={16}/> {t('print')}</button>
+                    <button onClick={onClose} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-bold hover:bg-slate-300"><X size={16}/></button>
+                </div>
+            </div>
+            
+            {/* Content (Printable) */}
+            <div className="p-8 max-w-3xl mx-auto w-full space-y-8 print:p-0 print:space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-black pb-4">
+                    <div>
+                        <h1 className="text-4xl font-serif font-bold uppercase tracking-widest">{watch.brand}</h1>
+                        <h2 className="text-xl text-slate-600 font-medium">{watch.model}</h2>
+                        {watch.reference && <p className="font-mono text-sm mt-1">REF: {watch.reference}</p>}
+                    </div>
+                    {/* Logo Placeholder */}
+                    <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center">
+                        <Watch size={32} />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
+                    <div>
+                        {watch.images && watch.images[0] && (
+                            <div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4">
+                                <img src={watch.images[0]} className="w-full h-full object-cover"/>
+                            </div>
+                        )}
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
+                             <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{isSale ? t('selling_price') : t('purchase_price')}</div>
+                             <div className="text-3xl font-bold font-serif">{formatPrice(isSale ? (watch.sellingPrice || watch.purchasePrice) : watch.purchasePrice)}</div>
+                             {isSale && <div className="mt-2 text-xs text-slate-500 italic">*Prix non contractuel, sujet à négociation</div>}
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <h3 className="font-bold uppercase border-b border-slate-200 pb-1">{t('specs')}</h3>
+                        <div className="grid grid-cols-2 gap-y-2 text-sm">
+                            <div className="text-slate-500">{t('year')}:</div><div>{watch.year || '-'}</div>
+                            <div className="text-slate-500">{t('diameter')}:</div><div>{watch.diameter ? watch.diameter + ' mm' : '-'}</div>
+                            <div className="text-slate-500">{t('movement')}:</div><div>{watch.movement || '-'}</div>
+                            <div className="text-slate-500">{t('dial')}:</div><div>{watch.dialColor || '-'}</div>
+                            <div className="text-slate-500">{t('box_included')}:</div><div>{watch.box || '-'}</div>
+                            <div className="text-slate-500">{t('warranty')}:</div><div>{watch.warrantyDate || '-'}</div>
+                            <div className="text-slate-500">{t('country')}:</div><div>{watch.country || '-'}</div>
+                        </div>
+                        
+                        {watch.conditionNotes && (
+                            <div className="mt-6">
+                                <h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('notes')}</h3>
+                                <p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.conditionNotes}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                
+                {isSale && (
+                   <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500">
+                       <p>Contactez le vendeur pour plus d'informations.</p>
+                       <div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">
+                           QR Code / Contact Info Placeholder
+                       </div>
+                   </div>
+                )}
+                
+                <div className="print:fixed print:bottom-4 print:left-0 print:w-full text-center text-[10px] text-slate-400">
+                    Généré par ChronoManager - {new Date().toLocaleDateString()}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const FinanceDetailList = ({ title, items, onClose, theme }) => {
     const [localSort, setLocalSort] = useState('alpha'); 
@@ -671,6 +788,7 @@ export default function App() {
   const [authDomainError, setAuthDomainError] = useState(null); 
   const [showRulesHelp, setShowRulesHelp] = useState(false); 
   const [isAuthLoading, setIsAuthLoading] = useState(false); 
+  const [exportType, setExportType] = useState(null); // 'insurance' | 'sale'
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
@@ -1109,6 +1227,15 @@ export default function App() {
     const w = selectedWatch;
     const displayImages = w.images && w.images.length > 0 ? w.images : (w.image ? [w.image] : []);
     
+    // Helpers for Market Search Links
+    const searchQuery = `${w.brand} ${w.model}`.replace(/\s+/g, '+');
+    const marketLinks = [
+        { name: "Chrono24", url: `https://www.chrono24.fr/search/index.htm?query=${searchQuery}`, icon: Clock },
+        { name: "eBay", url: `https://www.ebay.fr/sch/i.html?_nkw=${searchQuery}`, icon: ShoppingCart },
+        { name: "Vinted", url: `https://www.vinted.fr/vetements?search_text=${searchQuery}`, icon: Gem }, // Approximate icon
+        { name: "LeBonCoin", url: `https://www.leboncoin.fr/recherche?text=${searchQuery}`, icon: MapPin },
+    ];
+
     return (
       <div className={`pb-24 ${theme.bgSecondary} min-h-screen`}>
         <div className={`sticky top-0 ${theme.bgSecondary}/90 backdrop-blur p-4 flex items-center justify-between border-b ${theme.border} z-10`}>
@@ -1129,25 +1256,87 @@ export default function App() {
               <div>
                 <h1 className={`text-3xl font-serif font-bold ${theme.text} leading-tight`}>{w.brand}</h1>
                 <p className={`text-xl ${theme.textSub} font-medium font-serif`}>{w.model}</p>
+                {w.reference && <span className={`text-xs ${theme.bg} px-2 py-1 rounded mt-2 inline-block border ${theme.border} font-mono ${theme.textSub}`}>REF: {w.reference}</span>}
                 {w.isLimitedEdition && (<div className={`mt-2 inline-flex items-center px-3 py-1 ${theme.text} bg-indigo-500/10 text-xs font-bold rounded-full border border-indigo-500/30`}>{t('limited_edition')} {w.limitedNumber && w.limitedTotal ? `${w.limitedNumber} / ${w.limitedTotal}` : ''}</div>)}
               </div>
           </div>
+
+          {/* EXPORT BUTTONS */}
+          <div className="flex gap-2">
+               <button onClick={() => setExportType('insurance')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><ShieldCheck size={16}/> {t('sheet_insurance')}</button>
+               {w.status !== 'wishlist' && <button onClick={() => setExportType('sale')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><DollarSign size={16}/> {t('sheet_sale')}</button>}
+          </div>
+
+          {/* MARKET SEARCH LINKS */}
+          <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
+               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{w.status === 'wishlist' ? t('find_used') : t('market_value')}</h3>
+               <div className="grid grid-cols-2 gap-2">
+                   {marketLinks.map((link) => (
+                       <a key={link.name} href={link.url} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-lg ${theme.bg} border ${theme.border} hover:bg-indigo-50 hover:border-indigo-200 transition-colors`}>
+                           <link.icon size={14} className="text-indigo-600"/>
+                           <span className={`text-xs font-bold ${theme.text}`}>{link.name}</span>
+                           <ExternalLink size={10} className="ml-auto text-slate-400"/>
+                       </a>
+                   ))}
+               </div>
+          </div>
+
           {w.status === 'wishlist' && (<button onClick={() => handleMoveToCollection(w)} className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-transform active:scale-95 mb-4"><Gift size={20} /> {t('move_collection')}</button>)}
+          
+          {/* TECHNICAL SPECS */}
           <div>
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('specs')}</h3>
               <div className="grid grid-cols-2 gap-3">
                   <DetailItem icon={Ruler} label={t('diameter')} value={w.diameter ? w.diameter + ' mm' : ''} theme={theme} />
+                  <DetailItem icon={Layers} label={t('thickness')} value={w.thickness ? w.thickness + ' mm' : ''} theme={theme} />
                   <DetailItem icon={Activity} label={t('lug_width')} value={w.strapWidth ? w.strapWidth + ' mm' : ''} theme={theme} />
-                  <DetailItem icon={MovementIcon} label={t('movement')} value={w.movement} theme={theme} />
-                  <DetailItem icon={MapPin} label={t('country')} value={w.country} theme={theme} />
-                  <DetailItem icon={Calendar} label={t('year')} value={w.year} theme={theme} />
+                  <DetailItem icon={Scale} label={t('weight')} value={w.weight ? w.weight + ' g' : ''} theme={theme} />
+                  <DetailItem icon={Droplets} label={t('water_res')} value={w.waterResistance ? w.waterResistance + ' ATM' : ''} theme={theme} />
               </div>
           </div>
-          <div className={`grid grid-cols-2 gap-4 pt-4 border-t ${theme.border}`}>
-            <div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('purchase_price')}</div><div className={`text-lg font-bold ${theme.text}`}>{formatPrice(w.purchasePrice)}</div></div>
-            {w.status !== 'wishlist' && (<div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('selling_price')}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice || w.purchasePrice)}</div></div>)}
+
+          {/* MOVEMENT & DIAL */}
+          <div>
+               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3>
+               <div className="grid grid-cols-2 gap-3">
+                  <DetailItem icon={MovementIcon} label={t('movement')} value={w.movement} theme={theme} />
+                  <DetailItem icon={Settings} label={t('movement_model')} value={w.movementModel} theme={theme} />
+                  {w.batteryModel && <DetailItem icon={Battery} label={t('battery')} value={w.batteryModel} theme={theme} />}
+                  <DetailItem icon={Palette} label={t('dial')} value={w.dialColor} theme={theme} />
+                  <DetailItem icon={Search} label={t('glass')} value={w.glass} theme={theme} />
+               </div>
           </div>
+
+          {/* ORIGIN & MAINTENANCE */}
+          <div>
+               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('origin_maintenance')}</h3>
+               <div className="grid grid-cols-2 gap-3">
+                  <DetailItem icon={MapPin} label={t('country')} value={w.country} theme={theme} />
+                  <DetailItem icon={Calendar} label={t('date_release')} value={w.releaseDate} theme={theme} />
+                  <DetailItem icon={Calendar} label={t('year')} value={w.year} theme={theme} />
+                  <DetailItem icon={Package} label={t('box_included')} value={w.box} theme={theme} />
+                  <DetailItem icon={ShieldCheck} label={t('warranty')} value={w.warrantyDate} theme={theme} />
+                  <DetailItem icon={Wrench} label={t('revision')} value={w.revision} theme={theme} />
+               </div>
+          </div>
+
+          {/* FINANCE & DATES */}
+          <div>
+              <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} & Dates</h3>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                  {w.purchaseDate && <DetailItem icon={Calendar} label={t('date_purchase')} value={w.purchaseDate} theme={theme} />}
+                  {w.soldDate && w.status === 'sold' && <DetailItem icon={Calendar} label={t('date_sold')} value={w.soldDate} theme={theme} />}
+              </div>
+              <div className={`grid grid-cols-2 gap-4 pt-4 border-t ${theme.border}`}>
+                <div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('purchase_price')}</div><div className={`text-lg font-bold ${theme.text}`}>{formatPrice(w.purchasePrice)}</div></div>
+                {w.status !== 'wishlist' && (<div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('selling_price')}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice || w.purchasePrice)}</div></div>)}
+              </div>
+          </div>
+          
+          {/* HISTORY & NOTES */}
           {w.conditionNotes && (<div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100 mt-4"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> {t('notes')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.conditionNotes}</div></div>)}
+          {w.historyBrand && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_brand')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyBrand}</div></div>)}
+          {w.historyModel && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_model')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyModel}</div></div>)}
         </div>
       </div>
     );
@@ -1456,13 +1645,126 @@ export default function App() {
                     </label>
                 )}
             </div>
-            <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('brand')} value={watchForm.brand} onChange={e => setWatchForm({...watchForm, brand: e.target.value})} required />
-            <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('model')} value={watchForm.model} onChange={e => setWatchForm({...watchForm, model: e.target.value})} required />
-            <div className="grid grid-cols-2 gap-4">
-                <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('purchase_price')} value={watchForm.purchasePrice} onChange={e => setWatchForm({...watchForm, purchasePrice: e.target.value})} />
-                <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('selling_price')} value={watchForm.sellingPrice} onChange={e => setWatchForm({...watchForm, sellingPrice: e.target.value})} />
+            
+            {/* IDENTITY */}
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('identity')}</h3>
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('brand')} value={watchForm.brand} onChange={e => setWatchForm({...watchForm, brand: e.target.value})} required />
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('model')} value={watchForm.model} onChange={e => setWatchForm({...watchForm, model: e.target.value})} required />
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('reference')} value={watchForm.reference} onChange={e => setWatchForm({...watchForm, reference: e.target.value})} />
+                 <div className="relative">
+                     <input className={`w-full p-3 pl-10 rounded-lg ${theme.input}`} placeholder={t('dial')} value={watchForm.dialColor || ''} onChange={e => setWatchForm({...watchForm, dialColor: e.target.value})} />
+                     <Palette className={`absolute left-3 top-3.5 ${theme.textSub}`} size={18} />
+                 </div>
+                 <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
+                     <div className="flex items-center mb-2">
+                        <input type="checkbox" id="isLimited" checked={watchForm.isLimitedEdition} onChange={e => setWatchForm({...watchForm, isLimitedEdition: e.target.checked})} className="w-4 h-4 text-indigo-600 rounded mr-2" />
+                        <label htmlFor="isLimited" className={`text-sm font-bold ${theme.text}`}>{t('limited_edition')}</label>
+                     </div>
+                     {watchForm.isLimitedEdition && (
+                        <div className="flex gap-2 pl-6 animate-in slide-in-from-top-1">
+                            <input className={`w-full p-2 border rounded text-sm ${theme.input}`} placeholder="N°" value={watchForm.limitedNumber} onChange={e => setWatchForm({...watchForm, limitedNumber: e.target.value})} />
+                            <span className={`py-2 ${theme.textSub}`}>/</span>
+                            <input className={`w-full p-2 border rounded text-sm ${theme.input}`} placeholder="Total" value={watchForm.limitedTotal} onChange={e => setWatchForm({...watchForm, limitedTotal: e.target.value})} />
+                        </div>
+                     )}
+                 </div>
             </div>
-            <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
+
+            {/* TECHNICAL */}
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('technical')}</h3>
+                 <div className="grid grid-cols-2 gap-3">
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('diameter')} (mm)`} value={watchForm.diameter} onChange={e => setWatchForm({...watchForm, diameter: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('thickness')} (mm)`} value={watchForm.thickness} onChange={e => setWatchForm({...watchForm, thickness: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('lug_width')} (mm)`} value={watchForm.strapWidth} onChange={e => setWatchForm({...watchForm, strapWidth: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('water_res')} (ATM)`} value={watchForm.waterResistance} onChange={e => setWatchForm({...watchForm, waterResistance: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('weight')} (g)`} value={watchForm.weight || ''} onChange={e => setWatchForm({...watchForm, weight: e.target.value})} />
+                 </div>
+                 <div className="grid grid-cols-2 gap-3">
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('movement')} value={watchForm.movement} onChange={e => setWatchForm({...watchForm, movement: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('movement_model')} value={watchForm.movementModel || ''} onChange={e => setWatchForm({...watchForm, movementModel: e.target.value})} />
+                 </div>
+                 {['quartz', 'pile', 'battery'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
+                     <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
+                        <div className={`flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider ${theme.textSub}`}><Battery size={14}/> {t('battery')}</div>
+                        <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder="Ref Pile (ex: 377)" value={watchForm.batteryModel || ''} onChange={e => setWatchForm({...watchForm, batteryModel: e.target.value})} />
+                     </div>
+                 )}
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('glass')} value={watchForm.glass} onChange={e => setWatchForm({...watchForm, glass: e.target.value})} />
+            </div>
+
+            {/* ORIGIN & DATES */}
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('origin_maintenance')}</h3>
+                 <div className="grid grid-cols-3 gap-3">
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('country')} value={watchForm.country} onChange={e => setWatchForm({...watchForm, country: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={t('year')} value={watchForm.year} onChange={e => setWatchForm({...watchForm, year: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('box_included')} value={watchForm.box} onChange={e => setWatchForm({...watchForm, box: e.target.value})} />
+                 </div>
+                 
+                 {/* NEW DATE FIELDS */}
+                 <div className="grid grid-cols-2 gap-3">
+                     <div>
+                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_release')}</label>
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.releaseDate || ''} onChange={e => setWatchForm({...watchForm, releaseDate: e.target.value})} />
+                     </div>
+                     <div>
+                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_purchase')}</label>
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.purchaseDate || ''} onChange={e => setWatchForm({...watchForm, purchaseDate: e.target.value})} />
+                     </div>
+                 </div>
+                 {watchForm.status === 'sold' && (
+                     <div>
+                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label>
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={e => setWatchForm({...watchForm, soldDate: e.target.value})} />
+                     </div>
+                 )}
+                 
+                 <div className="grid grid-cols-2 gap-3">
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('warranty')} value={watchForm.warrantyDate} onChange={e => setWatchForm({...watchForm, warrantyDate: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('revision')} value={watchForm.revision} onChange={e => setWatchForm({...watchForm, revision: e.target.value})} />
+                 </div>
+            </div>
+
+            {/* FINANCE & STATUS */}
+            <div className="space-y-3">
+                <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('financial_status')}</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('purchase_price')} value={watchForm.purchasePrice} onChange={e => setWatchForm({...watchForm, purchasePrice: e.target.value})} />
+                    <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('selling_price')} value={watchForm.sellingPrice} onChange={e => setWatchForm({...watchForm, sellingPrice: e.target.value})} />
+                </div>
+                {watchForm.status !== 'wishlist' && (
+                    <div className={`p-2 rounded-lg border ${theme.border} ${theme.bg} flex items-center gap-2`}>
+                        <Lock size={16} className="text-amber-600" />
+                        <input type="number" className={`w-full p-2 bg-transparent border-none focus:ring-0 text-sm ${theme.text}`} placeholder={t('min_price')} value={watchForm.minPrice || ''} onChange={e => setWatchForm({...watchForm, minPrice: e.target.value})} />
+                    </div>
+                )}
+                <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
+                    {[{id: 'collection', label: t('collection')}, {id: 'forsale', label: t('forsale')}, {id: 'sold', label: t('sold')}, {id: 'wishlist', label: t('wishlist')}].map(s => (
+                        <button key={s.id} type="button" onClick={() => setWatchForm({...watchForm, status: s.id})} className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold border whitespace-nowrap ${watchForm.status === s.id ? 'bg-slate-800 text-white' : `${theme.bg} ${theme.border} ${theme.text}`}`}>{s.label}</button>
+                    ))}
+                </div>
+                <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            {watchForm.publicVisible ? <Eye className="text-indigo-600 mr-2" size={20}/> : <EyeOff className="text-slate-400 mr-2" size={20}/>}
+                            <span className={`text-sm font-bold ${theme.text}`}>{t('visibility_friends')}</span>
+                        </div>
+                        <input type="checkbox" checked={watchForm.publicVisible !== false} onChange={e => setWatchForm({...watchForm, publicVisible: e.target.checked})} className="w-5 h-5 text-indigo-600 rounded" />
+                    </div>
+                    <p className={`text-[10px] ${theme.textSub} mt-1 pl-8`}>{t('private_note')}</p>
+                </div>
+            </div>
+
+            {/* NOTES & HISTORY */}
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('notes')} & {t('history')}</h3>
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_brand')} value={watchForm.historyBrand || ''} onChange={e => setWatchForm({...watchForm, historyBrand: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_model')} value={watchForm.historyModel || ''} onChange={e => setWatchForm({...watchForm, historyModel: e.target.value})} />
+            </div>
+
             <button className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold shadow-lg">{t('save')}</button>
           </form>
         </div>
@@ -1486,6 +1788,9 @@ export default function App() {
             {view === 'detail' && renderDetail()}
             {view === 'add' && renderForm()}
         </div>
+        {/* NEW: Export View Overlay */}
+        {exportType && selectedWatch && <ExportView watch={selectedWatch} type={exportType} onClose={() => setExportType(null)} theme={theme} t={t} />}
+        
         {renderFullScreenImage()}
         {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} settings={settings} setSettings={setSettings} t={t} theme={theme} />}
         {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} t={t} />}
