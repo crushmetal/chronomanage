@@ -128,13 +128,10 @@ const TRANSLATIONS = {
     show_history: "Voir tout l'historique",
     show_less: "Réduire",
     year_summary: "Bilan Année",
-    stats_usage: "Statistiques d'Usage",
-    worn_this_month: "Ce mois",
-    worn_this_year: "Cette année",
-    worn_last_year: "Année dernière",
-    invoice: "Facture",
-    add_invoice: "Ajouter Facture",
-    view_invoice: "Voir Facture"
+    sort_date: "Date Ajout",
+    sort_alpha: "A-Z",
+    sort_price_asc: "Prix (Croissant)",
+    sort_price_desc: "Prix (Décroissant)"
   },
   en: {
     box: "Box",
@@ -249,13 +246,10 @@ const TRANSLATIONS = {
     show_history: "Show Full History",
     show_less: "Show Less",
     year_summary: "Year Summary",
-    stats_usage: "Usage Statistics",
-    worn_this_month: "This Month",
-    worn_this_year: "This Year",
-    worn_last_year: "Last Year",
-    invoice: "Invoice",
-    add_invoice: "Add Invoice",
-    view_invoice: "View Invoice"
+    sort_date: "Date Added",
+    sort_alpha: "A-Z",
+    sort_price_asc: "Price (Asc)",
+    sort_price_desc: "Price (Desc)"
   }
 };
 
@@ -1188,6 +1182,23 @@ export default function App() {
       <div className="flex justify-between items-center px-2 mb-2">
         <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{title}</h1>
         <div className="flex items-center gap-2">
+            {(title === t('collection') || title === t('wishlist') || title === t('bracelets') || title === t('inventory')) && (
+                <div className="relative">
+                    <select 
+                        value={sortOrder} 
+                        onChange={(e) => setSortOrder(e.target.value)}
+                        className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
+                    >
+                        <option value="date">{t('sort_date')}</option>
+                        <option value="alpha">{t('sort_alpha')}</option>
+                        <option value="priceAsc">{t('sort_price_asc')}</option>
+                        <option value="priceDesc">{t('sort_price_desc')}</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                        <ArrowUpDown size={10} />
+                    </div>
+                </div>
+            )}
             <button onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
         </div>
       </div>
@@ -1497,6 +1508,23 @@ export default function App() {
       <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border} mb-2`}>
          <div className="flex justify-between items-center px-2 mb-2">
             <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{t('gallery')}</h1>
+            <div className="flex items-center gap-2">
+                <div className="relative">
+                    <select 
+                        value={sortOrder} 
+                        onChange={(e) => setSortOrder(e.target.value)}
+                        className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
+                    >
+                        <option value="date">{t('sort_date')}</option>
+                        <option value="alpha">{t('sort_alpha')}</option>
+                        <option value="priceAsc">{t('sort_price_asc')}</option>
+                        <option value="priceDesc">{t('sort_price_desc')}</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                        <ArrowUpDown size={10} />
+                    </div>
+                </div>
+            </div>
          </div>
          <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
                <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button>
