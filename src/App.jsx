@@ -9,6 +9,7 @@ import {
   Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, 
   PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt
 } from 'lucide-react';
+
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc } from 'firebase/firestore';
@@ -196,7 +197,7 @@ const ExportView = ({ watch, type, onClose, theme, t }: any) => {
 
                 <div className="grid grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
                     <div>
-                        {watch.images && watch.images[0] && (<div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4"><img src={watch.images[0]} alt="" className="w-full h-full object-cover"/></div>)}
+                        {watch.images && watch.images[0] && (<div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4"><img src={watch.images[0]} alt="Montre" className="w-full h-full object-cover"/></div>)}
                         {!isSale && (
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
                                  <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{t('purchase_price')}</div>
@@ -371,25 +372,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
                     <div className="grid grid-cols-2 gap-2">
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button>
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button>
-                    </div>
-                </div>
-                
-                <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e: any) => setSettings((s: any) => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                    </div>
-                </div>
-                <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e: any) => setSettings((s: any) => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e: any) => setSettings((s: any) => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e: any) => setSettings((s: any) => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
             </div>
@@ -1044,7 +1026,7 @@ export default function App() {
                     <div className="relative">
                         <select 
                             value={sortOrder} 
-                            onChange={(e) => setSortOrder(e.target.value)}
+                            onChange={(e: any) => setSortOrder(e.target.value)}
                             className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
                         >
                             <option value="dateDesc">{t('sort_date_desc')}</option>
@@ -1063,7 +1045,7 @@ export default function App() {
           </div>
           {isSearchOpen && (
               <div className="px-2 mb-3">
-                  <input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
+                  <input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e: any) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
               </div>
           )}
           {withFilters && !isSearchOpen && (
@@ -1287,7 +1269,7 @@ export default function App() {
           </div>
 
           <div>
-               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3>
+               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} &amp; {t('dial')}</h3>
                <div className="grid grid-cols-2 gap-3">
                   <DetailItem icon={MovementIcon} label={t('movement')} value={w.movement} theme={theme} />
                   <DetailItem icon={Settings} label={t('movement_model')} value={w.movementModel} theme={theme} />
@@ -1311,7 +1293,7 @@ export default function App() {
           
           {(w.conditionRating || w.conditionComment) && (
               <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
-                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>
+                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État &amp; Condition</h3>
                   {w.conditionRating && (
                       <div className="flex items-center gap-2 mb-2">
                           <div className={`text-lg font-bold ${theme.text} bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg`}>{w.conditionRating}/10</div>
@@ -1321,7 +1303,7 @@ export default function App() {
                       </div>
                   )}
                   {w.conditionComment && (
-                      <p className={`text-sm ${theme.text} italic`}>"{w.conditionComment}"</p>
+                      <p className={`text-sm ${theme.text} italic`}>&quot;{w.conditionComment}&quot;</p>
                   )}
               </div>
           )}
@@ -1343,7 +1325,7 @@ export default function App() {
           </div>
 
           <div>
-              <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} & Dates</h3>
+              <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} &amp; Dates</h3>
               <div className="grid grid-cols-2 gap-3 mb-3">
                   {w.purchaseDate && <DetailItem icon={Calendar} label={t('date_purchase')} value={w.purchaseDate} theme={theme} />}
                   {w.soldDate && w.status === 'sold' && <DetailItem icon={Calendar} label={t('date_sold')} value={w.soldDate} theme={theme} />}
@@ -1360,6 +1342,49 @@ export default function App() {
         </div>
       </div>
     );
+  };
+
+  const renderSummary = () => (
+      <div className="pb-24 px-2">
+          {renderHeader(t('inventory'))}
+          <div className="space-y-6 px-1 mt-2">
+              <button className={`w-full p-4 text-left ${theme.card} border ${theme.border} rounded-lg shadow-sm`} onClick={exportCSV}><div className={`font-bold flex items-center ${theme.text}`}><Download className="mr-2" size={18}/> {t('export_csv')}</div></button>
+              {['collection', 'forsale', 'sold'].map(cat => {
+                  const list = filteredWatches.filter(w => w.status === cat);
+                  if (list.length === 0) return null;
+                  return (<div key={cat} className={`${theme.card} rounded-xl shadow-sm border ${theme.border}`}><div className={`px-4 py-2 border-b ${theme.border} font-bold text-sm ${theme.text}`}>{t(cat)} ({list.length})</div><div className={`divide-y ${theme.border}`}>{list.map(w => (<div key={w.id} className="flex items-center p-2"><div className={`font-bold text-sm ${theme.text} whitespace-nowrap mr-2`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div>))}</div></div>);
+              })}
+          </div>
+      </div>
+  );
+
+  const renderFriends = () => {
+      if (user?.isAnonymous || user?.uid === 'local-user') return (<div className="pb-24 px-6 flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6"><div className="p-6 bg-indigo-50 rounded-full text-indigo-600"><Users size={48}/></div><div><h2 className={`text-xl font-bold ${theme.text} mb-2`}>Cloud Requis</h2><p className={theme.textSub}>Connectez-vous pour ajouter des amis.</p></div><button onClick={handleGoogleLogin} className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold">{t('login_google')}</button></div>);
+      if (viewingFriend) return (
+          <div className={`pb-24 ${theme.bgSecondary} min-h-screen`}>
+              <div className={`sticky top-0 ${theme.bgSecondary}/95 backdrop-blur z-10 px-4 py-3 border-b ${theme.border} flex items-center gap-3`}><button onClick={() => setViewingFriend(null)} className={theme.text}><ChevronLeft/></button><div><h1 className={`font-serif font-bold ${theme.text}`}>{viewingFriend.name}</h1></div></div>
+              <div className="p-4 grid grid-cols-2 gap-3">
+                  {friendWatches.map(w => (
+                      <div key={w.id} onClick={() => setSelectedWatch(w)} className={`${theme.card} rounded-xl shadow-sm overflow-hidden border ${theme.border}`}>
+                          <div className={`aspect-square ${theme.bg}`}>
+                              <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/>
+                          </div>
+                          <div className="p-2"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div></div>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      );
+      return (
+          <div className="pb-24 px-3">
+              <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-4`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('friends')}</h1></div>
+              {friendRequests.length > 0 && (<div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4"><h3 className="font-bold text-sm text-amber-700 uppercase mb-3">{t('requests')}</h3>{friendRequests.map(req => (<div key={req.id} className="bg-white p-3 rounded-lg shadow-sm flex justify-between"><span className="text-sm font-bold">{req.fromEmail}</span><div className="flex gap-2"><button onClick={() => acceptRequest(req)}><Check size={16}/></button></div></div>))}</div>)}
+              <div className="bg-indigo-600 rounded-xl p-4 text-white shadow-lg mb-6"><h3 className="font-bold text-lg mb-1">Code Ami</h3><div className="bg-white/10 p-3 rounded-lg flex justify-between"><code className="font-mono text-sm">{user?.uid}</code><button onClick={() => navigator.clipboard.writeText(user?.uid)}><Copy size={12}/></button></div></div>
+              <button onClick={handlePreviewOwnProfile} className="w-full mb-6 py-3 border-2 border-indigo-100 text-indigo-600 rounded-xl font-bold flex justify-center gap-2"><Eye size={18}/> Mon Profil</button>
+              <div className="mb-6"><div className="flex gap-2"><input type="text" placeholder="Code ami..." className={`flex-1 p-3 rounded-xl border ${theme.border} ${theme.input}`} value={addFriendId} onChange={(e: any) => setAddFriendId(e.target.value)}/><button onClick={sendFriendRequest} className="bg-slate-900 text-white p-3 rounded-xl"><UserPlus size={20}/></button></div></div>
+              <div><h3 className={`font-bold text-sm ${theme.textSub} uppercase mb-3`}>Mes Amis</h3>{friends.map(f => (<div key={f.id} onClick={() => loadFriendCollection(f)} className={`${theme.card} p-4 rounded-xl border ${theme.border} flex justify-between cursor-pointer`}><span className={`font-bold ${theme.text}`}>{f.name}</span><button onClick={(e: any) => {e.stopPropagation(); removeFriend(f.id)}}><Trash2 size={16} className="text-red-500"/></button></div>))}</div>
+          </div>
+      );
   };
   
   const renderProfile = () => {
@@ -1456,13 +1481,17 @@ export default function App() {
             }
         });
         
-        const sortedCounts = Object.entries(periodCounts).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 5);
+        const countsArray = [];
+        for (const wId in periodCounts) {
+            countsArray.push({ id: wId, count: periodCounts[wId] });
+        }
         
-        return sortedCounts.map(item => { 
-            const wId = item[0];
-            const count = item[1];
-            const w = watches.find(watch => watch.id === wId); 
-            return w ? { ...w, count } : null; 
+        countsArray.sort((a, b) => b.count - a.count);
+        const top5 = countsArray.slice(0, 5);
+        
+        return top5.map(item => { 
+            const w = watches.find(watch => watch.id === item.id); 
+            return w ? { ...w, count: item.count } : null; 
         }).filter(Boolean);
       };
       
@@ -1505,26 +1534,44 @@ export default function App() {
       };
 
       const getTopBrands = () => {
-          const brands = watches.filter(w => w.status === 'collection').reduce((acc: Record<string, number>, w) => { 
-              if(w.brand) acc[w.brand] = (acc[w.brand] || 0) + 1; 
-              return acc; 
-          }, {});
-          return Object.entries(brands).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 5);
+          const brandsObj: Record<string, number> = {};
+          watches.forEach(w => {
+              if (w.status === 'collection' && w.brand) {
+                  brandsObj[w.brand] = (brandsObj[w.brand] || 0) + 1;
+              }
+          });
+          
+          const brandsArray = [];
+          for (const brand in brandsObj) {
+              brandsArray.push({ name: brand, count: brandsObj[brand] });
+          }
+          
+          brandsArray.sort((a, b) => b.count - a.count);
+          return brandsArray.slice(0, 5);
       };
       
       const getTopDials = () => {
-          const dials = watches.filter(w => w.status === 'collection').reduce((acc: Record<string, number>, w) => { 
-              if(w.dialColor) acc[w.dialColor] = (acc[w.dialColor] || 0) + 1; 
-              return acc; 
-          }, {});
-          return Object.entries(dials).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 5);
+          const dialsObj: Record<string, number> = {};
+          watches.forEach(w => {
+              if (w.status === 'collection' && w.dialColor) {
+                  dialsObj[w.dialColor] = (dialsObj[w.dialColor] || 0) + 1;
+              }
+          });
+          
+          const dialsArray = [];
+          for (const color in dialsObj) {
+              dialsArray.push({ name: color, count: dialsObj[color] });
+          }
+          
+          dialsArray.sort((a, b) => b.count - a.count);
+          return dialsArray.slice(0, 5);
       };
 
       const topBrands = getTopBrands();
       const topDials = getTopDials();
       
-      const maxBrandCount = topBrands[0] ? Number(topBrands[0][1]) : 1;
-      const maxDialCount = topDials[0] ? Number(topDials[0][1]) : 1;
+      const maxBrandCount = topBrands[0] ? topBrands[0].count : 1;
+      const maxDialCount = topDials[0] ? topDials[0].count : 1;
 
       return (
         <div className="pb-24 px-3">
@@ -1577,15 +1624,13 @@ export default function App() {
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><PieChart className="text-blue-500" size={16} /> {t('fav_brands')}</h3>
                     <div className="space-y-3">
                         {topBrands.map((item: any, i: number) => {
-                            const brand = item[0];
-                            const count = Number(item[1]);
-                            const pct = (count / Math.max(maxBrandCount, 1)) * 100;
+                            const pct = (item.count / Math.max(maxBrandCount, 1)) * 100;
                             return (
-                            <div key={brand || `brand-${i}`} className="flex items-center justify-between">
+                            <div key={`brand-${i}`} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
-                                        <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div>
+                                        <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{item.name}</span><span className="font-bold">{item.count}</span></div>
                                         <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${pct}%`}}></div></div>
                                     </div>
                                 </div>
@@ -1598,15 +1643,13 @@ export default function App() {
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><Palette className="text-purple-500" size={16} /> {t('fav_dials')}</h3>
                     <div className="space-y-3">
                         {topDials.map((item: any, i: number) => {
-                            const color = item[0];
-                            const count = Number(item[1]);
-                            const pct = (count / Math.max(maxDialCount, 1)) * 100;
+                            const pct = (item.count / Math.max(maxDialCount, 1)) * 100;
                             return (
-                            <div key={color || `color-${i}`} className="flex items-center justify-between">
+                            <div key={`color-${i}`} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
-                                        <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div>
+                                        <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{item.name}</span><span className="font-bold">{item.count}</span></div>
                                         <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${pct}%`}}></div></div>
                                     </div>
                                 </div>
@@ -1662,40 +1705,43 @@ export default function App() {
     const sSold = { buy: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
     const sTotal = { buy: sCol.buy+sSale.buy+sSold.buy, val: sCol.val+sSale.val+sSold.val, profit: sCol.profit+sSale.profit+sSold.profit };
 
-    const timelineMap = watches.reduce((acc: any, w: any) => {
+    const timelineMap: Record<string, any> = {};
+    
+    watches.forEach((w: any) => {
         if (w.purchaseDate && w.purchasePrice) {
             const d = new Date(w.purchaseDate);
             const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
-            acc[key].spent += Number(w.purchasePrice);
-            acc[key].count += 1; 
-            acc[key].boughtWatches.push(w);
+            if (!timelineMap[key]) timelineMap[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
+            timelineMap[key].spent += Number(w.purchasePrice);
+            timelineMap[key].count += 1; 
+            timelineMap[key].boughtWatches.push(w);
         }
         if (w.status === 'sold' && w.soldDate && w.sellingPrice) {
             const d = new Date(w.soldDate);
             const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
-            acc[key].gained += Number(w.sellingPrice);
-            acc[key].soldWatches.push(w);
+            if (!timelineMap[key]) timelineMap[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
+            timelineMap[key].gained += Number(w.sellingPrice);
+            timelineMap[key].soldWatches.push(w);
         }
-        return acc;
-    }, {});
+    });
     
     const sortedTimeline = Object.values(timelineMap).sort((a: any, b: any) => b.date.localeCompare(a.date));
     
-    const timelineByYear = sortedTimeline.reduce((acc: any, curr: any) => {
-        if (!acc[curr.year]) acc[curr.year] = { year: curr.year, months: [], spent: 0, gained: 0 };
-        acc[curr.year].months.push(curr);
-        acc[curr.year].spent += curr.spent;
-        acc[curr.year].gained += curr.gained;
-        return acc;
-    }, {});
+    const timelineByYear: Record<number, any> = {};
+    sortedTimeline.forEach((curr: any) => {
+        if (!timelineByYear[curr.year]) timelineByYear[curr.year] = { year: curr.year, months: [], spent: 0, gained: 0 };
+        timelineByYear[curr.year].months.push(curr);
+        timelineByYear[curr.year].spent += curr.spent;
+        timelineByYear[curr.year].gained += curr.gained;
+    });
     
     const sortedYears = Object.values(timelineByYear).sort((a: any, b: any) => b.year - a.year);
 
     const formatMonthName = (dateStr: string) => {
-        const [y, m] = dateStr.split('-');
-        const d = new Date(parseInt(y), parseInt(m)-1, 1);
+        const parts = dateStr.split('-');
+        const y = parseInt(parts[0]);
+        const m = parseInt(parts[1]);
+        const d = new Date(y, m - 1, 1);
         return d.toLocaleString(settings.lang, { month: 'long' });
     };
 
@@ -1705,7 +1751,7 @@ export default function App() {
     const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
 
-    const currentYearObj = sortedYears.find((y: any) => y.year === now.getFullYear()) as any || {};
+    const currentYearObj: any = sortedYears.find((y: any) => y.year === now.getFullYear()) || {};
     const currentYearSpent = currentYearObj.spent || 0;
     const currentYearGained = currentYearObj.gained || 0;
     const currentYearProfit = currentYearGained - currentYearSpent;
@@ -2071,6 +2117,7 @@ export default function App() {
             {view === 'stats' && renderStats()}
             {view === 'profile' && renderProfile()}
             {view === 'friends' && renderFriends()}
+            {view === 'summary' && renderSummary()}
             {view === 'detail' && renderDetail()}
             {view === 'add' && renderForm()}
         </div>
