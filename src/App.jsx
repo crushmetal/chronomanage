@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, AlertCircle, Tag,
-  Package, DollarSign, FileText, Box, Loader2, ChevronLeft, ClipboardList, WifiOff, 
+  Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, Tag,
+  Package, DollarSign, FileText, Box, Loader2, ChevronLeft, ClipboardList, 
   Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, 
   Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, 
-  Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, 
+  Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, 
   Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, 
   Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, 
   PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt
@@ -117,7 +117,11 @@ const AnalogClock = ({ isDark, settings }: any) => {
   useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
   const secondsRatio = time.getSeconds() / 60; const minutesRatio = (secondsRatio + time.getMinutes()) / 60; const hoursRatio = (minutesRatio + time.getHours()) / 12;
   const borderColor = isDark ? 'border-slate-600' : 'border-slate-800'; const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
-  const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); const sHandColor = settings.handSecond || '#ef4444'; 
+  
+  const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); 
+  const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); 
+  const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); 
+  const sHandColor = settings.handSecond || '#ef4444'; 
 
   return (
     <div className="w-32 h-32 relative mx-auto mb-2">
@@ -157,6 +161,7 @@ const DetailItem = ({ icon: Icon, label, value, theme }: any) => (
     </div>
 );
 
+// EXPORT SHEET COMPONENT
 const ExportView = ({ watch, type, onClose, theme, t }: any) => {
     const isSale = type === 'sale';
     return (
@@ -390,15 +395,20 @@ export default function App() {
   
   const [settings, setSettings] = useState(() => {
       try { 
-          const saved = localStorage.getItem(LOCAL_SETTINGS_KEY); 
-          return saved ? JSON.parse(saved) : { lang: 'fr', theme: 'light' }; 
+          if (typeof window !== 'undefined') {
+              const saved = localStorage.getItem(LOCAL_SETTINGS_KEY); 
+              return saved ? JSON.parse(saved) : { lang: 'fr', theme: 'light' }; 
+          }
+          return { lang: 'fr', theme: 'light' };
       } catch(e) { 
           return { lang: 'fr', theme: 'light' }; 
       }
   });
 
   useEffect(() => { 
-      localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings)); 
+      if (typeof window !== 'undefined') {
+          localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings)); 
+      }
   }, [settings]);
 
   const t = (key: string) => (TRANSLATIONS as any)[settings.lang]?.[key] || key;
@@ -487,8 +497,11 @@ export default function App() {
 
   useEffect(() => {
      if (useLocalStorage || !user?.uid) return;
-     const savedFriends = localStorage.getItem(`friends_${user.uid}`);
-     if (savedFriends) setFriends(JSON.parse(savedFriends));
+     if (typeof window !== 'undefined') {
+         const savedFriends = localStorage.getItem(`friends_${user.uid}`);
+         if (savedFriends) setFriends(JSON.parse(savedFriends));
+     }
+     
      if (firebaseReady && !useLocalStorage) {
          if (user.isAnonymous) return;
          try {
@@ -525,7 +538,9 @@ export default function App() {
       const newFriend = { id: req.fromUser, name: req.fromEmail || 'Ami' };
       const updatedFriends = [...friends, newFriend];
       setFriends(updatedFriends);
-      localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+      if (typeof window !== 'undefined') {
+          localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+      }
       try { 
           await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', req.id)); 
       } catch (e) {}
@@ -538,7 +553,9 @@ export default function App() {
   const removeFriend = (friendId: string) => {
       const updatedFriends = friends.filter(f => f.id !== friendId);
       setFriends(updatedFriends);
-      localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+      if (typeof window !== 'undefined') {
+          localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+      }
   };
 
   const handlePreviewOwnProfile = () => {
@@ -689,11 +706,13 @@ export default function App() {
   useEffect(() => {
     if (!user && !useLocalStorage) return;
     if (useLocalStorage) {
-      try {
-        const lw = localStorage.getItem(LOCAL_STORAGE_KEY); if (lw) setWatches(JSON.parse(lw));
-        const lb = localStorage.getItem(LOCAL_STORAGE_BRACELETS_KEY); if (lb) setBracelets(JSON.parse(lb));
-        const lc = localStorage.getItem(LOCAL_STORAGE_CALENDAR_KEY); if (lc) setCalendarEvents(JSON.parse(lc));
-      } catch(e){}
+      if (typeof window !== 'undefined') {
+          try {
+            const lw = localStorage.getItem(LOCAL_STORAGE_KEY); if (lw) setWatches(JSON.parse(lw));
+            const lb = localStorage.getItem(LOCAL_STORAGE_BRACELETS_KEY); if (lb) setBracelets(JSON.parse(lb));
+            const lc = localStorage.getItem(LOCAL_STORAGE_CALENDAR_KEY); if (lc) setCalendarEvents(JSON.parse(lc));
+          } catch(e){}
+      }
       setLoading(false);
     } else {
       if (!user?.uid) return;
@@ -701,7 +720,7 @@ export default function App() {
         const unsubW = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches')), (snap) => { 
             setWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a: any,b: any) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())); 
             setLoading(false); 
-            if(error) setError(null); 
+            setError(null); 
         }, (err) => { 
             if (user?.isAnonymous) setUseLocalStorage(true); 
             else setError("Erreur synchro: " + (err.code || err.message)); 
@@ -724,7 +743,7 @@ export default function App() {
   }, [user, useLocalStorage]);
 
   useEffect(() => {
-    if (useLocalStorage) {
+    if (useLocalStorage && typeof window !== 'undefined') {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(watches));
       localStorage.setItem(LOCAL_STORAGE_BRACELETS_KEY, JSON.stringify(bracelets));
       localStorage.setItem(LOCAL_STORAGE_CALENDAR_KEY, JSON.stringify(calendarEvents));
@@ -929,7 +948,7 @@ export default function App() {
     return (
         <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-2 animate-in fade-in duration-200" onClick={() => setFullScreenImage(null)}>
             <button className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/50 rounded-full p-2"><X size={32}/></button>
-            <img src={fullScreenImage} className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+            <img src={fullScreenImage} alt="" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
         </div>
     );
   };
@@ -952,7 +971,7 @@ export default function App() {
               </button>
             ) : (
               <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">
-                 {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
+                 {user.photoURL ? <img src={user.photoURL} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
               </button>
             )}
             <button onClick={() => setShowSettingsModal(true)} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors z-20`}><Settings size={18} /></button>
@@ -1052,7 +1071,7 @@ export default function App() {
                     {bracelets.map(b => (
                         <Card key={b.id} onClick={() => handleEdit(b, 'bracelet')} theme={theme}>
                             <div className={`aspect-square ${theme.bg} relative flex items-center justify-center`}>
-                                {b.image ? <img src={b.image} className="w-full h-full object-cover"/> : <Activity className={theme.textSub}/>}
+                                {b.image ? <img src={b.image} alt="" className="w-full h-full object-cover"/> : <Activity className={theme.textSub}/>}
                                 <div className="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm">{b.width}mm</div>
                             </div>
                             <div className="p-3">
@@ -1076,7 +1095,7 @@ export default function App() {
             return (
             <Card key={w.id} onClick={() => { setSelectedWatch(w); setViewedImageIndex(0); setView('detail'); }} theme={theme}>
               <div className={`aspect-square ${theme.bg} relative`}>
-                {displayImage ? <img src={displayImage} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
+                {displayImage ? <img src={displayImage} alt="" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
                 {(w.purchasePrice) && (<div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{formatPrice(w.purchasePrice)}</div>)}
                 <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">{w.status === 'sold' ? <span className="text-emerald-600 font-extrabold">{t('sold')}</span> : formatPrice(w.sellingPrice || w.purchasePrice)}</div>
                 <div className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer z-10" onClick={(e) => { e.stopPropagation(); toggleVisibility(w); }}>{w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}</div>
@@ -1100,7 +1119,7 @@ export default function App() {
             const displayImage = w.images?.[0] || w.image;
             return (
             <Card key={w.id} className="flex p-3 gap-3 relative" onClick={() => { setSelectedWatch(w); setView('detail'); }} theme={theme}>
-                <div className={`w-20 h-20 ${theme.bg} rounded-lg flex-shrink-0 overflow-hidden`}>{displayImage ? <img src={displayImage} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}</div>
+                <div className={`w-20 h-20 ${theme.bg} rounded-lg flex-shrink-0 overflow-hidden`}>{displayImage ? <img src={displayImage} alt="" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}</div>
                 <div className="flex-1 flex flex-col justify-between py-1">
                     <div><h3 className={`font-bold font-serif ${theme.text} tracking-wide`}>{w.brand}</h3><p className={`text-xs ${theme.textSub}`}>{w.model}</p></div>
                     <div className="flex justify-between items-end"><div className="font-semibold text-emerald-600">{formatPrice(w.purchasePrice)}</div>{w.link && (<a href={w.link} target="_blank" rel="noreferrer" className="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 z-10" onClick={(e) => { e.stopPropagation(); }}><ExternalLink size={14} /></a>)}</div>
@@ -1165,10 +1184,10 @@ export default function App() {
         <div className="p-4 space-y-6">
           <div className="space-y-4">
               <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative group`} onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}>
-                {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
+                {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} alt="" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
                 {displayImages.length > 1 && (<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">{displayImages.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === viewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>)}</div>)}
               </div>
-              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img, i) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} className="w-full h-full object-cover" /></div>))}</div>)}
+              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img: any, i: number) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} alt="" className="w-full h-full object-cover" /></div>))}</div>)}
               <div>
                 <h1 className={`text-3xl font-serif font-bold ${theme.text} leading-tight`}>{w.brand}</h1>
                 <p className={`text-xl ${theme.textSub} font-medium font-serif`}>{w.model}</p>
@@ -1287,7 +1306,7 @@ export default function App() {
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>
               {w.invoice ? (
                   <div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer`} onClick={() => setFullScreenImage(w.invoice)}>
-                      <img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <img src={w.invoice} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
                               <Receipt size={14}/> {t('view_invoice')}
@@ -1386,7 +1405,7 @@ export default function App() {
           <div className="grid grid-cols-3 gap-1 mt-2 px-1">
               {displayWatches.map(w => (
                   <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
-                      <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
+                      <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover" />
                   </div>
               ))}
               {displayWatches.length === 0 && (
@@ -1399,7 +1418,7 @@ export default function App() {
 
   const renderStats = () => {
       const getTopWatches = () => {
-        const periodCounts: any = {};
+        const periodCounts: Record<string, number> = {};
         calendarEvents.forEach(evt => {
             const evtDate = new Date(evt.date);
             let inPeriod = false;
@@ -1447,7 +1466,7 @@ export default function App() {
                             const img = w.images?.[0] || w.image; 
                             return (
                                 <div key={idx} className="w-1.5 h-1.5 rounded-full bg-slate-300 overflow-hidden">
-                                    {img && <img src={img} className="w-full h-full object-cover" />}
+                                    {img && <img src={img} alt="" className="w-full h-full object-cover" />}
                                 </div>
                             ); 
                         })}
@@ -1459,7 +1478,7 @@ export default function App() {
       };
 
       const getTopBrands = () => {
-          const brands = watches.filter(w => w.status === 'collection').reduce((acc, w) => { 
+          const brands = watches.filter(w => w.status === 'collection').reduce((acc: Record<string, number>, w) => { 
               if(w.brand) acc[w.brand] = (acc[w.brand] || 0) + 1; 
               return acc; 
           }, {});
@@ -1467,7 +1486,7 @@ export default function App() {
       };
       
       const getTopDials = () => {
-          const dials = watches.filter(w => w.status === 'collection').reduce((acc, w) => { 
+          const dials = watches.filter(w => w.status === 'collection').reduce((acc: Record<string, number>, w) => { 
               if(w.dialColor) acc[w.dialColor] = (acc[w.dialColor] || 0) + 1; 
               return acc; 
           }, {});
@@ -1477,6 +1496,9 @@ export default function App() {
       const topBrands = getTopBrands();
       const topDials = getTopDials();
       
+      const maxBrandCount = topBrands[0] ? (topBrands[0][1] as number) : 1;
+      const maxDialCount = topDials[0] ? (topDials[0][1] as number) : 1;
+
       return (
         <div className="pb-24 px-3">
             <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-3 border-b ${theme.border} mb-4 flex justify-between items-center`}>
@@ -1512,7 +1534,7 @@ export default function App() {
                             <div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}>
                                 <div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div>
                                 <div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}>
-                                    <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
+                                    <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div>
@@ -1528,12 +1550,12 @@ export default function App() {
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><PieChart className="text-blue-500" size={16} /> {t('fav_brands')}</h3>
                     <div className="space-y-3">
                         {topBrands.map(([brand, count]: any, i: number) => (
-                            <div key={brand} className="flex items-center justify-between">
+                            <div key={brand || `brand-${i}`} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${((count as number) / (topBrands[0][1] as number)) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${((count as number) / maxBrandCount) * 100}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -1545,12 +1567,12 @@ export default function App() {
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><Palette className="text-purple-500" size={16} /> {t('fav_dials')}</h3>
                     <div className="space-y-3">
                         {topDials.map(([color, count]: any, i: number) => (
-                            <div key={color} className="flex items-center justify-between">
+                            <div key={color || `color-${i}`} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${((count as number) / (topDials[0][1] as number)) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${((count as number) / maxDialCount) * 100}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -1579,7 +1601,7 @@ export default function App() {
                                         {isSelected && <Check size={12} className="text-white" />}
                                     </div>
                                     <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-200 shrink-0">
-                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
+                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div>
@@ -1747,7 +1769,7 @@ export default function App() {
                                                             {tItem.boughtWatches.map((w: any) => (
                                                                 <div key={`buy-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
                                                                     <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
                                                                     </div>
                                                                     <div className="flex-1 min-w-0">
                                                                         <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
@@ -1766,7 +1788,7 @@ export default function App() {
                                                             {tItem.soldWatches.map((w: any) => (
                                                                 <div key={`sell-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
                                                                     <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
                                                                     </div>
                                                                     <div className="flex-1 min-w-0">
                                                                         <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
@@ -1806,7 +1828,7 @@ export default function App() {
             <div className="grid grid-cols-3 gap-3">
                 {currentImages.map((img: any, idx: number) => (
                     <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
-                        <img src={img as string} className="w-full h-full object-cover" />
+                        <img src={img as string} alt="" className="w-full h-full object-cover" />
                         <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X size={12}/></button>
                         {idx === 0 ? (
                             <div className="absolute bottom-0 w-full bg-emerald-500 text-white text-[8px] text-center">MAIN</div>
