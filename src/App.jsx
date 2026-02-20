@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
-  Search, AlertCircle,
+  Search, AlertCircle, Tag,
   Package, DollarSign, FileText, Box, Loader2,
   ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt
 } from 'lucide-react';
@@ -299,7 +299,7 @@ const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v54.2";
+const APP_VERSION = "v54.5";
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -325,15 +325,11 @@ const DEFAULT_BRACELET_STATE = {
     width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' 
 };
 
-// Fonction pour tenter d'initialiser Firebase
 const tryInitFirebase = (config) => {
     try {
         if (!config || !config.apiKey || config.apiKey.length < 5) return false;
-        if (getApps().length === 0) {
-            app = initializeApp(config);
-        } else {
-            app = getApp();
-        }
+        if (getApps().length === 0) app = initializeApp(config);
+        else app = getApp();
         auth = getAuth(app);
         db = getFirestore(app);
         firebaseReady = true;
@@ -349,13 +345,11 @@ const tryInitFirebase = (config) => {
 if (typeof __firebase_config !== 'undefined') {
     try { tryInitFirebase(JSON.parse(__firebase_config)); } catch(e) {}
 }
-if (!firebaseReady) {
-    tryInitFirebase(productionConfig);
-}
+if (!firebaseReady) tryInitFirebase(productionConfig);
 if (!firebaseReady) {
     try {
         const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY);
-        if (savedConfig) { tryInitFirebase(JSON.parse(savedConfig)); }
+        if (savedConfig) tryInitFirebase(JSON.parse(savedConfig));
     } catch(e) {}
 }
 
@@ -373,20 +367,16 @@ const compressImage = (file) => {
     reader.readAsDataURL(file);
     reader.onload = (event) => {
       const img = new Image();
-      img.src = event.target.result;
+      img.src = event.target.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 800; 
         let width = img.width;
         let height = img.height;
-        if (width > MAX_WIDTH) {
-          height = (height * MAX_WIDTH) / width;
-          width = MAX_WIDTH;
-        }
-        canvas.width = width;
-        canvas.height = height;
+        if (width > MAX_WIDTH) { height = (height * MAX_WIDTH) / width; width = MAX_WIDTH; }
+        canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
+        if(ctx) ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', 0.85));
       };
     };
@@ -518,12 +508,11 @@ const DetailItem = ({ icon: Icon, label, value, theme }) => (
     </div>
 );
 
-// NEW: Export / Print View Component
+// EXPORT SHEET COMPONENT
 const ExportView = ({ watch, type, onClose, theme, t }) => {
     const isSale = type === 'sale';
     return (
         <div className="fixed inset-0 z-[200] bg-white flex flex-col overflow-auto text-black">
-            {/* Header Toolbar (Hidden when printing) */}
             <div className="print:hidden p-4 border-b flex justify-between items-center bg-slate-100 sticky top-0 z-50">
                 <h2 className="font-bold text-lg">{isSale ? t('sheet_sale') : t('sheet_insurance')}</h2>
                 <div className="flex gap-2">
@@ -532,7 +521,6 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                 </div>
             </div>
             
-            {/* Content (Printable) */}
             <div className="p-8 max-w-3xl mx-auto w-full space-y-8 print:p-0 print:space-y-4">
                 <div className="flex items-center justify-between border-b-2 border-black pb-4">
                     <div>
@@ -540,7 +528,6 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                         <h2 className="text-xl text-slate-600 font-medium">{watch.model}</h2>
                         {watch.reference && <p className="font-mono text-sm mt-1">REF: {watch.reference}</p>}
                     </div>
-                    {/* Logo Placeholder */}
                     <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center">
                         <Watch size={32} />
                     </div>
@@ -553,11 +540,19 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                                 <img src={watch.images[0]} className="w-full h-full object-cover"/>
                             </div>
                         )}
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
-                             <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{isSale ? t('selling_price') : t('purchase_price')}</div>
-                             <div className="text-3xl font-bold font-serif">{formatPrice(isSale ? (watch.sellingPrice || watch.purchasePrice) : watch.purchasePrice)}</div>
-                             {isSale && <div className="mt-2 text-xs text-slate-500 italic">*Prix non contractuel, sujet à négociation</div>}
-                        </div>
+                        {!isSale && (
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
+                                 <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{t('purchase_price')}</div>
+                                 <div className="text-3xl font-bold font-serif">{formatPrice(watch.purchasePrice)}</div>
+                            </div>
+                        )}
+                        {isSale && (watch.sellingPrice || watch.purchasePrice) && (
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
+                                 <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{t('selling_price')}</div>
+                                 <div className="text-3xl font-bold font-serif">{formatPrice(watch.sellingPrice || watch.purchasePrice)}</div>
+                                 <div className="mt-2 text-xs text-slate-500 italic">*Prix non contractuel, sujet à négociation</div>
+                            </div>
+                        )}
                     </div>
                     <div className="space-y-4">
                         <h3 className="font-bold uppercase border-b border-slate-200 pb-1">{t('specs')}</h3>
@@ -567,12 +562,14 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                             <div className="text-slate-500">{t('thickness')}:</div><div>{watch.thickness ? watch.thickness + ' mm' : '-'}</div>
                             <div className="text-slate-500">{t('lug_width')}:</div><div>{watch.strapWidth ? watch.strapWidth + ' mm' : '-'}</div>
                             <div className="text-slate-500">{t('movement')}:</div><div>{watch.movement || '-'}</div>
+                            <div className="text-slate-500">{t('movement_model')}:</div><div>{watch.movementModel || '-'}</div>
                             <div className="text-slate-500">{t('dial')}:</div><div>{watch.dialColor || '-'}</div>
                             <div className="text-slate-500">{t('box_included')}:</div><div>{watch.box || '-'}</div>
                             <div className="text-slate-500">{t('warranty')}:</div><div>{watch.warrantyDate || '-'}</div>
                             <div className="text-slate-500">{t('country')}:</div><div>{watch.country || '-'}</div>
                             <div className="text-slate-500">{t('weight')}:</div><div>{watch.weight ? watch.weight + ' g' : '-'}</div>
                             {watch.batteryModel && <><div className="text-slate-500">{t('battery')}:</div><div>{watch.batteryModel}</div></>}
+                            {watch.conditionRating && <><div className="text-slate-500">{t('condition_rating')}:</div><div>{watch.conditionRating}/10</div></>}
                         </div>
                         
                         {watch.conditionNotes && (
@@ -584,7 +581,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                     </div>
                 </div>
 
-                {/* NEW: History in Sale Sheet */}
+                {/* History in Sale Sheet */}
                 {isSale && (watch.historyBrand || watch.historyModel) && (
                     <div className="space-y-4">
                         {watch.historyBrand && (
@@ -606,7 +603,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                    <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500">
                        <p>Contactez le vendeur pour plus d'informations.</p>
                        <div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">
-                           QR Code / Contact Info Placeholder
+                           Espace Réservé (Contact / Info)
                        </div>
                    </div>
                 )}
@@ -619,7 +616,8 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
     );
 };
 
-const FinanceDetailList = ({ title, items, onClose, theme }) => {
+// MODALS AND CARDS
+const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch, t }) => {
     const [localSort, setLocalSort] = useState('alpha'); 
     const sortedItems = useMemo(() => {
         let sorted = [...items];
@@ -633,7 +631,7 @@ const FinanceDetailList = ({ title, items, onClose, theme }) => {
             <h2 className={`font-serif font-bold text-lg ${theme.text} tracking-wide`}>{title}</h2>
             <div className="flex gap-2">
                 <button onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')} className={`flex items-center gap-1 px-3 py-1.5 border rounded-lg text-xs font-medium ${theme.textSub} ${theme.bg}`}>
-                    <ArrowUpDown size={14} /> {localSort === 'date' ? 'Date' : 'A-Z'}
+                    <ArrowUpDown size={14} /> {localSort === 'date' ? t('sort_date_desc') : t('sort_alpha')}
                 </button>
                 <button onClick={onClose} className={`p-2 rounded-full shadow-sm border ${theme.border} ${theme.bg} ${theme.text}`}><X size={20}/></button>
             </div>
@@ -643,7 +641,7 @@ const FinanceDetailList = ({ title, items, onClose, theme }) => {
                const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image;
                const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
                return (
-                 <div key={w.id} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border}`}>
+                 <div key={w.id} onClick={() => { onClose(); onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:opacity-80`}>
                      <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover"/>}</div>
                      <div className="flex-1 min-w-0">
                         <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div>
@@ -837,6 +835,8 @@ export default function App() {
   const [financeDetail, setFinanceDetail] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [gallerySearchTerm, setGallerySearchTerm] = useState(''); // INDEPENDENT GALLERY SEARCH
+  const [isGallerySearchOpen, setIsGallerySearchOpen] = useState(false);
   
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
@@ -855,6 +855,7 @@ export default function App() {
   const [exportType, setExportType] = useState(null); 
 
   const [timelineFilter, setTimelineFilter] = useState('default'); 
+  const [expandedMonth, setExpandedMonth] = useState(null);
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
@@ -1130,11 +1131,32 @@ export default function App() {
     let filtered = watches;
     if (searchTerm) { const lower = searchTerm.toLowerCase(); filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower))); }
     let sorted = [...filtered];
+
+    const getTime = (w) => {
+        if (w.purchaseDate) return new Date(w.purchaseDate).getTime();
+        if (w.dateAdded) return new Date(w.dateAdded).getTime();
+        return 0;
+    };
+
     if (sortOrder === 'priceAsc') sorted.sort((a, b) => (a.purchasePrice || 0) - (b.purchasePrice || 0));
     else if (sortOrder === 'priceDesc') sorted.sort((a, b) => (b.purchasePrice || 0) - (a.purchasePrice || 0));
-    else if (sortOrder === 'dateAsc') sorted.sort((a, b) => new Date(a.purchaseDate || a.dateAdded || 0) - new Date(b.purchaseDate || b.dateAdded || 0));
     else if (sortOrder === 'alpha') sorted.sort((a, b) => a.brand.localeCompare(b.brand));
-    else sorted.sort((a, b) => new Date(b.purchaseDate || b.dateAdded || 0) - new Date(a.purchaseDate || a.dateAdded || 0)); // dateDesc is default
+    else if (sortOrder === 'dateAsc') {
+        sorted.sort((a, b) => {
+            const ta = getTime(a), tb = getTime(b);
+            if (ta === 0) return 1;
+            if (tb === 0) return -1;
+            return ta - tb;
+        });
+    }
+    else { // dateDesc (default)
+        sorted.sort((a, b) => {
+            const ta = getTime(a), tb = getTime(b);
+            if (ta === 0) return 1;
+            if (tb === 0) return -1;
+            return tb - ta;
+        });
+    }
     return sorted;
   }, [watches, searchTerm, sortOrder]);
 
@@ -1152,7 +1174,7 @@ export default function App() {
     <div className={`flex flex-col items-center justify-start h-full min-h-[80vh] px-8 relative overflow-hidden pt-28 ${theme.text}`}>
       <GraphicBackground isDark={isDark} />
       <div className="absolute top-4 left-4 z-20">
-        <button onClick={() => setView('friends')} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}>
+        <button onClick={() => { setView('friends'); setSearchTerm(''); setGallerySearchTerm(''); }} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}>
             <Users size={18} />
             {friendRequests.length > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}
         </button>
@@ -1370,11 +1392,13 @@ export default function App() {
               </div>
           </div>
 
+          {/* EXPORT BUTTONS */}
           <div className="flex gap-2">
                {w.status !== 'wishlist' && <button onClick={() => setExportType('insurance')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><ShieldCheck size={16}/> {t('sheet_insurance')}</button>}
-               {w.status !== 'wishlist' && <button onClick={() => setExportType('sale')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><DollarSign size={16}/> {t('sheet_sale')}</button>}
+               {w.status !== 'wishlist' && <button onClick={() => setExportType('sale')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><Tag size={16}/> {t('sheet_sale')}</button>}
           </div>
 
+          {/* MARKET SEARCH LINKS */}
           <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{w.status === 'wishlist' ? t('find_used') : t('market_value')}</h3>
                <div className="grid grid-cols-2 gap-2">
@@ -1403,6 +1427,7 @@ export default function App() {
               </>
           )}
 
+          {/* USAGE STATS */}
           {w.status === 'collection' && (
               <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
                   <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider flex items-center gap-2`}>
@@ -1425,6 +1450,7 @@ export default function App() {
               </div>
           )}
           
+          {/* TECHNICAL SPECS */}
           <div>
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('specs')}</h3>
               <div className="grid grid-cols-2 gap-3">
@@ -1436,6 +1462,7 @@ export default function App() {
               </div>
           </div>
 
+          {/* MOVEMENT & DIAL */}
           <div>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3>
                <div className="grid grid-cols-2 gap-3">
@@ -1447,6 +1474,7 @@ export default function App() {
                </div>
           </div>
 
+          {/* ORIGIN & MAINTENANCE */}
           <div>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('origin_maintenance')}</h3>
                <div className="grid grid-cols-2 gap-3">
@@ -1459,6 +1487,7 @@ export default function App() {
                </div>
           </div>
           
+          {/* CONDITION & RATING (NEW) */}
           {(w.conditionRating || w.conditionComment) && (
               <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
                   <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>
@@ -1476,7 +1505,8 @@ export default function App() {
               </div>
           )}
 
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+          {/* DOCUMENTS & INVOICE */}
+          <div className={`pt-4 border-t ${theme.border}`}>
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>
               {w.invoice ? (
                   <div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer`} onClick={() => setFullScreenImage(w.invoice)}>
@@ -1492,6 +1522,7 @@ export default function App() {
               )}
           </div>
 
+          {/* FINANCE & DATES */}
           <div>
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} & Dates</h3>
               <div className="grid grid-cols-2 gap-3 mb-3">
@@ -1504,6 +1535,7 @@ export default function App() {
               </div>
           </div>
           
+          {/* HISTORY & NOTES */}
           {w.conditionNotes && (<div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100 mt-4"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> {t('notes')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.conditionNotes}</div></div>)}
           {w.historyBrand && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_brand')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyBrand}</div></div>)}
           {w.historyModel && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_model')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyModel}</div></div>)}
@@ -1512,7 +1544,33 @@ export default function App() {
     );
   };
   
-  const renderProfile = () => (
+  const renderProfile = () => {
+    // Independent Gallery Search State filtering
+    const displayWatches = watches.filter(w => { 
+        if (!w.image && (!w.images || w.images.length === 0)) return false; 
+        
+        let matchSearch = true;
+        if (gallerySearchTerm) {
+            const lower = gallerySearchTerm.toLowerCase();
+            matchSearch = (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower));
+        }
+        if (!matchSearch) return false;
+
+        if (w.status === 'collection' && showGalleryCollection) return true; 
+        if (w.status === 'forsale' && showGalleryForsale) return true; 
+        if (w.status === 'sold' && showGallerySold) return true; 
+        if (w.status === 'wishlist' && showGalleryWishlist) return true;
+        
+        return false; 
+    });
+
+    // Independent sort for Gallery
+    if (sortOrder === 'priceAsc') displayWatches.sort((a, b) => (a.purchasePrice || 0) - (b.purchasePrice || 0));
+    else if (sortOrder === 'priceDesc') displayWatches.sort((a, b) => (b.purchasePrice || 0) - (a.purchasePrice || 0));
+    else if (sortOrder === 'alpha') displayWatches.sort((a, b) => a.brand.localeCompare(b.brand));
+    else displayWatches.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+
+    return (
     <div className="pb-24 px-2">
       <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border} mb-2`}>
          <div className="flex justify-between items-center px-2 mb-2">
@@ -1534,8 +1592,10 @@ export default function App() {
                         <ArrowUpDown size={10} />
                     </div>
                 </div>
+                <button onClick={() => { setIsGallerySearchOpen(!isGallerySearchOpen); if(isGallerySearchOpen) setGallerySearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isGallerySearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
             </div>
          </div>
+         {isGallerySearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={gallerySearchTerm} onChange={(e) => setGallerySearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
          <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
                <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button>
                <button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button>
@@ -1544,24 +1604,18 @@ export default function App() {
          </div>
       </div>
       <div className="grid grid-cols-3 gap-1 mt-2 px-1">
-          {filteredWatches.filter(w => { 
-             if (!w.image && (!w.images || w.images.length === 0)) return false; 
-             if (w.status === 'collection' && showGalleryCollection) return true; 
-             if (w.status === 'forsale' && showGalleryForsale) return true; 
-             if (w.status === 'sold' && showGallerySold) return true; 
-             if (w.status === 'wishlist' && showGalleryWishlist) return true;
-             return false; 
-          }).map(w => (
+          {displayWatches.map(w => (
               <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
                   <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
               </div>
           ))}
-          {filteredWatches.filter(w => { if (!w.image && (!w.images || w.images.length === 0)) return false; if (w.status === 'collection' && showGalleryCollection) return true; if (w.status === 'forsale' && showGalleryForsale) return true; if (w.status === 'sold' && showGallerySold) return true; if (w.status === 'wishlist' && showGalleryWishlist) return true; return false; }).length === 0 && (
+          {displayWatches.length === 0 && (
               <div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible.</div>
           )}
       </div>
     </div>
   );
+  };
 
   const renderStats = () => {
       const getTopWatches = () => {
@@ -1706,125 +1760,6 @@ export default function App() {
             )}
         </div>
       );
-  };
-
-  const renderFinance = () => {
-    const sCol = { buy: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
-    const sSale = { buy: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
-    const sSold = { buy: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
-    const sTotal = { buy: sCol.buy+sSale.buy+sSold.buy, val: sCol.val+sSale.val+sSold.val, profit: sCol.profit+sSale.profit+sSold.profit };
-
-    const timelineMap = watches.reduce((acc, w) => {
-        if (w.purchaseDate && w.purchasePrice) {
-            const d = new Date(w.purchaseDate);
-            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
-            acc[key].spent += Number(w.purchasePrice);
-            acc[key].count += 1; 
-            acc[key].boughtWatches.push(w);
-        }
-        if (w.status === 'sold' && w.soldDate && w.sellingPrice) {
-            const d = new Date(w.soldDate);
-            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
-            acc[key].gained += Number(w.sellingPrice);
-            acc[key].soldWatches.push(w);
-        }
-        return acc;
-    }, {});
-    
-    const sortedTimeline = Object.values(timelineMap).sort((a,b) => b.date.localeCompare(a.date));
-    
-    const timelineByYear = sortedTimeline.reduce((acc, curr) => {
-        if (!acc[curr.year]) acc[curr.year] = { year: curr.year, months: [], spent: 0, gained: 0 };
-        acc[curr.year].months.push(curr);
-        acc[curr.year].spent += curr.spent;
-        acc[curr.year].gained += curr.gained;
-        return acc;
-    }, {});
-    
-    const sortedYears = Object.values(timelineByYear).sort((a,b) => b.year - a.year);
-
-    const formatMonthName = (dateStr) => {
-        const [y, m] = dateStr.split('-');
-        const d = new Date(y, parseInt(m)-1, 1);
-        return d.toLocaleString(settings.lang, { month: 'long' });
-    };
-
-    const now = new Date();
-    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
-
-    return (
-      <div className="pb-24 px-3 space-y-2">
-        <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-2`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('finance')}</h1></div>
-        
-        {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter(w=>w.status==='collection')} onClose={() => setFinanceDetail(null)} theme={theme} />}
-        {financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter(w=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} theme={theme} />}
-        {financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter(w=>w.status==='sold')} onClose={() => setFinanceDetail(null)} theme={theme} />}
-        
-        <FinanceCardFull title={t('collection')} icon={Watch} stats={sCol} type="collection" bgColor="bg-emerald-500" onClick={() => setFinanceDetail('collection')} theme={theme} />
-        <FinanceCardFull title={t('forsale')} icon={TrendingUp} stats={sSale} type="forsale" bgColor="bg-amber-500" onClick={() => setFinanceDetail('forsale')} theme={theme} />
-        <FinanceCardFull title={t('sold')} icon={DollarSign} stats={sSold} type="sold" bgColor="bg-blue-600" onClick={() => setFinanceDetail('sold')} theme={theme} />
-        <div className="mt-4 pt-2"><FinanceCardFull title={t('total_value')} icon={Activity} stats={sTotal} type="total" bgColor="bg-white" onClick={() => {}} theme={theme} /></div>
-
-        <div className="mt-6">
-            <div className="flex justify-between items-center mb-3">
-                <h3 className={`font-bold text-sm ${theme.text} uppercase tracking-wider flex items-center gap-2`}><Briefcase size={16}/> {t('finance_timeline')}</h3>
-                <button onClick={() => setTimelineFilter(prev => prev === 'default' ? 'all' : 'default')} className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-colors ${timelineFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : `${theme.bgSecondary} ${theme.text} ${theme.border}`}`}>
-                    {timelineFilter === 'default' ? t('show_history') : t('show_less')}
-                </button>
-            </div>
-
-            {sortedYears.map(yearData => {
-                if (timelineFilter === 'default' && yearData.year !== now.getFullYear()) return null;
-
-                const monthsToDisplay = timelineFilter === 'default' 
-                    ? yearData.months.filter(m => m.date === currentMonthKey || m.date === prevMonthKey)
-                    : yearData.months;
-
-                if (timelineFilter === 'default' && monthsToDisplay.length === 0) {
-                     return <div key={yearData.year} className={`text-center text-xs ${theme.textSub} py-4 italic`}>Aucune activité récente.</div>;
-                }
-
-                return (
-                    <div key={yearData.year} className="mb-6">
-                        <div className={`mb-3 p-3 rounded-xl border border-indigo-100 bg-indigo-50/50 dark:bg-indigo-900/20 dark:border-indigo-800`}>
-                            <div className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase mb-2 text-center">{t('year_summary')} {yearData.year}</div>
-                            <div className="flex justify-between text-sm">
-                                <div className="text-red-500 font-bold">- {formatPrice(yearData.spent)}</div>
-                                <div className="font-mono font-bold text-slate-400">= {formatPrice(yearData.gained - yearData.spent)}</div>
-                                <div className="text-emerald-600 font-bold">+ {formatPrice(yearData.gained)}</div>
-                            </div>
-                        </div>
-                        <div className="space-y-3">
-                            {monthsToDisplay.map((tItem) => (
-                                <div key={tItem.date} className={`${theme.card} p-3 rounded-xl border ${theme.border} flex items-center justify-between`}>
-                                    <div className="flex items-center gap-3">
-                                        <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>
-                                            {formatMonthName(tItem.date)}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
-                                            <span className={`font-bold text-sm ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
-                                                {formatPrice(tItem.gained - tItem.spent)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="text-right text-xs">
-                                        {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
-                                        {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-      </div>
-    );
   };
 
   const renderForm = () => {
