@@ -2,14 +2,13 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, Tag,
   Package, DollarSign, FileText, Box, Loader2, ChevronLeft, ClipboardList, 
-  Ruler, Calendar, LogIn, LogOut, MapPin, Droplets, ShieldCheck, 
+  Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, 
   Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, 
-  Save, Copy, Palette, Users, UserPlus, Eye, EyeOff, 
-  Check, Gem, Battery, ShoppingCart, BookOpen, 
-  Gift, Scale, Lock, ChevronRight, BarChart2, Moon, Sun, Clock, 
-  PieChart, Briefcase, Printer, Link as LinkIcon, Receipt
+  Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, 
+  Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, 
+  Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, 
+  PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt
 } from 'lucide-react';
-
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc } from 'firebase/firestore';
@@ -118,6 +117,7 @@ const AnalogClock = ({ isDark, settings }: any) => {
   useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
   const secondsRatio = time.getSeconds() / 60; const minutesRatio = (secondsRatio + time.getMinutes()) / 60; const hoursRatio = (minutesRatio + time.getHours()) / 12;
   const borderColor = isDark ? 'border-slate-600' : 'border-slate-800'; const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
+  
   const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); 
   const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); 
   const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); 
@@ -327,7 +327,7 @@ const ConfigModal = ({ onClose, currentError, t }: any) => {
                 <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><h3 className="font-bold text-slate-800 flex items-center gap-2"><Settings size={18}/> {t('config_cloud')}</h3><button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button></div>
                 <div className="p-6 space-y-4">
                     {currentError && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs mb-4">{String(currentError)}</div>}
-                    <textarea className="w-full h-40 p-3 border rounded-lg font-mono text-xs bg-slate-50" placeholder={`{ apiKey: "...", ... }`} value={jsonConfig} onChange={(e: any) => setJsonConfig(e.target.value)} />
+                    <textarea className="w-full h-40 p-3 border rounded-lg font-mono text-xs bg-slate-50" placeholder={`{ apiKey: "...", ... }`} value={jsonConfig} onChange={e => setJsonConfig(e.target.value)} />
                     {parseError && <div className="text-xs text-red-500">{parseError}</div>}
                     <button onClick={handleSave} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"><Save size={18}/> {t('save')}</button>
                 </div>
@@ -1010,7 +1010,7 @@ export default function App() {
                     <div className="relative">
                         <select 
                             value={sortOrder} 
-                            onChange={(e: any) => setSortOrder(e.target.value)}
+                            onChange={e => setSortOrder(e.target.value)}
                             className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
                         >
                             <option value="dateDesc">{t('sort_date_desc')}</option>
@@ -1029,7 +1029,7 @@ export default function App() {
           </div>
           {isSearchOpen && (
               <div className="px-2 mb-3">
-                  <input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e: any) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
+                  <input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
               </div>
           )}
           {withFilters && !isSearchOpen && (
@@ -1373,7 +1373,7 @@ export default function App() {
                     <div className="relative">
                         <select 
                             value={sortOrder} 
-                            onChange={(e: any) => setSortOrder(e.target.value)}
+                            onChange={e => setSortOrder(e.target.value)}
                             className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
                         >
                             <option value="dateDesc">{t('sort_date_desc')}</option>
@@ -1391,7 +1391,7 @@ export default function App() {
              </div>
              {isGallerySearchOpen && (
                  <div className="px-2 mb-3">
-                     <input autoFocus type="text" placeholder={t('search')} value={gallerySearchTerm} onChange={(e: any) => setGallerySearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
+                     <input autoFocus type="text" placeholder={t('search')} value={gallerySearchTerm} onChange={e => setGallerySearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
                  </div>
              )}
              <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
@@ -1590,7 +1590,7 @@ export default function App() {
                                 <h3 className={`font-bold ${theme.text}`}>Porté le {new Date(selectedCalendarDate).toLocaleDateString()}</h3>
                                 <button onClick={() => setSelectedCalendarDate(null)}><X size={20} className={theme.textSub}/></button>
                             </div>
-                            <input autoFocus type="text" placeholder={t('search')} className={`w-full p-2 ${theme.input} rounded-lg text-sm`} value={calendarSearchTerm} onChange={(e: any) => setCalendarSearchTerm(e.target.value)}/>
+                            <input autoFocus type="text" placeholder={t('search')} className={`w-full p-2 ${theme.input} rounded-lg text-sm`} value={calendarSearchTerm} onChange={e => setCalendarSearchTerm(e.target.value)}/>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
                             {watches.filter(w => w.status === 'collection').filter(w => !calendarSearchTerm || w.brand.toLowerCase().includes(calendarSearchTerm.toLowerCase())).map(w => {
@@ -1670,9 +1670,9 @@ export default function App() {
     const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
 
-    const currentYearObj = sortedYears.find((y: any) => y.year === now.getFullYear()) as any;
-    const currentYearSpent = currentYearObj?.spent || 0;
-    const currentYearGained = currentYearObj?.gained || 0;
+    const currentYearObj = sortedYears.find((y: any) => y.year === now.getFullYear()) as any || {};
+    const currentYearSpent = currentYearObj.spent || 0;
+    const currentYearGained = currentYearObj.gained || 0;
     const currentYearProfit = currentYearGained - currentYearSpent;
 
     return (
@@ -1854,30 +1854,30 @@ export default function App() {
                 {currentImages.length < 3 && (
                     <label className={`aspect-square ${theme.bg} rounded-xl flex flex-col items-center justify-center border-2 border-dashed ${theme.border} cursor-pointer`}>
                         <Camera className={theme.textSub} size={24}/>
-                        <input type="file" onChange={(e: any) => handleImageUpload(e, 'watch')} className="hidden" accept="image/*"/>
+                        <input type="file" onChange={e => handleImageUpload(e, 'watch')} className="hidden" accept="image/*"/>
                     </label>
                 )}
             </div>
             
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('identity')}</h3>
-                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('brand')} value={watchForm.brand} onChange={(e: any) => setWatchForm({...watchForm, brand: e.target.value})} required />
-                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('model')} value={watchForm.model} onChange={(e: any) => setWatchForm({...watchForm, model: e.target.value})} required />
-                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('reference')} value={watchForm.reference} onChange={(e: any) => setWatchForm({...watchForm, reference: e.target.value})} />
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('brand')} value={watchForm.brand} onChange={e => setWatchForm({...watchForm, brand: e.target.value})} required />
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('model')} value={watchForm.model} onChange={e => setWatchForm({...watchForm, model: e.target.value})} required />
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('reference')} value={watchForm.reference} onChange={e => setWatchForm({...watchForm, reference: e.target.value})} />
                  <div className="relative">
-                     <input className={`w-full p-3 pl-10 rounded-lg ${theme.input}`} placeholder={t('dial')} value={watchForm.dialColor || ''} onChange={(e: any) => setWatchForm({...watchForm, dialColor: e.target.value})} />
+                     <input className={`w-full p-3 pl-10 rounded-lg ${theme.input}`} placeholder={t('dial')} value={watchForm.dialColor || ''} onChange={e => setWatchForm({...watchForm, dialColor: e.target.value})} />
                      <Palette className={`absolute left-3 top-3.5 ${theme.textSub}`} size={18} />
                  </div>
                  <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
                      <div className="flex items-center mb-2">
-                        <input type="checkbox" id="isLimited" checked={watchForm.isLimitedEdition} onChange={(e: any) => setWatchForm({...watchForm, isLimitedEdition: e.target.checked})} className="w-4 h-4 text-indigo-600 rounded mr-2" />
+                        <input type="checkbox" id="isLimited" checked={watchForm.isLimitedEdition} onChange={e => setWatchForm({...watchForm, isLimitedEdition: e.target.checked})} className="w-4 h-4 text-indigo-600 rounded mr-2" />
                         <label htmlFor="isLimited" className={`text-sm font-bold ${theme.text}`}>{t('limited_edition')}</label>
                      </div>
                      {watchForm.isLimitedEdition && (
                         <div className="flex gap-2 pl-6 animate-in slide-in-from-top-1">
-                            <input className={`w-full p-2 border rounded text-sm ${theme.input}`} placeholder="N°" value={watchForm.limitedNumber} onChange={(e: any) => setWatchForm({...watchForm, limitedNumber: e.target.value})} />
+                            <input className={`w-full p-2 border rounded text-sm ${theme.input}`} placeholder="N°" value={watchForm.limitedNumber} onChange={e => setWatchForm({...watchForm, limitedNumber: e.target.value})} />
                             <span className={`py-2 ${theme.textSub}`}>/</span>
-                            <input className={`w-full p-2 border rounded text-sm ${theme.input}`} placeholder="Total" value={watchForm.limitedTotal} onChange={(e: any) => setWatchForm({...watchForm, limitedTotal: e.target.value})} />
+                            <input className={`w-full p-2 border rounded text-sm ${theme.input}`} placeholder="Total" value={watchForm.limitedTotal} onChange={e => setWatchForm({...watchForm, limitedTotal: e.target.value})} />
                         </div>
                      )}
                  </div>
@@ -1886,53 +1886,53 @@ export default function App() {
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('technical')}</h3>
                  <div className="grid grid-cols-2 gap-3">
-                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('diameter')} (mm)`} value={watchForm.diameter} onChange={(e: any) => setWatchForm({...watchForm, diameter: e.target.value})} />
-                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('thickness')} (mm)`} value={watchForm.thickness} onChange={(e: any) => setWatchForm({...watchForm, thickness: e.target.value})} />
-                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('lug_width')} (mm)`} value={watchForm.strapWidth} onChange={(e: any) => setWatchForm({...watchForm, strapWidth: e.target.value})} />
-                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('water_res')} (ATM)`} value={watchForm.waterResistance} onChange={(e: any) => setWatchForm({...watchForm, waterResistance: e.target.value})} />
-                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('weight')} (g)`} value={watchForm.weight || ''} onChange={(e: any) => setWatchForm({...watchForm, weight: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('diameter')} (mm)`} value={watchForm.diameter} onChange={e => setWatchForm({...watchForm, diameter: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('thickness')} (mm)`} value={watchForm.thickness} onChange={e => setWatchForm({...watchForm, thickness: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('lug_width')} (mm)`} value={watchForm.strapWidth} onChange={e => setWatchForm({...watchForm, strapWidth: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('water_res')} (ATM)`} value={watchForm.waterResistance} onChange={e => setWatchForm({...watchForm, waterResistance: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('weight')} (g)`} value={watchForm.weight || ''} onChange={e => setWatchForm({...watchForm, weight: e.target.value})} />
                  </div>
                  <div className="grid grid-cols-2 gap-3">
-                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('movement')} value={watchForm.movement} onChange={(e: any) => setWatchForm({...watchForm, movement: e.target.value})} />
-                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('movement_model')} value={watchForm.movementModel || ''} onChange={(e: any) => setWatchForm({...watchForm, movementModel: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('movement')} value={watchForm.movement} onChange={e => setWatchForm({...watchForm, movement: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('movement_model')} value={watchForm.movementModel || ''} onChange={e => setWatchForm({...watchForm, movementModel: e.target.value})} />
                  </div>
                  {['quartz', 'pile', 'battery'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
                      <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
                         <div className={`flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider ${theme.textSub}`}><Battery size={14}/> {t('battery')}</div>
-                        <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder="Ref Pile (ex: 377)" value={watchForm.batteryModel || ''} onChange={(e: any) => setWatchForm({...watchForm, batteryModel: e.target.value})} />
+                        <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder="Ref Pile (ex: 377)" value={watchForm.batteryModel || ''} onChange={e => setWatchForm({...watchForm, batteryModel: e.target.value})} />
                      </div>
                  )}
-                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('glass')} value={watchForm.glass} onChange={(e: any) => setWatchForm({...watchForm, glass: e.target.value})} />
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('glass')} value={watchForm.glass} onChange={e => setWatchForm({...watchForm, glass: e.target.value})} />
             </div>
 
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('origin_maintenance')}</h3>
                  <div className="grid grid-cols-3 gap-3">
-                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('country')} value={watchForm.country} onChange={(e: any) => setWatchForm({...watchForm, country: e.target.value})} />
-                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={t('model_year')} value={watchForm.year} onChange={(e: any) => setWatchForm({...watchForm, year: e.target.value})} />
-                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('box_included')} value={watchForm.box} onChange={(e: any) => setWatchForm({...watchForm, box: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('country')} value={watchForm.country} onChange={e => setWatchForm({...watchForm, country: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={t('model_year')} value={watchForm.year} onChange={e => setWatchForm({...watchForm, year: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('box_included')} value={watchForm.box} onChange={e => setWatchForm({...watchForm, box: e.target.value})} />
                  </div>
                  
                  <div className="grid grid-cols-2 gap-3">
                      <div>
                          <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_release')}</label>
-                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.releaseDate || ''} onChange={(e: any) => setWatchForm({...watchForm, releaseDate: e.target.value})} />
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.releaseDate || ''} onChange={e => setWatchForm({...watchForm, releaseDate: e.target.value})} />
                      </div>
                      <div>
                          <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_purchase')}</label>
-                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.purchaseDate || ''} onChange={(e: any) => setWatchForm({...watchForm, purchaseDate: e.target.value})} />
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.purchaseDate || ''} onChange={e => setWatchForm({...watchForm, purchaseDate: e.target.value})} />
                      </div>
                  </div>
                  {watchForm.status === 'sold' && (
                      <div>
                          <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label>
-                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={(e: any) => setWatchForm({...watchForm, soldDate: e.target.value})} />
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={e => setWatchForm({...watchForm, soldDate: e.target.value})} />
                      </div>
                  )}
                  
                  <div className="grid grid-cols-2 gap-3">
-                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('warranty')} value={watchForm.warrantyDate} onChange={(e: any) => setWatchForm({...watchForm, warrantyDate: e.target.value})} />
-                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('revision')} value={watchForm.revision} onChange={(e: any) => setWatchForm({...watchForm, revision: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('warranty')} value={watchForm.warrantyDate} onChange={e => setWatchForm({...watchForm, warrantyDate: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('revision')} value={watchForm.revision} onChange={e => setWatchForm({...watchForm, revision: e.target.value})} />
                  </div>
             </div>
             
@@ -1946,7 +1946,7 @@ export default function App() {
                 ) : (
                     <label className={`flex items-center gap-2 cursor-pointer text-xs font-bold ${theme.text}`}>
                         <Plus size={14}/> {t('add_invoice')}
-                        <input type="file" onChange={(e: any) => handleImageUpload(e, 'invoice')} className="hidden" accept="image/*"/>
+                        <input type="file" onChange={e => handleImageUpload(e, 'invoice')} className="hidden" accept="image/*"/>
                     </label>
                 )}
             </div>
@@ -1962,22 +1962,22 @@ export default function App() {
                         step="1" 
                         className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
                         value={watchForm.conditionRating || 0}
-                        onChange={(e: any) => setWatchForm({...watchForm, conditionRating: parseInt(e.target.value)})}
+                        onChange={e => setWatchForm({...watchForm, conditionRating: parseInt(e.target.value)})}
                      />
                  </div>
-                 <textarea className={`w-full p-3 rounded-lg min-h-[60px] ${theme.input}`} placeholder={t('condition_comment')} value={watchForm.conditionComment || ''} onChange={(e: any) => setWatchForm({...watchForm, conditionComment: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[60px] ${theme.input}`} placeholder={t('condition_comment')} value={watchForm.conditionComment || ''} onChange={e => setWatchForm({...watchForm, conditionComment: e.target.value})} />
             </div>
 
             <div className="space-y-3">
                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('financial_status')}</h3>
                 <div className="grid grid-cols-2 gap-4">
-                    <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('purchase_price')} value={watchForm.purchasePrice} onChange={(e: any) => setWatchForm({...watchForm, purchasePrice: e.target.value})} />
-                    <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('selling_price')} value={watchForm.sellingPrice} onChange={(e: any) => setWatchForm({...watchForm, sellingPrice: e.target.value})} />
+                    <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('purchase_price')} value={watchForm.purchasePrice} onChange={e => setWatchForm({...watchForm, purchasePrice: e.target.value})} />
+                    <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('selling_price')} value={watchForm.sellingPrice} onChange={e => setWatchForm({...watchForm, sellingPrice: e.target.value})} />
                 </div>
                 {watchForm.status !== 'wishlist' && (
                     <div className={`p-2 rounded-lg border ${theme.border} ${theme.bg} flex items-center gap-2`}>
                         <Lock size={16} className="text-amber-600" />
-                        <input type="number" className={`w-full p-2 bg-transparent border-none focus:ring-0 text-sm ${theme.text}`} placeholder={t('min_price')} value={watchForm.minPrice || ''} onChange={(e: any) => setWatchForm({...watchForm, minPrice: e.target.value})} />
+                        <input type="number" className={`w-full p-2 bg-transparent border-none focus:ring-0 text-sm ${theme.text}`} placeholder={t('min_price')} value={watchForm.minPrice || ''} onChange={e => setWatchForm({...watchForm, minPrice: e.target.value})} />
                     </div>
                 )}
                 
@@ -1989,7 +1989,7 @@ export default function App() {
 
                 <div className={`relative ${watchForm.status === 'wishlist' ? 'animate-pulse-slow' : ''}`}>
                     <LinkIcon className={`absolute left-3 top-3.5 ${theme.textSub}`} size={18}/>
-                    <input className={`w-full p-3 pl-10 rounded-lg ${theme.input} ${watchForm.status === 'wishlist' ? 'border-indigo-300 ring-1 ring-indigo-100' : ''}`} placeholder={t('link_web')} value={watchForm.link || ''} onChange={(e: any) => setWatchForm({...watchForm, link: e.target.value})} />
+                    <input className={`w-full p-3 pl-10 rounded-lg ${theme.input} ${watchForm.status === 'wishlist' ? 'border-indigo-300 ring-1 ring-indigo-100' : ''}`} placeholder={t('link_web')} value={watchForm.link || ''} onChange={e => setWatchForm({...watchForm, link: e.target.value})} />
                 </div>
 
                 <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
@@ -1998,7 +1998,7 @@ export default function App() {
                             {watchForm.publicVisible ? <Eye className="text-indigo-600 mr-2" size={20}/> : <EyeOff className="text-slate-400 mr-2" size={20}/>}
                             <span className={`text-sm font-bold ${theme.text}`}>{t('visibility_friends')}</span>
                         </div>
-                        <input type="checkbox" checked={watchForm.publicVisible !== false} onChange={(e: any) => setWatchForm({...watchForm, publicVisible: e.target.checked})} className="w-5 h-5 text-indigo-600 rounded" />
+                        <input type="checkbox" checked={watchForm.publicVisible !== false} onChange={e => setWatchForm({...watchForm, publicVisible: e.target.checked})} className="w-5 h-5 text-indigo-600 rounded" />
                     </div>
                     <p className={`text-[10px] ${theme.textSub} mt-1 pl-8`}>{t('private_note')}</p>
                 </div>
@@ -2006,9 +2006,9 @@ export default function App() {
 
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('notes')} &amp; {t('history')}</h3>
-                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={(e: any) => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
-                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_brand')} value={watchForm.historyBrand || ''} onChange={(e: any) => setWatchForm({...watchForm, historyBrand: e.target.value})} />
-                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_model')} value={watchForm.historyModel || ''} onChange={(e: any) => setWatchForm({...watchForm, historyModel: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_brand')} value={watchForm.historyBrand || ''} onChange={e => setWatchForm({...watchForm, historyBrand: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_model')} value={watchForm.historyModel || ''} onChange={e => setWatchForm({...watchForm, historyModel: e.target.value})} />
             </div>
 
             <button className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold shadow-lg">{t('save')}</button>
@@ -2036,6 +2036,7 @@ export default function App() {
             {view === 'stats' && renderStats()}
             {view === 'profile' && renderProfile()}
             {view === 'friends' && renderFriends()}
+            {view === 'summary' && renderSummary()}
             {view === 'detail' && renderDetail()}
             {view === 'add' && renderForm()}
         </div>
