@@ -2,12 +2,12 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, Tag,
   Package, DollarSign, FileText, Box, Loader2, ChevronLeft, ClipboardList, 
-  Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, 
+  Ruler, Calendar, LogIn, LogOut, MapPin, Droplets, ShieldCheck, 
   Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, 
-  Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, 
-  Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, 
-  Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, 
-  PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt
+  Save, Copy, Palette, Users, UserPlus, Eye, EyeOff, 
+  Check, Gem, Battery, ShoppingCart, BookOpen, 
+  Gift, Scale, Lock, ChevronRight, BarChart2, Moon, Sun, Clock, 
+  PieChart, Briefcase, Printer, Link as LinkIcon, Receipt
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -208,7 +208,7 @@ const ExportView = ({ watch, type, onClose, theme, t }: any) => {
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
                                  <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{t('selling_price')}</div>
                                  <div className="text-3xl font-bold font-serif">{formatPrice(watch.sellingPrice || watch.purchasePrice)}</div>
-                                 <div className="mt-2 text-xs text-slate-500 italic">*Prix non contractuel, sujet à négociation</div>
+                                 <div className="mt-2 text-xs text-slate-500 italic">*Prix non contractuel, sujet &agrave; négociation</div>
                             </div>
                         )}
                     </div>
@@ -243,7 +243,7 @@ const ExportView = ({ watch, type, onClose, theme, t }: any) => {
                 )}
                 
                 {isSale && (
-                   <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500"><p>Contactez le vendeur pour plus d&apos;informations.</p><div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">Espace Réservé (Contact / Info)</div></div>
+                   <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500"><p>Contactez le vendeur pour plus d&apos;informations.</p><div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">Espace R&eacute;serv&eacute; (Contact / Info)</div></div>
                 )}
                 <div className="print:fixed print:bottom-4 print:left-0 print:w-full text-center text-[10px] text-slate-400">Généré par ChronoManager - {new Date().toLocaleDateString()}</div>
             </div>
@@ -282,7 +282,7 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch, t }: a
 
                return (
                  <div key={w.id} onClick={() => { onClose(); onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:opacity-80`}>
-                     <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} alt="" className="w-full h-full object-cover"/>}</div>
+                     <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} alt="Montre" className="w-full h-full object-cover"/>}</div>
                      <div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div><div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div></div>
                      <div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div><div className={`text-xs font-medium ${profitColor}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div>
                  </div>
@@ -954,7 +954,7 @@ export default function App() {
     return (
         <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-2 animate-in fade-in duration-200" onClick={() => setFullScreenImage(null)}>
             <button className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/50 rounded-full p-2"><X size={32}/></button>
-            <img src={fullScreenImage} alt="" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+            <img src={fullScreenImage} alt="Fullscreen" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
         </div>
     );
   };
@@ -977,7 +977,7 @@ export default function App() {
               </button>
             ) : (
               <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">
-                 {user.photoURL ? <img src={user.photoURL} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
+                 {user.photoURL ? <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
               </button>
             )}
             <button onClick={() => setShowSettingsModal(true)} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors z-20`}><Settings size={18} /></button>
@@ -1077,7 +1077,7 @@ export default function App() {
                     {bracelets.map(b => (
                         <Card key={b.id} onClick={() => handleEdit(b, 'bracelet')} theme={theme}>
                             <div className={`aspect-square ${theme.bg} relative flex items-center justify-center`}>
-                                {b.image ? <img src={b.image} alt="" className="w-full h-full object-cover"/> : <Activity className={theme.textSub}/>}
+                                {b.image ? <img src={b.image} alt="Bracelet" className="w-full h-full object-cover"/> : <Activity className={theme.textSub}/>}
                                 <div className="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm">{b.width}mm</div>
                             </div>
                             <div className="p-3">
@@ -1101,7 +1101,7 @@ export default function App() {
             return (
             <Card key={w.id} onClick={() => { setSelectedWatch(w); setViewedImageIndex(0); setView('detail'); }} theme={theme}>
               <div className={`aspect-square ${theme.bg} relative`}>
-                {displayImage ? <img src={displayImage} alt="" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
+                {displayImage ? <img src={displayImage} alt="Montre" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
                 {(w.purchasePrice) && (<div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{formatPrice(w.purchasePrice)}</div>)}
                 <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">{w.status === 'sold' ? <span className="text-emerald-600 font-extrabold">{t('sold')}</span> : formatPrice(w.sellingPrice || w.purchasePrice)}</div>
                 <div className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer z-10" onClick={(e: any) => { e.stopPropagation(); toggleVisibility(w); }}>{w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}</div>
@@ -1125,7 +1125,7 @@ export default function App() {
             const displayImage = w.images?.[0] || w.image;
             return (
             <Card key={w.id} className="flex p-3 gap-3 relative" onClick={() => { setSelectedWatch(w); setView('detail'); }} theme={theme}>
-                <div className={`w-20 h-20 ${theme.bg} rounded-lg flex-shrink-0 overflow-hidden`}>{displayImage ? <img src={displayImage} alt="" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}</div>
+                <div className={`w-20 h-20 ${theme.bg} rounded-lg flex-shrink-0 overflow-hidden`}>{displayImage ? <img src={displayImage} alt="Souhait" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}</div>
                 <div className="flex-1 flex flex-col justify-between py-1">
                     <div><h3 className={`font-bold font-serif ${theme.text} tracking-wide`}>{w.brand}</h3><p className={`text-xs ${theme.textSub}`}>{w.model}</p></div>
                     <div className="flex justify-between items-end"><div className="font-semibold text-emerald-600">{formatPrice(w.purchasePrice)}</div>{w.link && (<a href={w.link} target="_blank" rel="noreferrer" className="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 z-10" onClick={(e: any) => { e.stopPropagation(); }}><ExternalLink size={14} /></a>)}</div>
@@ -1190,10 +1190,10 @@ export default function App() {
         <div className="p-4 space-y-6">
           <div className="space-y-4">
               <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative group`} onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}>
-                {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} alt="" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
+                {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} alt="Montre" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
                 {displayImages.length > 1 && (<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">{displayImages.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === viewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>)}</div>)}
               </div>
-              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img: any, i: number) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} alt="" className="w-full h-full object-cover" /></div>))}</div>)}
+              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img: any, i: number) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} alt="Miniature" className="w-full h-full object-cover" /></div>))}</div>)}
               <div>
                 <h1 className={`text-3xl font-serif font-bold ${theme.text} leading-tight`}>{w.brand}</h1>
                 <p className={`text-xl ${theme.textSub} font-medium font-serif`}>{w.model}</p>
@@ -1312,7 +1312,7 @@ export default function App() {
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>
               {w.invoice ? (
                   <div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer`} onClick={() => setFullScreenImage(w.invoice)}>
-                      <img src={w.invoice} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <img src={w.invoice} alt="Facture" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
                               <Receipt size={14}/> {t('view_invoice')}
@@ -1342,49 +1342,6 @@ export default function App() {
         </div>
       </div>
     );
-  };
-
-  const renderSummary = () => (
-      <div className="pb-24 px-2">
-          {renderHeader(t('inventory'))}
-          <div className="space-y-6 px-1 mt-2">
-              <button className={`w-full p-4 text-left ${theme.card} border ${theme.border} rounded-lg shadow-sm`} onClick={exportCSV}><div className={`font-bold flex items-center ${theme.text}`}><Download className="mr-2" size={18}/> {t('export_csv')}</div></button>
-              {['collection', 'forsale', 'sold'].map(cat => {
-                  const list = filteredWatches.filter(w => w.status === cat);
-                  if (list.length === 0) return null;
-                  return (<div key={cat} className={`${theme.card} rounded-xl shadow-sm border ${theme.border}`}><div className={`px-4 py-2 border-b ${theme.border} font-bold text-sm ${theme.text}`}>{t(cat)} ({list.length})</div><div className={`divide-y ${theme.border}`}>{list.map(w => (<div key={w.id} className="flex items-center p-2"><div className={`font-bold text-sm ${theme.text} whitespace-nowrap mr-2`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div>))}</div></div>);
-              })}
-          </div>
-      </div>
-  );
-
-  const renderFriends = () => {
-      if (user?.isAnonymous || user?.uid === 'local-user') return (<div className="pb-24 px-6 flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6"><div className="p-6 bg-indigo-50 rounded-full text-indigo-600"><Users size={48}/></div><div><h2 className={`text-xl font-bold ${theme.text} mb-2`}>Cloud Requis</h2><p className={theme.textSub}>Connectez-vous pour ajouter des amis.</p></div><button onClick={handleGoogleLogin} className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold">{t('login_google')}</button></div>);
-      if (viewingFriend) return (
-          <div className={`pb-24 ${theme.bgSecondary} min-h-screen`}>
-              <div className={`sticky top-0 ${theme.bgSecondary}/95 backdrop-blur z-10 px-4 py-3 border-b ${theme.border} flex items-center gap-3`}><button onClick={() => setViewingFriend(null)} className={theme.text}><ChevronLeft/></button><div><h1 className={`font-serif font-bold ${theme.text}`}>{viewingFriend.name}</h1></div></div>
-              <div className="p-4 grid grid-cols-2 gap-3">
-                  {friendWatches.map(w => (
-                      <div key={w.id} onClick={() => setSelectedWatch(w)} className={`${theme.card} rounded-xl shadow-sm overflow-hidden border ${theme.border}`}>
-                          <div className={`aspect-square ${theme.bg}`}>
-                              <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/>
-                          </div>
-                          <div className="p-2"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div></div>
-                      </div>
-                  ))}
-              </div>
-          </div>
-      );
-      return (
-          <div className="pb-24 px-3">
-              <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-4`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('friends')}</h1></div>
-              {friendRequests.length > 0 && (<div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4"><h3 className="font-bold text-sm text-amber-700 uppercase mb-3">{t('requests')}</h3>{friendRequests.map(req => (<div key={req.id} className="bg-white p-3 rounded-lg shadow-sm flex justify-between"><span className="text-sm font-bold">{req.fromEmail}</span><div className="flex gap-2"><button onClick={() => acceptRequest(req)}><Check size={16}/></button></div></div>))}</div>)}
-              <div className="bg-indigo-600 rounded-xl p-4 text-white shadow-lg mb-6"><h3 className="font-bold text-lg mb-1">Code Ami</h3><div className="bg-white/10 p-3 rounded-lg flex justify-between"><code className="font-mono text-sm">{user?.uid}</code><button onClick={() => navigator.clipboard.writeText(user?.uid)}><Copy size={12}/></button></div></div>
-              <button onClick={handlePreviewOwnProfile} className="w-full mb-6 py-3 border-2 border-indigo-100 text-indigo-600 rounded-xl font-bold flex justify-center gap-2"><Eye size={18}/> Mon Profil</button>
-              <div className="mb-6"><div className="flex gap-2"><input type="text" placeholder="Code ami..." className={`flex-1 p-3 rounded-xl border ${theme.border} ${theme.input}`} value={addFriendId} onChange={(e: any) => setAddFriendId(e.target.value)}/><button onClick={sendFriendRequest} className="bg-slate-900 text-white p-3 rounded-xl"><UserPlus size={20}/></button></div></div>
-              <div><h3 className={`font-bold text-sm ${theme.textSub} uppercase mb-3`}>Mes Amis</h3>{friends.map(f => (<div key={f.id} onClick={() => loadFriendCollection(f)} className={`${theme.card} p-4 rounded-xl border ${theme.border} flex justify-between cursor-pointer`}><span className={`font-bold ${theme.text}`}>{f.name}</span><button onClick={(e: any) => {e.stopPropagation(); removeFriend(f.id)}}><Trash2 size={16} className="text-red-500"/></button></div>))}</div>
-          </div>
-      );
   };
   
   const renderProfile = () => {
@@ -1454,7 +1411,7 @@ export default function App() {
           <div className="grid grid-cols-3 gap-1 mt-2 px-1">
               {displayWatches.map(w => (
                   <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
-                      <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover" />
+                      <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover" />
                   </div>
               ))}
               {displayWatches.length === 0 && (
@@ -1522,7 +1479,7 @@ export default function App() {
                             const img = w.images?.[0] || w.image; 
                             return (
                                 <div key={idx} className="w-1.5 h-1.5 rounded-full bg-slate-300 overflow-hidden">
-                                    {img && <img src={img} alt="" className="w-full h-full object-cover" />}
+                                    {img && <img src={img} alt="Montre" className="w-full h-full object-cover" />}
                                 </div>
                             ); 
                         })}
@@ -1608,7 +1565,7 @@ export default function App() {
                             <div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}>
                                 <div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div>
                                 <div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}>
-                                    <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover" />
+                                    <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div>
@@ -1679,7 +1636,7 @@ export default function App() {
                                         {isSelected && <Check size={12} className="text-white" />}
                                     </div>
                                     <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-200 shrink-0">
-                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
+                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div>
@@ -1863,7 +1820,7 @@ export default function App() {
                                                                 {tItem.boughtWatches.map((w: any) => (
                                                                     <div key={`buy-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
                                                                         <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                            {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                            {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
                                                                         </div>
                                                                         <div className="flex-1 min-w-0">
                                                                             <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
@@ -1882,7 +1839,7 @@ export default function App() {
                                                                 {tItem.soldWatches.map((w: any) => (
                                                                     <div key={`sell-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
                                                                         <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                            {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                            {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
                                                                         </div>
                                                                         <div className="flex-1 min-w-0">
                                                                             <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
@@ -1917,13 +1874,13 @@ export default function App() {
         <div className={`pb-24 p-4 ${theme.bgSecondary} min-h-screen`}>
           <div className="flex justify-between items-center mb-6 mt-2">
               <h1 className={`text-2xl font-bold font-serif ${theme.text}`}>{editingId ? t('edit') : t('add_new')}</h1>
-              <button onClick={() => handleCancelForm()} className={theme.text}><X/></button>
+              <button type="button" onClick={() => handleCancelForm()} className={theme.text}><X/></button>
           </div>
-          <form onSubmit={(e) => handleSubmit(e)} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-3 gap-3">
                 {currentImages.map((img: any, idx: number) => (
                     <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
-                        <img src={img as string} alt="" className="w-full h-full object-cover" />
+                        <img src={img as string} alt="Upload" className="w-full h-full object-cover" />
                         <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X size={12}/></button>
                         {idx === 0 ? (
                             <div className="absolute bottom-0 w-full bg-emerald-500 text-white text-[8px] text-center">MAIN</div>
@@ -2033,7 +1990,7 @@ export default function App() {
             </div>
 
             <div className="space-y-3">
-                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>État & Condition</h3>
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>État &amp; Condition</h3>
                  <div>
                      <label className={`block text-xs ${theme.textSub} mb-1`}>{t('condition_rating')}: <span className="font-bold text-lg">{watchForm.conditionRating || '-'}</span>/10</label>
                      <input 
@@ -2086,7 +2043,7 @@ export default function App() {
             </div>
 
             <div className="space-y-3">
-                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('notes')} & Histoire</h3>
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('notes')} &amp; Histoire</h3>
                  <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={(e: any) => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
                  <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_brand')} value={watchForm.historyBrand || ''} onChange={(e: any) => setWatchForm({...watchForm, historyBrand: e.target.value})} />
                  <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_model')} value={watchForm.historyModel || ''} onChange={(e: any) => setWatchForm({...watchForm, historyModel: e.target.value})} />
