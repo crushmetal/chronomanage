@@ -40,7 +40,8 @@ const TRANSLATIONS = {
     brand: "Marque",
     model: "Modèle",
     reference: "Référence",
-    year: "Année Modèle", // Changed
+    year: "Année", 
+    model_year: "Année du modèle",
     price: "Prix",
     add_new: "Ajouter",
     edit: "Modifier",
@@ -115,6 +116,7 @@ const TRANSLATIONS = {
     origin_maintenance: "Origine & Entretien",
     technical: "Technique",
     financial_status: "Finances & Statut",
+    date_release: "Date de Sortie",
     date_purchase: "Date d'Achat",
     date_sold: "Date de Vente",
     market_value: "Estimation du Marché",
@@ -128,10 +130,20 @@ const TRANSLATIONS = {
     show_history: "Voir tout l'historique",
     show_less: "Réduire",
     year_summary: "Bilan Année",
-    sort_date: "Date Ajout",
+    stats_usage: "Statistiques d'Usage",
+    worn_this_month: "Ce mois",
+    worn_this_year: "Cette année",
+    worn_last_year: "Année dernière",
+    invoice: "Facture",
+    add_invoice: "Ajouter Facture",
+    view_invoice: "Voir Facture",
+    sort_date_desc: "Date d'achat (Récents)",
+    sort_date_asc: "Date d'achat (Anciens)",
     sort_alpha: "A-Z",
     sort_price_asc: "Prix (Croissant)",
-    sort_price_desc: "Prix (Décroissant)"
+    sort_price_desc: "Prix (Décroissant)",
+    purchases: "Achats",
+    sales: "Ventes"
   },
   en: {
     box: "Box",
@@ -158,7 +170,8 @@ const TRANSLATIONS = {
     brand: "Brand",
     model: "Model",
     reference: "Reference",
-    year: "Model Year", // Changed
+    year: "Year", 
+    model_year: "Model Year",
     price: "Price",
     add_new: "Add New",
     edit: "Edit",
@@ -233,6 +246,7 @@ const TRANSLATIONS = {
     origin_maintenance: "Origin & Maintenance",
     technical: "Technical",
     financial_status: "Finances & Status",
+    date_release: "Release Date",
     date_purchase: "Purchase Date",
     date_sold: "Sold Date",
     market_value: "Market Estimation",
@@ -246,10 +260,20 @@ const TRANSLATIONS = {
     show_history: "Show Full History",
     show_less: "Show Less",
     year_summary: "Year Summary",
-    sort_date: "Date Added",
+    stats_usage: "Usage Statistics",
+    worn_this_month: "This Month",
+    worn_this_year: "This Year",
+    worn_last_year: "Last Year",
+    invoice: "Invoice",
+    add_invoice: "Add Invoice",
+    view_invoice: "View Invoice",
+    sort_date_desc: "Purchase Date (Newest)",
+    sort_date_asc: "Purchase Date (Oldest)",
     sort_alpha: "A-Z",
     sort_price_asc: "Price (Asc)",
-    sort_price_desc: "Price (Desc)"
+    sort_price_desc: "Price (Desc)",
+    purchases: "Purchases",
+    sales: "Sales"
   }
 };
 
@@ -275,11 +299,11 @@ const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v54.0";
+const APP_VERSION = "v54.2";
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
-    diameter: '', year: '', // Now Model Year
+    diameter: '', year: '', 
     movement: '', movementModel: '', 
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '',
     dialColor: '', 
@@ -294,7 +318,7 @@ const DEFAULT_WATCH_STATE = {
     conditionRating: '', conditionComment: '',
     image: null, 
     images: [],
-    invoice: null // NEW: Invoice Image
+    invoice: null 
 };
 
 const DEFAULT_BRACELET_STATE = {
@@ -819,7 +843,7 @@ export default function App() {
   const [selectedCalendarWatches, setSelectedCalendarWatches] = useState([]);
   const [statsTimeframe, setStatsTimeframe] = useState('month'); 
   const [calendarSearchTerm, setCalendarSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState('alpha');
+  const [sortOrder, setSortOrder] = useState('dateDesc');
   const [error, setError] = useState(null); 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isBoxOpening, setIsBoxOpening] = useState(false);
@@ -830,8 +854,7 @@ export default function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(false); 
   const [exportType, setExportType] = useState(null); 
 
-  // NEW: Timeline filter state
-  const [timelineFilter, setTimelineFilter] = useState('default'); // 'default' | 'all'
+  const [timelineFilter, setTimelineFilter] = useState('default'); 
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
@@ -1013,7 +1036,7 @@ export default function App() {
               const newImages = [...currentImages, base64];
               return { ...prev, images: newImages, image: newImages[0] };
           });
-      } else if (type === 'invoice') { // NEW: Invoice
+      } else if (type === 'invoice') {
           setWatchForm(prev => ({...prev, invoice: base64}));
       } else { setBraceletForm(prev => ({ ...prev, image: base64 })); }
     } catch (err) {}
@@ -1071,7 +1094,6 @@ export default function App() {
 
   const openAdd = () => {
       setEditingId(null);
-      // CLEAR SELECTED WATCH TO ENSURE CANCEL GOES TO LIST
       setSelectedWatch(null);
       setWatchForm({ ...DEFAULT_WATCH_STATE, status: view === 'wishlist' ? 'wishlist' : 'collection' });
       setBraceletForm(DEFAULT_BRACELET_STATE);
@@ -1110,8 +1132,9 @@ export default function App() {
     let sorted = [...filtered];
     if (sortOrder === 'priceAsc') sorted.sort((a, b) => (a.purchasePrice || 0) - (b.purchasePrice || 0));
     else if (sortOrder === 'priceDesc') sorted.sort((a, b) => (b.purchasePrice || 0) - (a.purchasePrice || 0));
+    else if (sortOrder === 'dateAsc') sorted.sort((a, b) => new Date(a.purchaseDate || a.dateAdded || 0) - new Date(b.purchaseDate || b.dateAdded || 0));
     else if (sortOrder === 'alpha') sorted.sort((a, b) => a.brand.localeCompare(b.brand));
-    else sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+    else sorted.sort((a, b) => new Date(b.purchaseDate || b.dateAdded || 0) - new Date(a.purchaseDate || a.dateAdded || 0)); // dateDesc is default
     return sorted;
   }, [watches, searchTerm, sortOrder]);
 
@@ -1128,7 +1151,6 @@ export default function App() {
   const renderBox = () => (
     <div className={`flex flex-col items-center justify-start h-full min-h-[80vh] px-8 relative overflow-hidden pt-28 ${theme.text}`}>
       <GraphicBackground isDark={isDark} />
-      {/* BOUTON AMIS - GAUCHE */}
       <div className="absolute top-4 left-4 z-20">
         <button onClick={() => setView('friends')} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}>
             <Users size={18} />
@@ -1147,7 +1169,6 @@ export default function App() {
           </button>
         )}
         
-        {/* BOUTON SETTINGS - SOUS LE LOGIN */}
         <button onClick={() => setShowSettingsModal(true)} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors z-20`}><Settings size={18} /></button>
       </div>
       
@@ -1166,7 +1187,6 @@ export default function App() {
       <div className="mb-8 text-center z-10 scale-90 opacity-90"><LiveClock isDark={isDark} settings={settings} /></div>
       <div className="z-10 mb-4"><AnalogClock isDark={isDark} settings={settings} /></div>
       
-      {/* COFFRE AVEC MARGE NEGATIVE POUR REMONTER LE COMPTEUR */}
       <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10 -mt-12">
         <WatchBoxLogo isOpen={isBoxOpening} isDark={isDark} settings={settings} />
       </div>
@@ -1189,7 +1209,8 @@ export default function App() {
                         onChange={(e) => setSortOrder(e.target.value)}
                         className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
                     >
-                        <option value="date">{t('sort_date')}</option>
+                        <option value="dateDesc">{t('sort_date_desc')}</option>
+                        <option value="dateAsc">{t('sort_date_asc')}</option>
                         <option value="alpha">{t('sort_alpha')}</option>
                         <option value="priceAsc">{t('sort_price_asc')}</option>
                         <option value="priceDesc">{t('sort_price_desc')}</option>
@@ -1289,16 +1310,14 @@ export default function App() {
     const w = selectedWatch;
     const displayImages = w.images && w.images.length > 0 ? w.images : (w.image ? [w.image] : []);
     
-    // Helpers for Market Search Links
     const searchQuery = `${w.brand} ${w.model}`.replace(/\s+/g, '+');
     const marketLinks = [
         { name: "Chrono24", url: `https://www.chrono24.fr/search/index.htm?query=${searchQuery}`, icon: Clock },
         { name: "eBay", url: `https://www.ebay.fr/sch/i.html?_nkw=${searchQuery}`, icon: ShoppingCart },
-        { name: "Vinted", url: `https://www.vinted.fr/vetements?search_text=${searchQuery}`, icon: Gem }, // Approximate icon
+        { name: "Vinted", url: `https://www.vinted.fr/vetements?search_text=${searchQuery}`, icon: Gem }, 
         { name: "LeBonCoin", url: `https://www.leboncoin.fr/recherche?text=${searchQuery}`, icon: MapPin },
     ];
 
-    // Helper for Watch Usage Stats
     const getWatchStats = (watchId) => {
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -1351,13 +1370,11 @@ export default function App() {
               </div>
           </div>
 
-          {/* EXPORT BUTTONS */}
           <div className="flex gap-2">
                {w.status !== 'wishlist' && <button onClick={() => setExportType('insurance')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><ShieldCheck size={16}/> {t('sheet_insurance')}</button>}
                {w.status !== 'wishlist' && <button onClick={() => setExportType('sale')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><DollarSign size={16}/> {t('sheet_sale')}</button>}
           </div>
 
-          {/* MARKET SEARCH LINKS */}
           <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{w.status === 'wishlist' ? t('find_used') : t('market_value')}</h3>
                <div className="grid grid-cols-2 gap-2">
@@ -1386,7 +1403,6 @@ export default function App() {
               </>
           )}
 
-          {/* USAGE STATS */}
           {w.status === 'collection' && (
               <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
                   <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider flex items-center gap-2`}>
@@ -1409,7 +1425,6 @@ export default function App() {
               </div>
           )}
           
-          {/* TECHNICAL SPECS */}
           <div>
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('specs')}</h3>
               <div className="grid grid-cols-2 gap-3">
@@ -1421,7 +1436,6 @@ export default function App() {
               </div>
           </div>
 
-          {/* MOVEMENT & DIAL */}
           <div>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3>
                <div className="grid grid-cols-2 gap-3">
@@ -1433,11 +1447,11 @@ export default function App() {
                </div>
           </div>
 
-          {/* ORIGIN & MAINTENANCE */}
           <div>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('origin_maintenance')}</h3>
                <div className="grid grid-cols-2 gap-3">
                   <DetailItem icon={MapPin} label={t('country')} value={w.country} theme={theme} />
+                  <DetailItem icon={Calendar} label={t('date_release')} value={w.releaseDate} theme={theme} />
                   <DetailItem icon={Calendar} label={t('year')} value={w.year} theme={theme} />
                   <DetailItem icon={Package} label={t('box_included')} value={w.box} theme={theme} />
                   <DetailItem icon={ShieldCheck} label={t('warranty')} value={w.warrantyDate} theme={theme} />
@@ -1445,7 +1459,6 @@ export default function App() {
                </div>
           </div>
           
-          {/* CONDITION & RATING (NEW) */}
           {(w.conditionRating || w.conditionComment) && (
               <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
                   <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>
@@ -1463,7 +1476,6 @@ export default function App() {
               </div>
           )}
 
-          {/* DOCUMENTS & INVOICE */}
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>
               {w.invoice ? (
@@ -1480,7 +1492,6 @@ export default function App() {
               )}
           </div>
 
-          {/* FINANCE & DATES */}
           <div>
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} & Dates</h3>
               <div className="grid grid-cols-2 gap-3 mb-3">
@@ -1493,7 +1504,6 @@ export default function App() {
               </div>
           </div>
           
-          {/* HISTORY & NOTES */}
           {w.conditionNotes && (<div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100 mt-4"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> {t('notes')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.conditionNotes}</div></div>)}
           {w.historyBrand && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_brand')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyBrand}</div></div>)}
           {w.historyModel && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_model')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyModel}</div></div>)}
@@ -1502,7 +1512,6 @@ export default function App() {
     );
   };
   
-  // Re-added renderProfile function which was missing
   const renderProfile = () => (
     <div className="pb-24 px-2">
       <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border} mb-2`}>
@@ -1515,7 +1524,8 @@ export default function App() {
                         onChange={(e) => setSortOrder(e.target.value)}
                         className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
                     >
-                        <option value="date">{t('sort_date')}</option>
+                        <option value="dateDesc">{t('sort_date_desc')}</option>
+                        <option value="dateAsc">{t('sort_date_asc')}</option>
                         <option value="alpha">{t('sort_alpha')}</option>
                         <option value="priceAsc">{t('sort_price_asc')}</option>
                         <option value="priceDesc">{t('sort_price_desc')}</option>
@@ -1554,7 +1564,6 @@ export default function App() {
   );
 
   const renderStats = () => {
-      // Logic for Calendar & Top Worn (unchanged)
       const getTopWatches = () => {
         const periodCounts = {};
         calendarEvents.forEach(evt => {
@@ -1567,6 +1576,7 @@ export default function App() {
         });
         return Object.entries(periodCounts).sort(([,a], [,b]) => b - a).slice(0, 5).map(([wId, count]) => { const w = watches.find(watch => watch.id === wId); return w ? { ...w, count } : null; }).filter(Boolean);
       };
+      
       const renderCalendarGrid = () => {
         const year = currentMonth.getFullYear(); const month = currentMonth.getMonth();
         const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0);
@@ -1587,11 +1597,11 @@ export default function App() {
         return days;
       };
 
-      // NEW STATS LOGIC
       const getTopBrands = () => {
           const brands = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.brand) acc[w.brand] = (acc[w.brand] || 0) + 1; return acc; }, {});
           return Object.entries(brands).sort((a,b) => b[1] - a[1]).slice(0, 5);
       };
+      
       const getTopDials = () => {
           const dials = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.dialColor) acc[w.dialColor] = (acc[w.dialColor] || 0) + 1; return acc; }, {});
           return Object.entries(dials).sort((a,b) => b[1] - a[1]).slice(0, 5);
@@ -1665,21 +1675,32 @@ export default function App() {
                 </div>
             </div>
             
-            {/* Calendar Modal Code (Unchanged) */}
+            {/* Calendar Modal */}
             {selectedCalendarDate && (
                 <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
                     <div className={`${theme.card} rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col max-h-[80vh]`}>
                         <div className={`p-4 border-b ${theme.border} ${theme.bgSecondary}`}>
                             <div className="flex justify-between items-center mb-3"><h3 className={`font-bold ${theme.text}`}>Porté le {new Date(selectedCalendarDate).toLocaleDateString()}</h3><button onClick={() => setSelectedCalendarDate(null)}><X size={20} className={theme.textSub}/></button></div>
-                            <input autoFocus type="text" placeholder="Rechercher..." className={`w-full p-2 ${theme.input} rounded-lg text-sm`} value={calendarSearchTerm} onChange={(e) => setCalendarSearchTerm(e.target.value)}/>
+                            <input autoFocus type="text" placeholder={t('search')} className={`w-full p-2 ${theme.input} rounded-lg text-sm`} value={calendarSearchTerm} onChange={(e) => setCalendarSearchTerm(e.target.value)}/>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
                             {watches.filter(w => w.status === 'collection').filter(w => !calendarSearchTerm || w.brand.toLowerCase().includes(calendarSearchTerm.toLowerCase())).map(w => {
                                 const isSelected = selectedCalendarWatches.includes(w.id);
-                                return (<div key={w.id} onClick={() => setSelectedCalendarWatches(prev => isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id])} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/10' : `${theme.border} hover:${theme.bg}`}`}><div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-600' : `${theme.bgSecondary} ${theme.border}`}`}>{isSelected && <Check size={12} className="text-white" />}</div><div className={`font-bold text-sm ${theme.text}`}>{w.brand}</div></div>);
+                                return (
+                                <div key={w.id} onClick={() => setSelectedCalendarWatches(prev => isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id])} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/10' : `${theme.border} hover:${theme.bg}`}`}>
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-600 border-indigo-600' : `${theme.bgSecondary} ${theme.border}`}`}>{isSelected && <Check size={12} className="text-white" />}</div>
+                                    <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-200 shrink-0">
+                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div>
+                                        <div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div>
+                                    </div>
+                                </div>
+                                );
                             })}
                         </div>
-                        <div className={`p-4 border-t ${theme.border} ${theme.bgSecondary}`}><button onClick={handleCalendarSave} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">Enregistrer</button></div>
+                        <div className={`p-4 border-t ${theme.border} ${theme.bgSecondary}`}><button onClick={handleCalendarSave} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">{t('save')}</button></div>
                     </div>
                 </div>
             )}
@@ -1688,123 +1709,124 @@ export default function App() {
   };
 
   const renderFinance = () => {
-    // Basic Stats
     const sCol = { buy: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
     const sSale = { buy: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
     const sSold = { buy: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
     const sTotal = { buy: sCol.buy+sSale.buy+sSold.buy, val: sCol.val+sSale.val+sSold.val, profit: sCol.profit+sSale.profit+sSold.profit };
 
-    // TIMELINE LOGIC (Revised: Group by Month, Filter by state)
-    // Create map of all months with activity
     const timelineMap = watches.reduce((acc, w) => {
-        // Handle purchases
         if (w.purchaseDate && w.purchasePrice) {
             const d = new Date(w.purchaseDate);
             const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            if (!acc[key]) acc[key] = { date: key, spent: 0, gained: 0, count: 0 };
+            if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
             acc[key].spent += Number(w.purchasePrice);
-            acc[key].count += 1; // Count activity
+            acc[key].count += 1; 
+            acc[key].boughtWatches.push(w);
         }
-        // Handle sales
         if (w.status === 'sold' && w.soldDate && w.sellingPrice) {
             const d = new Date(w.soldDate);
             const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            if (!acc[key]) acc[key] = { date: key, spent: 0, gained: 0, count: 0 };
+            if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
             acc[key].gained += Number(w.sellingPrice);
-            // Don't double count if purchased and sold same month? keep simple count of transactions.
+            acc[key].soldWatches.push(w);
         }
         return acc;
     }, {});
     
-    let sortedTimeline = Object.values(timelineMap).sort((a,b) => b.date.localeCompare(a.date));
+    const sortedTimeline = Object.values(timelineMap).sort((a,b) => b.date.localeCompare(a.date));
+    
+    const timelineByYear = sortedTimeline.reduce((acc, curr) => {
+        if (!acc[curr.year]) acc[curr.year] = { year: curr.year, months: [], spent: 0, gained: 0 };
+        acc[curr.year].months.push(curr);
+        acc[curr.year].spent += curr.spent;
+        acc[curr.year].gained += curr.gained;
+        return acc;
+    }, {});
+    
+    const sortedYears = Object.values(timelineByYear).sort((a,b) => b.year - a.year);
 
-    // FILTER LOGIC
-    // Default: Current Month, Previous Month, Current Year Summary (Separate block)
+    const formatMonthName = (dateStr) => {
+        const [y, m] = dateStr.split('-');
+        const d = new Date(y, parseInt(m)-1, 1);
+        return d.toLocaleString(settings.lang, { month: 'long' });
+    };
+
     const now = new Date();
     const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
-    const currentYearKey = String(now.getFullYear());
-
-    // Calculate Current Year Summary
-    const currentYearStats = sortedTimeline.filter(t => t.date.startsWith(currentYearKey)).reduce((acc, curr) => {
-        acc.spent += curr.spent;
-        acc.gained += curr.gained;
-        return acc;
-    }, { spent: 0, gained: 0 });
-
-    const displayedTimeline = timelineFilter === 'default' 
-        ? sortedTimeline.filter(t => t.date === currentMonthKey || t.date === prevMonthKey)
-        : sortedTimeline;
 
     return (
       <div className="pb-24 px-3 space-y-2">
         <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-2`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('finance')}</h1></div>
         
-        {/* Modals */}
         {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter(w=>w.status==='collection')} onClose={() => setFinanceDetail(null)} theme={theme} />}
         {financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter(w=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} theme={theme} />}
         {financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter(w=>w.status==='sold')} onClose={() => setFinanceDetail(null)} theme={theme} />}
         
-        {/* Cards */}
         <FinanceCardFull title={t('collection')} icon={Watch} stats={sCol} type="collection" bgColor="bg-emerald-500" onClick={() => setFinanceDetail('collection')} theme={theme} />
         <FinanceCardFull title={t('forsale')} icon={TrendingUp} stats={sSale} type="forsale" bgColor="bg-amber-500" onClick={() => setFinanceDetail('forsale')} theme={theme} />
         <FinanceCardFull title={t('sold')} icon={DollarSign} stats={sSold} type="sold" bgColor="bg-blue-600" onClick={() => setFinanceDetail('sold')} theme={theme} />
         <div className="mt-4 pt-2"><FinanceCardFull title={t('total_value')} icon={Activity} stats={sTotal} type="total" bgColor="bg-white" onClick={() => {}} theme={theme} /></div>
 
-        {/* TIMELINE */}
         <div className="mt-6">
             <div className="flex justify-between items-center mb-3">
                 <h3 className={`font-bold text-sm ${theme.text} uppercase tracking-wider flex items-center gap-2`}><Briefcase size={16}/> {t('finance_timeline')}</h3>
-                <button 
-                    onClick={() => setTimelineFilter(prev => prev === 'default' ? 'all' : 'default')}
-                    className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-colors ${timelineFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : `${theme.bgSecondary} ${theme.text} ${theme.border}`}`}
-                >
+                <button onClick={() => setTimelineFilter(prev => prev === 'default' ? 'all' : 'default')} className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-colors ${timelineFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : `${theme.bgSecondary} ${theme.text} ${theme.border}`}`}>
                     {timelineFilter === 'default' ? t('show_history') : t('show_less')}
                 </button>
             </div>
 
-            {/* Current Year Summary (Always visible in Default mode, or stick to top?) Let's put it at top in default mode */}
-            {timelineFilter === 'default' && (
-                <div className={`mb-4 p-3 rounded-xl border-2 border-indigo-100 bg-indigo-50/50`}>
-                    <div className="text-xs font-bold text-indigo-900 uppercase mb-2 text-center">{t('year_summary')} {currentYearKey}</div>
-                    <div className="flex justify-between text-sm">
-                        <div className="text-red-500 font-bold">- {formatPrice(currentYearStats.spent)}</div>
-                        <div className="font-mono font-bold text-slate-400">= {formatPrice(currentYearStats.gained - currentYearStats.spent)}</div>
-                        <div className="text-emerald-600 font-bold">+ {formatPrice(currentYearStats.gained)}</div>
-                    </div>
-                </div>
-            )}
+            {sortedYears.map(yearData => {
+                if (timelineFilter === 'default' && yearData.year !== now.getFullYear()) return null;
 
-            <div className="space-y-3">
-                {displayedTimeline.length === 0 && timelineFilter === 'default' && <div className={`text-center text-xs ${theme.textSub} py-4 italic`}>Aucune activité récente.</div>}
-                
-                {displayedTimeline.map((tItem) => (
-                    <div key={tItem.date} className={`${theme.card} p-3 rounded-xl border ${theme.border} flex items-center justify-between`}>
-                        <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${theme.bgSecondary} font-mono text-xs font-bold ${theme.textSub}`}>
-                                {tItem.date}
-                            </div>
-                            <div className="flex flex-col">
-                                <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
-                                <span className={`font-bold text-sm ${theme.text} ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
-                                    {formatPrice(tItem.gained - tItem.spent)}
-                                </span>
+                const monthsToDisplay = timelineFilter === 'default' 
+                    ? yearData.months.filter(m => m.date === currentMonthKey || m.date === prevMonthKey)
+                    : yearData.months;
+
+                if (timelineFilter === 'default' && monthsToDisplay.length === 0) {
+                     return <div key={yearData.year} className={`text-center text-xs ${theme.textSub} py-4 italic`}>Aucune activité récente.</div>;
+                }
+
+                return (
+                    <div key={yearData.year} className="mb-6">
+                        <div className={`mb-3 p-3 rounded-xl border border-indigo-100 bg-indigo-50/50 dark:bg-indigo-900/20 dark:border-indigo-800`}>
+                            <div className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase mb-2 text-center">{t('year_summary')} {yearData.year}</div>
+                            <div className="flex justify-between text-sm">
+                                <div className="text-red-500 font-bold">- {formatPrice(yearData.spent)}</div>
+                                <div className="font-mono font-bold text-slate-400">= {formatPrice(yearData.gained - yearData.spent)}</div>
+                                <div className="text-emerald-600 font-bold">+ {formatPrice(yearData.gained)}</div>
                             </div>
                         </div>
-                        <div className="text-right text-xs">
-                            {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
-                            {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
+                        <div className="space-y-3">
+                            {monthsToDisplay.map((tItem) => (
+                                <div key={tItem.date} className={`${theme.card} p-3 rounded-xl border ${theme.border} flex items-center justify-between`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>
+                                            {formatMonthName(tItem.date)}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
+                                            <span className={`font-bold text-sm ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
+                                                {formatPrice(tItem.gained - tItem.spent)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right text-xs">
+                                        {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
+                                        {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                ))}
-            </div>
+                );
+            })}
         </div>
       </div>
     );
   };
 
-  // --- RENDER FORM ---
   const renderForm = () => {
       const isWatch = editingType === 'watch';
       const currentImages = isWatch ? (watchForm.images || (watchForm.image ? [watchForm.image] : [])) : [];
@@ -1815,7 +1837,6 @@ export default function App() {
               <button onClick={() => handleCancelForm()} className={theme.text}><X/></button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* ... (Image Grid - Unchanged) ... */}
             <div className="grid grid-cols-3 gap-3">
                 {currentImages.map((img, idx) => (
                     <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
@@ -1832,7 +1853,6 @@ export default function App() {
                 )}
             </div>
             
-            {/* IDENTITY */}
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('identity')}</h3>
                  <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('brand')} value={watchForm.brand} onChange={e => setWatchForm({...watchForm, brand: e.target.value})} required />
@@ -1857,7 +1877,6 @@ export default function App() {
                  </div>
             </div>
 
-            {/* TECHNICAL */}
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('technical')}</h3>
                  <div className="grid grid-cols-2 gap-3">
@@ -1880,27 +1899,30 @@ export default function App() {
                  <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('glass')} value={watchForm.glass} onChange={e => setWatchForm({...watchForm, glass: e.target.value})} />
             </div>
 
-            {/* ORIGIN & DATES */}
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('origin_maintenance')}</h3>
                  <div className="grid grid-cols-3 gap-3">
                     <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('country')} value={watchForm.country} onChange={e => setWatchForm({...watchForm, country: e.target.value})} />
-                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={t('year')} value={watchForm.year} onChange={e => setWatchForm({...watchForm, year: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={t('model_year')} value={watchForm.year} onChange={e => setWatchForm({...watchForm, year: e.target.value})} />
                     <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('box_included')} value={watchForm.box} onChange={e => setWatchForm({...watchForm, box: e.target.value})} />
                  </div>
                  
                  <div className="grid grid-cols-2 gap-3">
                      <div>
+                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_release')}</label>
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.releaseDate || ''} onChange={e => setWatchForm({...watchForm, releaseDate: e.target.value})} />
+                     </div>
+                     <div>
                          <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_purchase')}</label>
                          <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.purchaseDate || ''} onChange={e => setWatchForm({...watchForm, purchaseDate: e.target.value})} />
                      </div>
-                     {watchForm.status === 'sold' && (
-                         <div>
-                             <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label>
-                             <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={e => setWatchForm({...watchForm, soldDate: e.target.value})} />
-                         </div>
-                     )}
                  </div>
+                 {watchForm.status === 'sold' && (
+                     <div>
+                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label>
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={e => setWatchForm({...watchForm, soldDate: e.target.value})} />
+                     </div>
+                 )}
                  
                  <div className="grid grid-cols-2 gap-3">
                     <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('warranty')} value={watchForm.warrantyDate} onChange={e => setWatchForm({...watchForm, warrantyDate: e.target.value})} />
@@ -1908,7 +1930,6 @@ export default function App() {
                  </div>
             </div>
             
-            {/* INVOICE UPLOAD */}
             <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
                 <div className={`flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider ${theme.textSub}`}><Receipt size={14}/> {t('invoice')}</div>
                 {watchForm.invoice ? (
@@ -1924,7 +1945,6 @@ export default function App() {
                 )}
             </div>
 
-            {/* NEW: Condition Scale */}
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>État & Condition</h3>
                  <div>
@@ -1942,7 +1962,6 @@ export default function App() {
                  <textarea className={`w-full p-3 rounded-lg min-h-[60px] ${theme.input}`} placeholder={t('condition_comment')} value={watchForm.conditionComment || ''} onChange={e => setWatchForm({...watchForm, conditionComment: e.target.value})} />
             </div>
 
-            {/* FINANCE & STATUS */}
             <div className="space-y-3">
                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('financial_status')}</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -1956,14 +1975,12 @@ export default function App() {
                     </div>
                 )}
                 
-                {/* STATUS SELECTOR */}
                 <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
                     {[{id: 'collection', label: t('collection')}, {id: 'forsale', label: t('forsale')}, {id: 'sold', label: t('sold')}, {id: 'wishlist', label: t('wishlist')}].map(s => (
                         <button key={s.id} type="button" onClick={() => setWatchForm({...watchForm, status: s.id})} className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold border whitespace-nowrap ${watchForm.status === s.id ? 'bg-slate-800 text-white' : `${theme.bg} ${theme.border} ${theme.text}`}`}>{s.label}</button>
                     ))}
                 </div>
 
-                {/* NEW: LINK INPUT (Always Visible, Emphasized for Wishlist) */}
                 <div className={`relative ${watchForm.status === 'wishlist' ? 'animate-pulse-slow' : ''}`}>
                     <LinkIcon className={`absolute left-3 top-3.5 ${theme.textSub}`} size={18}/>
                     <input className={`w-full p-3 pl-10 rounded-lg ${theme.input} ${watchForm.status === 'wishlist' ? 'border-indigo-300 ring-1 ring-indigo-100' : ''}`} placeholder={t('link_web')} value={watchForm.link || ''} onChange={e => setWatchForm({...watchForm, link: e.target.value})} />
@@ -1981,7 +1998,6 @@ export default function App() {
                 </div>
             </div>
 
-            {/* NOTES & HISTORY */}
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('notes')} & {t('history')}</h3>
                  <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
@@ -2012,7 +2028,6 @@ export default function App() {
             {view === 'detail' && renderDetail()}
             {view === 'add' && renderForm()}
         </div>
-        {/* NEW: Export View Overlay */}
         {exportType && selectedWatch && <ExportView watch={selectedWatch} type={exportType} onClose={() => setExportType(null)} theme={theme} t={t} />}
         
         {renderFullScreenImage()}
