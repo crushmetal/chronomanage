@@ -161,7 +161,6 @@ const DetailItem = ({ icon: Icon, label, value, theme }: any) => (
     </div>
 );
 
-// EXPORT SHEET COMPONENT
 const ExportView = ({ watch, type, onClose, theme, t }: any) => {
     const isSale = type === 'sale';
     return (
@@ -261,11 +260,16 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch, t }: a
              {sortedItems.map(w => {
                const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image;
                const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
+               
+               let profitColor = 'text-slate-500';
+               if (profit > 0) profitColor = 'text-emerald-600';
+               else if (profit < 0) profitColor = 'text-red-500';
+
                return (
                  <div key={w.id} onClick={() => { onClose(); onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:opacity-80`}>
                      <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} alt="" className="w-full h-full object-cover"/>}</div>
                      <div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div><div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div></div>
-                     <div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div><div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div>
+                     <div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div><div className={`text-xs font-medium ${profitColor}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div>
                  </div>
                )
              })}
@@ -283,6 +287,11 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, the
     const borderClass = isWhite ? `border ${theme.border}` : 'border border-transparent';
     const bgIcon = isWhite ? (theme.bg === 'bg-slate-950' ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600') : 'bg-white/20 text-white';
 
+    let profitColor = 'text-white';
+    if (isWhite) {
+        profitColor = stats.profit > 0 ? 'text-emerald-600' : (stats.profit < 0 ? 'text-red-500' : 'text-slate-500');
+    }
+
     return (
         <div onClick={onClick} className={`${cardBg} ${borderClass} p-4 rounded-xl shadow-md mb-3 cursor-pointer hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden relative`}>
             <div className="flex justify-between items-center mb-4 relative z-10">
@@ -292,7 +301,7 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, the
             <div className="grid grid-cols-3 gap-2 text-center relative z-10">
                 <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div></div>
                 <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div></div>
-                <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div><div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>{stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}</div></div>
+                <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div><div className={`font-bold text-base ${profitColor}`}>{stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}</div></div>
             </div>
             {!isWhite && <Icon size={120} className="absolute -bottom-4 -right-4 opacity-10 text-white transform rotate-12 pointer-events-none" />}
         </div>
@@ -348,24 +357,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
                     <div className="grid grid-cols-2 gap-2">
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button>
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button>
-                    </div>
-                </div>
-                <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e) => setSettings((s: any) => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                    </div>
-                </div>
-                <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e) => setSettings((s: any) => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e) => setSettings((s: any) => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e) => setSettings((s: any) => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
             </div>
@@ -1098,7 +1089,7 @@ export default function App() {
                 {displayImage ? <img src={displayImage} alt="" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
                 {(w.purchasePrice) && (<div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{formatPrice(w.purchasePrice)}</div>)}
                 <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">{w.status === 'sold' ? <span className="text-emerald-600 font-extrabold">{t('sold')}</span> : formatPrice(w.sellingPrice || w.purchasePrice)}</div>
-                <div className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer z-10" onClick={(e) => { e.stopPropagation(); toggleVisibility(w); }}>{w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}</div>
+                <div className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer z-10" onClick={(e: any) => { e.stopPropagation(); toggleVisibility(w); }}>{w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}</div>
               </div>
               <div className="p-3"><div className={`font-bold font-serif text-sm truncate ${theme.text}`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div>
             </Card>
@@ -1665,9 +1656,15 @@ export default function App() {
     };
 
     const now = new Date();
+    const currentYearStr = String(now.getFullYear());
     const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+
+    const currentYearObj = sortedYears.find((y: any) => y.year === now.getFullYear()) as any;
+    const currentYearSpent = currentYearObj?.spent || 0;
+    const currentYearGained = currentYearObj?.gained || 0;
+    const currentYearProfit = currentYearGained - currentYearSpent;
 
     return (
       <div className="pb-24 px-3 space-y-2">
@@ -1675,6 +1672,7 @@ export default function App() {
             <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('finance')}</h1>
         </div>
         
+        {/* Modals */}
         {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter(w=>w.status==='collection')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
         {financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter(w=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
         {financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter(w=>w.status==='sold')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
@@ -1699,11 +1697,11 @@ export default function App() {
 
             {timelineFilter === 'default' && (
                 <div className={`mb-4 p-3 rounded-xl border-2 border-indigo-100 bg-indigo-50/50 dark:bg-indigo-900/20 dark:border-indigo-800`}>
-                    <div className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase mb-2 text-center">{t('year_summary')} {now.getFullYear()}</div>
+                    <div className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase mb-2 text-center">{t('year_summary')} {currentYearStr}</div>
                     <div className="flex justify-between text-sm">
-                        <div className="text-red-500 font-bold">- {formatPrice((sortedYears.find((y: any) => y.year === now.getFullYear()) as any)?.spent || 0)}</div>
-                        <div className="font-mono font-bold text-slate-400">= {formatPrice(((sortedYears.find((y: any) => y.year === now.getFullYear()) as any)?.gained || 0) - ((sortedYears.find((y: any) => y.year === now.getFullYear()) as any)?.spent || 0))}</div>
-                        <div className="text-emerald-600 font-bold">+ {formatPrice((sortedYears.find((y: any) => y.year === now.getFullYear()) as any)?.gained || 0)}</div>
+                        <div className="text-red-500 font-bold">- {formatPrice(currentYearSpent)}</div>
+                        <div className="font-mono font-bold text-slate-400">= {formatPrice(currentYearProfit)}</div>
+                        <div className="text-emerald-600 font-bold">+ {formatPrice(currentYearGained)}</div>
                     </div>
                 </div>
             )}
@@ -1720,6 +1718,8 @@ export default function App() {
                          return <div key={yearData.year} className={`text-center text-xs ${theme.textSub} py-4 italic`}>Aucune activité récente.</div>;
                     }
 
+                    const yearProfit = yearData.gained - yearData.spent;
+
                     return (
                         <div key={yearData.year} className="mb-6">
                             {timelineFilter === 'all' && (
@@ -1727,83 +1727,88 @@ export default function App() {
                                     <div className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase mb-2 text-center">{t('year_summary')} {yearData.year}</div>
                                     <div className="flex justify-between text-sm">
                                         <div className="text-red-500 font-bold">- {formatPrice(yearData.spent)}</div>
-                                        <div className="font-mono font-bold text-slate-400">= {formatPrice(yearData.gained - yearData.spent)}</div>
+                                        <div className="font-mono font-bold text-slate-400">= {formatPrice(yearProfit)}</div>
                                         <div className="text-emerald-600 font-bold">+ {formatPrice(yearData.gained)}</div>
                                     </div>
                                 </div>
                             )}
                             <div className="space-y-3">
-                                {monthsToDisplay.map((tItem: any) => (
-                                    <div key={tItem.date} className={`${theme.card} rounded-xl border ${theme.border} overflow-hidden mb-3`}>
-                                        <div 
-                                            onClick={() => setExpandedMonth(expandedMonth === tItem.date ? null : tItem.date)}
-                                            className={`p-3 flex items-center justify-between cursor-pointer hover:${theme.bgSecondary} transition-colors`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>
-                                                    {formatMonthName(tItem.date)}
+                                {monthsToDisplay.map((tItem: any) => {
+                                    const mProfit = tItem.gained - tItem.spent;
+                                    const mProfitColor = mProfit > 0 ? 'text-emerald-500' : (mProfit < 0 ? 'text-red-500' : 'text-slate-500');
+
+                                    return (
+                                        <div key={tItem.date} className={`${theme.card} rounded-xl border ${theme.border} overflow-hidden mb-3`}>
+                                            <div 
+                                                onClick={() => setExpandedMonth(expandedMonth === tItem.date ? null : tItem.date)}
+                                                className={`p-3 flex items-center justify-between cursor-pointer hover:${theme.bgSecondary} transition-colors`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>
+                                                        {formatMonthName(tItem.date)}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
+                                                        <span className={`font-bold text-sm ${mProfitColor}`}>
+                                                            {formatPrice(mProfit)}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
-                                                    <span className={`font-bold text-sm ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
-                                                        {formatPrice(tItem.gained - tItem.spent)}
-                                                    </span>
+                                                <div className="text-right text-xs flex items-center gap-2">
+                                                    <div>
+                                                        {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
+                                                        {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
+                                                    </div>
+                                                    <ChevronLeft size={16} className={`text-slate-400 transition-transform ${expandedMonth === tItem.date ? '-rotate-90' : 'rotate-180'}`} />
                                                 </div>
                                             </div>
-                                            <div className="text-right text-xs flex items-center gap-2">
-                                                <div>
-                                                    {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
-                                                    {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
+                                    
+                                            {/* Expanded Content */}
+                                            {expandedMonth === tItem.date && (
+                                                <div className={`border-t ${theme.border} bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-3`}>
+                                                    {tItem.boughtWatches.length > 0 && (
+                                                        <div>
+                                                            <div className="text-[10px] font-bold uppercase text-red-500 mb-2">{t('purchases')}</div>
+                                                            <div className="space-y-2">
+                                                                {tItem.boughtWatches.map((w: any) => (
+                                                                    <div key={`buy-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
+                                                                        <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
+                                                                            {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
+                                                                            <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
+                                                                        </div>
+                                                                        <div className="text-xs font-bold text-red-500">- {formatPrice(w.purchasePrice)}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {tItem.soldWatches.length > 0 && (
+                                                        <div>
+                                                            <div className="text-[10px] font-bold uppercase text-emerald-500 mb-2">{t('sales')}</div>
+                                                            <div className="space-y-2">
+                                                                {tItem.soldWatches.map((w: any) => (
+                                                                    <div key={`sell-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
+                                                                        <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
+                                                                            {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
+                                                                            <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
+                                                                        </div>
+                                                                        <div className="text-xs font-bold text-emerald-500">+ {formatPrice(w.sellingPrice)}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <ChevronLeft size={16} className={`text-slate-400 transition-transform ${expandedMonth === tItem.date ? '-rotate-90' : 'rotate-180'}`} />
-                                            </div>
+                                            )}
                                         </div>
-                                
-                                        {/* Expanded Content */}
-                                        {expandedMonth === tItem.date && (
-                                            <div className={`border-t ${theme.border} bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-3`}>
-                                                {tItem.boughtWatches.length > 0 && (
-                                                    <div>
-                                                        <div className="text-[10px] font-bold uppercase text-red-500 mb-2">{t('purchases')}</div>
-                                                        <div className="space-y-2">
-                                                            {tItem.boughtWatches.map((w: any) => (
-                                                                <div key={`buy-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                                                                    <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
-                                                                    </div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
-                                                                        <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
-                                                                    </div>
-                                                                    <div className="text-xs font-bold text-red-500">- {formatPrice(w.purchasePrice)}</div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {tItem.soldWatches.length > 0 && (
-                                                    <div>
-                                                        <div className="text-[10px] font-bold uppercase text-emerald-500 mb-2">{t('sales')}</div>
-                                                        <div className="space-y-2">
-                                                            {tItem.soldWatches.map((w: any) => (
-                                                                <div key={`sell-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                                                                    <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
-                                                                    </div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
-                                                                        <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
-                                                                    </div>
-                                                                    <div className="text-xs font-bold text-emerald-500">+ {formatPrice(w.sellingPrice)}</div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     );
@@ -1951,7 +1956,7 @@ export default function App() {
                         onChange={e => setWatchForm({...watchForm, conditionRating: parseInt(e.target.value)})}
                      />
                  </div>
-                 <textarea className={`w-full p-3 rounded-lg min-h-[60px] ${theme.input}`} placeholder={t('condition_comment')} value={watchForm.conditionComment || ''} onChange={e => setWatchForm({...watchForm, conditionComment: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[60px] ${theme.input}`} placeholder={t('condition_comment')} value={watchForm.conditionComment || ''} onChange={e => setWatchForm({...watchForm, conditionComment: e.target.value})}></textarea>
             </div>
 
             <div className="space-y-3">
@@ -1992,9 +1997,9 @@ export default function App() {
 
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('notes')} & {t('history')}</h3>
-                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
-                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_brand')} value={watchForm.historyBrand || ''} onChange={e => setWatchForm({...watchForm, historyBrand: e.target.value})} />
-                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_model')} value={watchForm.historyModel || ''} onChange={e => setWatchForm({...watchForm, historyModel: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})}></textarea>
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_brand')} value={watchForm.historyBrand || ''} onChange={e => setWatchForm({...watchForm, historyBrand: e.target.value})}></textarea>
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_model')} value={watchForm.historyModel || ''} onChange={e => setWatchForm({...watchForm, historyModel: e.target.value})}></textarea>
             </div>
 
             <button className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold shadow-lg">{t('save')}</button>
