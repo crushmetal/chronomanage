@@ -289,17 +289,16 @@ const productionConfig = {
 // ==========================================================================
 // GESTIONNAIRE FIREBASE
 // ==========================================================================
-let app, auth, db;
+let app: any, auth: any, db: any;
 let firebaseReady = false;
-let globalInitError = null; 
+let globalInitError: string | null = null; 
 
 const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
-const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v54.5";
+const APP_ID_STABLE = typeof window !== 'undefined' && (window as any).__app_id ? (window as any).__app_id : 'chrono-manager-universal'; 
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -325,58 +324,75 @@ const DEFAULT_BRACELET_STATE = {
     width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' 
 };
 
-const tryInitFirebase = (config) => {
+const tryInitFirebase = (config: any) => {
     try {
         if (!config || !config.apiKey || config.apiKey.length < 5) return false;
-        if (getApps().length === 0) app = initializeApp(config);
-        else app = getApp();
+        if (getApps().length === 0) {
+            app = initializeApp(config);
+        } else {
+            app = getApp();
+        }
         auth = getAuth(app);
         db = getFirestore(app);
         firebaseReady = true;
         globalInitError = null;
         return true;
-    } catch (e) {
+    } catch (e: any) {
         console.error("Erreur init Firebase:", e);
         globalInitError = e.message || String(e); 
         return false;
     }
 };
 
-if (typeof __firebase_config !== 'undefined') {
-    try { tryInitFirebase(JSON.parse(__firebase_config)); } catch(e) {}
+if (typeof window !== 'undefined' && (window as any).__firebase_config) {
+    try { 
+        tryInitFirebase(JSON.parse((window as any).__firebase_config)); 
+    } catch(e) {}
 }
-if (!firebaseReady) tryInitFirebase(productionConfig);
+
+if (!firebaseReady) {
+    tryInitFirebase(productionConfig);
+}
+
 if (!firebaseReady) {
     try {
         const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY);
-        if (savedConfig) tryInitFirebase(JSON.parse(savedConfig));
+        if (savedConfig) {
+            tryInitFirebase(JSON.parse(savedConfig));
+        }
     } catch(e) {}
 }
 
 // --- UTILS UI ---
-const formatPrice = (price) => {
+const formatPrice = (price: any) => {
   if (price === undefined || price === null || price === '') return '0 €';
   const numPrice = Number(price);
   if (isNaN(numPrice)) return '0 €';
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(numPrice);
 };
 
-const compressImage = (file) => {
+const compressImage = (file: File): Promise<string> => {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
       const img = new Image();
-      img.src = event.target.result as string;
+      img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 800; 
         let width = img.width;
         let height = img.height;
-        if (width > MAX_WIDTH) { height = (height * MAX_WIDTH) / width; width = MAX_WIDTH; }
-        canvas.width = width; canvas.height = height;
+        if (width > MAX_WIDTH) { 
+            height = (height * MAX_WIDTH) / width; 
+            width = MAX_WIDTH; 
+        }
+        canvas.width = width; 
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
-        if(ctx) ctx.drawImage(img, 0, 0, width, height);
+        if(ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+        }
         resolve(canvas.toDataURL('image/jpeg', 0.85));
       };
     };
@@ -394,7 +410,7 @@ const MovementIcon = ({ size = 24, className = "" }) => (
 );
 
 // --- ANIMATION COFFRE ---
-const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
+const WatchBoxLogo = ({ isOpen, isDark, settings }: { isOpen: boolean, isDark: boolean, settings: any }) => {
   const leatherColor = settings.boxLeather || (isDark ? "#3E2723" : "#5D4037");
   const interiorColor = settings.boxInterior || (isDark ? "#424242" : "#f5f5f0");
   const cushionColor = settings.boxCushion || (isDark ? "#616161" : "#fdfbf7");
@@ -451,12 +467,18 @@ const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
   );
 };
 
-const AnalogClock = ({ isDark, settings }) => {
+const AnalogClock = ({ isDark, settings }: { isDark: boolean, settings: any }) => {
   const [time, setTime] = useState(new Date());
-  useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
+  
+  useEffect(() => { 
+      const timer = setInterval(() => setTime(new Date()), 1000); 
+      return () => clearInterval(timer); 
+  }, []);
+  
   const secondsRatio = time.getSeconds() / 60;
   const minutesRatio = (secondsRatio + time.getMinutes()) / 60;
   const hoursRatio = (minutesRatio + time.getHours()) / 12;
+  
   const borderColor = isDark ? 'border-slate-600' : 'border-slate-800';
   const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
   
@@ -468,8 +490,13 @@ const AnalogClock = ({ isDark, settings }) => {
   return (
     <div className="w-32 h-32 relative mx-auto mb-2">
        <div className={`w-full h-full rounded-full border-4 ${borderColor} ${bgColor} shadow-inner flex items-center justify-center relative`}>
-          {[...Array(12)].map((_, i) => (<div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
-          {[0, 3, 6, 9].map((i) => (<div key={i} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
+          {[...Array(12)].map((_, i) => (
+              <div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>
+          ))}
+          {[0, 3, 6, 9].map((i) => (
+              <div key={`thick-${i}`} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>
+          ))}
+          
           <div className="absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
           <div className="absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
           <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
@@ -479,13 +506,21 @@ const AnalogClock = ({ isDark, settings }) => {
   );
 };
 
-const LiveClock = ({ isDark, settings }) => {
+const LiveClock = ({ isDark, settings }: { isDark: boolean, settings: any }) => {
   const [time, setTime] = useState(new Date());
-  useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
-  return <div className={`font-mono text-4xl sm:text-5xl font-medium tracking-widest mb-2 opacity-90`} style={{ color: settings.digitalColor || (isDark ? '#e2e8f0' : '#1e293b') }}>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</div>;
+  useEffect(() => { 
+      const timer = setInterval(() => setTime(new Date()), 1000); 
+      return () => clearInterval(timer); 
+  }, []);
+  
+  return (
+      <div className={`font-mono text-4xl sm:text-5xl font-medium tracking-widest mb-2 opacity-90`} style={{ color: settings.digitalColor || (isDark ? '#e2e8f0' : '#1e293b') }}>
+          {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+      </div>
+  );
 };
 
-const GraphicBackground = ({ isDark }) => (
+const GraphicBackground = ({ isDark }: { isDark: boolean }) => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
       <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(${isDark ? '#475569' : '#cbd5e1'} 1px, transparent 1px)`, backgroundSize: '30px 30px', opacity: 0.5 }}></div>
       <svg className={`absolute -right-20 -top-20 w-96 h-96 opacity-40 ${isDark ? 'text-slate-700' : 'text-slate-200'}`} viewBox="0 0 200 200">
@@ -497,27 +532,38 @@ const GraphicBackground = ({ isDark }) => (
 
 // --- COMPOSANTS EXTERNALISÉS ---
 
-const Card = ({ children, className = "", onClick, theme }) => (
-  <div onClick={onClick} className={`${theme.card} rounded-xl shadow-sm border ${theme.border} overflow-hidden ${className} ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}>{children}</div>
+const Card = ({ children, className = "", onClick, theme }: { children: React.ReactNode, className?: string, onClick?: () => void, theme: any }) => (
+  <div onClick={onClick} className={`${theme.card} rounded-xl shadow-sm border ${theme.border} overflow-hidden ${className} ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}>
+      {children}
+  </div>
 );
 
-const DetailItem = ({ icon: Icon, label, value, theme }) => (
+const DetailItem = ({ icon: Icon, label, value, theme }: { icon: any, label: string, value: string, theme: any }) => (
     <div className={`${theme.bgSecondary} p-3 rounded-lg border ${theme.border} flex items-center`}>
-        <div className={`${theme.bg} p-2 rounded-full border ${theme.border} mr-3 ${theme.textSub} flex-shrink-0`}>{Icon && <Icon size={16} />}</div>
-        <div className="min-w-0"><span className={`text-[10px] font-bold uppercase tracking-wider ${theme.textSub} block opacity-70`}>{label}</span><span className={`font-serif text-sm ${theme.text} truncate block`}>{value || '-'}</span></div>
+        <div className={`${theme.bg} p-2 rounded-full border ${theme.border} mr-3 ${theme.textSub} flex-shrink-0`}>
+            {Icon && <Icon size={16} />}
+        </div>
+        <div className="min-w-0">
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${theme.textSub} block opacity-70`}>{label}</span>
+            <span className={`font-serif text-sm ${theme.text} truncate block`}>{value || '-'}</span>
+        </div>
     </div>
 );
 
 // EXPORT SHEET COMPONENT
-const ExportView = ({ watch, type, onClose, theme, t }) => {
+const ExportView = ({ watch, type, onClose, theme, t }: { watch: any, type: string, onClose: () => void, theme: any, t: any }) => {
     const isSale = type === 'sale';
     return (
         <div className="fixed inset-0 z-[200] bg-white flex flex-col overflow-auto text-black">
             <div className="print:hidden p-4 border-b flex justify-between items-center bg-slate-100 sticky top-0 z-50">
                 <h2 className="font-bold text-lg">{isSale ? t('sheet_sale') : t('sheet_insurance')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => window.print()} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700"><Printer size={16}/> {t('print')}</button>
-                    <button onClick={onClose} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-bold hover:bg-slate-300"><X size={16}/></button>
+                    <button onClick={() => window.print()} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700">
+                        <Printer size={16}/> {t('print')}
+                    </button>
+                    <button onClick={onClose} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">
+                        <X size={16}/>
+                    </button>
                 </div>
             </div>
             
@@ -540,12 +586,14 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                                 <img src={watch.images[0]} className="w-full h-full object-cover"/>
                             </div>
                         )}
+                        
                         {!isSale && (
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
                                  <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{t('purchase_price')}</div>
                                  <div className="text-3xl font-bold font-serif">{formatPrice(watch.purchasePrice)}</div>
                             </div>
                         )}
+                        
                         {isSale && (watch.sellingPrice || watch.purchasePrice) && (
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
                                  <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{t('selling_price')}</div>
@@ -554,6 +602,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                             </div>
                         )}
                     </div>
+                    
                     <div className="space-y-4">
                         <h3 className="font-bold uppercase border-b border-slate-200 pb-1">{t('specs')}</h3>
                         <div className="grid grid-cols-2 gap-y-2 text-sm">
@@ -568,8 +617,18 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                             <div className="text-slate-500">{t('warranty')}:</div><div>{watch.warrantyDate || '-'}</div>
                             <div className="text-slate-500">{t('country')}:</div><div>{watch.country || '-'}</div>
                             <div className="text-slate-500">{t('weight')}:</div><div>{watch.weight ? watch.weight + ' g' : '-'}</div>
-                            {watch.batteryModel && <><div className="text-slate-500">{t('battery')}:</div><div>{watch.batteryModel}</div></>}
-                            {watch.conditionRating && <><div className="text-slate-500">{t('condition_rating')}:</div><div>{watch.conditionRating}/10</div></>}
+                            {watch.batteryModel && (
+                                <>
+                                    <div className="text-slate-500">{t('battery')}:</div>
+                                    <div>{watch.batteryModel}</div>
+                                </>
+                            )}
+                            {watch.conditionRating && (
+                                <>
+                                    <div className="text-slate-500">{t('condition_rating')}:</div>
+                                    <div>{watch.conditionRating}/10</div>
+                                </>
+                            )}
                         </div>
                         
                         {watch.conditionNotes && (
@@ -615,50 +674,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
     );
 };
 
-const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch, t }) => {
-    const [localSort, setLocalSort] = useState('alpha'); 
-    const sortedItems = useMemo(() => {
-        let sorted = [...items];
-        if (localSort === 'alpha') sorted.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
-        else sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-        return sorted;
-    }, [items, localSort]);
-    return (
-        <div className={`fixed inset-0 z-[60] ${theme.card} flex flex-col animate-in slide-in-from-bottom-10`}>
-          <div className={`p-4 border-b ${theme.border} flex items-center justify-between ${theme.bgSecondary}`}>
-            <h2 className={`font-serif font-bold text-lg ${theme.text} tracking-wide`}>{title}</h2>
-            <div className="flex gap-2">
-                <button onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')} className={`flex items-center gap-1 px-3 py-1.5 border rounded-lg text-xs font-medium ${theme.textSub} ${theme.bg}`}>
-                    <ArrowUpDown size={14} /> {localSort === 'date' ? t('sort_date_desc') : t('sort_alpha')}
-                </button>
-                <button onClick={onClose} className={`p-2 rounded-full shadow-sm border ${theme.border} ${theme.bg} ${theme.text}`}><X size={20}/></button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-             {sortedItems.map(w => {
-               const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image;
-               const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
-               return (
-                 <div key={w.id} onClick={() => { onClose(); onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:opacity-80`}>
-                     <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover"/>}</div>
-                     <div className="flex-1 min-w-0">
-                        <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div>
-                        <div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div>
-                     </div>
-                     <div className="text-right">
-                        <div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div>
-                        <div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div>
-                     </div>
-                 </div>
-               )
-             })}
-             {sortedItems.length === 0 && <div className={`text-center ${theme.textSub} py-10 text-sm`}>Aucune montre.</div>}
-          </div>
-        </div>
-    );
-};
-
-const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, theme }) => {
+const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, theme }: any) => {
     const isWhite = type === 'total';
     const cardBg = isWhite ? (theme.bg === 'bg-slate-950' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200') : bgColor;
     const txtMain = isWhite ? theme.text : 'text-white';
@@ -676,18 +692,30 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, the
                 {type !== 'total' && <div className={`bg-white/20 p-1 rounded-full ${txtMain}`}><ChevronLeft className="rotate-180" size={16}/></div>}
             </div>
             <div className="grid grid-cols-3 gap-2 text-center relative z-10">
-                <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div></div>
-                <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div></div>
-                <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div><div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>{stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}</div></div>
+                <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div>
+                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div>
+                </div>
+                <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div>
+                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div>
+                </div>
+                <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div>
+                    <div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>
+                        {stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}
+                    </div>
+                </div>
             </div>
             {!isWhite && <Icon size={120} className="absolute -bottom-4 -right-4 opacity-10 text-white transform rotate-12 pointer-events-none" />}
         </div>
     );
 };
 
-const ConfigModal = ({ onClose, currentError, t }) => {
+const ConfigModal = ({ onClose, currentError, t }: any) => {
     const [jsonConfig, setJsonConfig] = useState('');
-    const [parseError, setParseError] = useState(null);
+    const [parseError, setParseError] = useState<string | null>(null);
+    
     const handleSave = () => {
         try {
             let cleanJson = jsonConfig;
@@ -697,8 +725,11 @@ const ConfigModal = ({ onClose, currentError, t }) => {
             if (!parsed.apiKey) throw new Error("apiKey manquante");
             localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(parsed));
             window.location.reload();
-        } catch (e) { setParseError("Format invalide."); }
+        } catch (e) { 
+            setParseError("Format invalide."); 
+        }
     };
+
     return (
         <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
@@ -717,7 +748,7 @@ const ConfigModal = ({ onClose, currentError, t }) => {
     );
 };
 
-const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
+const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className={`${theme.card} rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border ${theme.border} max-h-[90vh] flex flex-col`}>
             <div className={`p-4 border-b ${theme.border} ${theme.bgSecondary} flex justify-between items-center flex-shrink-0`}>
@@ -728,15 +759,15 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('language')}</label>
                     <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => setSettings(s => ({...s, lang: 'fr'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'fr' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇫🇷</span> Français</button>
-                        <button onClick={() => setSettings(s => ({...s, lang: 'en'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'en' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇬🇧</span> English</button>
+                        <button onClick={() => setSettings((s: any) => ({...s, lang: 'fr'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'fr' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇫🇷</span> Français</button>
+                        <button onClick={() => setSettings((s: any) => ({...s, lang: 'en'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'en' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇬🇧</span> English</button>
                     </div>
                 </div>
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('theme')}</label>
                     <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => setSettings(s => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button>
-                        <button onClick={() => setSettings(s => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button>
+                        <button onClick={() => setSettings((s: any) => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button>
+                        <button onClick={() => setSettings((s: any) => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button>
                     </div>
                 </div>
                 
@@ -744,11 +775,11 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e) => setSettings(s => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e) => setSettings(s => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e) => setSettings(s => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e) => setSettings(s => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e) => setSettings(s => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e) => setSettings((s: any) => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
 
@@ -756,9 +787,9 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label>
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e) => setSettings(s => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e) => setSettings(s => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e) => setSettings(s => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e) => setSettings((s: any) => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e) => setSettings((s: any) => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e) => setSettings((s: any) => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
             </div>
@@ -766,7 +797,7 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
     </div>
 );
 
-const RulesHelpModal = ({ onClose, theme }) => (
+const RulesHelpModal = ({ onClose, theme }: any) => (
     <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
         <div className={`${theme.card} rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden`}>
             <div className={`${theme.bgSecondary} p-4 border-b ${theme.border} flex justify-between items-center`}>
@@ -785,13 +816,23 @@ const RulesHelpModal = ({ onClose, theme }) => (
 
 export default function App() {
   const [useLocalStorage, setUseLocalStorage] = useState(!firebaseReady);
-  const [user, setUser] = useState(useLocalStorage ? { uid: 'local-user' } : null);
+  const [user, setUser] = useState<any>(useLocalStorage ? { uid: 'local-user' } : null);
   
   const [settings, setSettings] = useState(() => {
-      try { const saved = localStorage.getItem(LOCAL_SETTINGS_KEY); return saved ? JSON.parse(saved) : { lang: 'fr', theme: 'light' }; } catch(e) { return { lang: 'fr', theme: 'light' }; }
+      try { 
+          const saved = localStorage.getItem(LOCAL_SETTINGS_KEY); 
+          return saved ? JSON.parse(saved) : { lang: 'fr', theme: 'light' }; 
+      } catch(e) { 
+          return { lang: 'fr', theme: 'light' }; 
+      }
   });
-  useEffect(() => { localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings)); }, [settings]);
-  const t = (key) => TRANSLATIONS[settings.lang][key] || key;
+
+  useEffect(() => { 
+      localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings)); 
+  }, [settings]);
+
+  const t = (key: string) => (TRANSLATIONS as any)[settings.lang]?.[key] || key;
+  
   const isDark = settings.theme === 'dark';
   const theme = {
       bg: isDark ? 'bg-slate-950' : 'bg-slate-50',
@@ -804,14 +845,14 @@ export default function App() {
       nav: isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
   };
 
-  const [watches, setWatches] = useState([]);
-  const [bracelets, setBracelets] = useState([]);
-  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [watches, setWatches] = useState<any[]>([]);
+  const [bracelets, setBracelets] = useState<any[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
   
-  const [friends, setFriends] = useState([]); 
-  const [friendRequests, setFriendRequests] = useState([]); 
-  const [viewingFriend, setViewingFriend] = useState(null); 
-  const [friendWatches, setFriendWatches] = useState([]); 
+  const [friends, setFriends] = useState<any[]>([]); 
+  const [friendRequests, setFriendRequests] = useState<any[]>([]); 
+  const [viewingFriend, setViewingFriend] = useState<any>(null); 
+  const [friendWatches, setFriendWatches] = useState<any[]>([]); 
   const [addFriendId, setAddFriendId] = useState(''); 
   const [isFriendsLoading, setIsFriendsLoading] = useState(false);
   
@@ -820,52 +861,57 @@ export default function App() {
   const [showGallerySold, setShowGallerySold] = useState(false);
   const [showGalleryWishlist, setShowGalleryWishlist] = useState(false);
 
-  const [fullScreenImage, setFullScreenImage] = useState(null);
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('box'); 
   const [filter, setFilter] = useState('all');
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingType, setEditingType] = useState('watch');
 
-  const [selectedWatch, setSelectedWatch] = useState(null);
+  const [selectedWatch, setSelectedWatch] = useState<any>(null);
   const [viewedImageIndex, setViewedImageIndex] = useState(0); 
 
-  const [financeDetail, setFinanceDetail] = useState(null);
+  const [financeDetail, setFinanceDetail] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [gallerySearchTerm, setGallerySearchTerm] = useState(''); 
   const [isGallerySearchOpen, setIsGallerySearchOpen] = useState(false);
   
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
-  const [selectedCalendarWatches, setSelectedCalendarWatches] = useState([]);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null);
+  const [selectedCalendarWatches, setSelectedCalendarWatches] = useState<any[]>([]);
   const [statsTimeframe, setStatsTimeframe] = useState('month'); 
   const [calendarSearchTerm, setCalendarSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('dateDesc');
-  const [error, setError] = useState(null); 
+  const [error, setError] = useState<string | null>(null); 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isBoxOpening, setIsBoxOpening] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false); 
   const [showSettingsModal, setShowSettingsModal] = useState(false); 
-  const [authDomainError, setAuthDomainError] = useState(null); 
+  const [authDomainError, setAuthDomainError] = useState<string | null>(null); 
   const [showRulesHelp, setShowRulesHelp] = useState(false); 
   const [isAuthLoading, setIsAuthLoading] = useState(false); 
-  const [exportType, setExportType] = useState(null); 
+  const [exportType, setExportType] = useState<string | null>(null); 
 
   const [timelineFilter, setTimelineFilter] = useState('default'); 
-  const [expandedMonth, setExpandedMonth] = useState(null);
+  const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
 
-  const scrollRef = useRef(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [view, viewingFriend, financeDetail]);
+  useEffect(() => { 
+      if (scrollRef.current) scrollRef.current.scrollTop = 0; 
+  }, [view, viewingFriend, financeDetail]);
 
   useEffect(() => {
       if (!firebaseReady && productionConfig.apiKey) {
           tryInitFirebase(productionConfig);
-          if (firebaseReady) { setUseLocalStorage(false); setLoading(true); }
+          if (firebaseReady) { 
+              setUseLocalStorage(false); 
+              setLoading(true); 
+          }
       }
   }, []);
 
@@ -878,7 +924,9 @@ export default function App() {
          try {
              const requestsRef = collection(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests');
              const q = query(requestsRef, where('toUser', '==', user.uid));
-             const unsubRequests = onSnapshot(q, (snap) => { setFriendRequests(snap.docs.map(d => ({id: d.id, ...d.data()}))); }); 
+             const unsubRequests = onSnapshot(q, (snap) => { 
+                 setFriendRequests(snap.docs.map(d => ({id: d.id, ...d.data()}))); 
+             }); 
              return () => unsubRequests();
          } catch (e) {}
      }
@@ -888,56 +936,87 @@ export default function App() {
       if (!addFriendId || addFriendId.length < 5) return alert("Code invalide");
       if (addFriendId === user.uid) return alert("Impossible de s'ajouter soi-même");
       try {
-          await addDoc(collection(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests'), { fromUser: user.uid, fromEmail: user.email, toUser: addFriendId, status: 'pending', createdAt: new Date().toISOString() });
-          alert("Demande envoyée !"); setAddFriendId('');
-      } catch (e) { if (e.code === 'permission-denied') setShowRulesHelp(true); else alert("Erreur: " + e.message); }
+          await addDoc(collection(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests'), { 
+              fromUser: user.uid, 
+              fromEmail: user.email, 
+              toUser: addFriendId, 
+              status: 'pending', 
+              createdAt: new Date().toISOString() 
+          });
+          alert("Demande envoyée !"); 
+          setAddFriendId('');
+      } catch (e: any) { 
+          if (e.code === 'permission-denied') setShowRulesHelp(true); 
+          else alert("Erreur: " + e.message); 
+      }
   };
-  const acceptRequest = async (req) => {
+
+  const acceptRequest = async (req: any) => {
       const newFriend = { id: req.fromUser, name: req.fromEmail || 'Ami' };
       const updatedFriends = [...friends, newFriend];
       setFriends(updatedFriends);
       localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
-      try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', req.id)); } catch (e) {}
+      try { 
+          await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', req.id)); 
+      } catch (e) {}
   };
-  const rejectRequest = async (reqId) => { try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', reqId)); } catch (e) {} };
-  const removeFriend = (friendId) => {
+
+  const rejectRequest = async (reqId: string) => { 
+      try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', reqId)); } catch (e) {} 
+  };
+
+  const removeFriend = (friendId: string) => {
       const updatedFriends = friends.filter(f => f.id !== friendId);
       setFriends(updatedFriends);
       localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
   };
+
   const handlePreviewOwnProfile = () => {
       setFriendWatches(watches.filter(w => w.publicVisible !== false));
       setViewingFriend({ id: user.uid, name: 'Mon Profil Public' });
       if(scrollRef.current) scrollRef.current.scrollTop = 0;
   };
-  const loadFriendCollection = async (friend) => {
+
+  const loadFriendCollection = async (friend: any) => {
       if (!firebaseReady) return;
-      setIsFriendsLoading(true); setViewingFriend(friend);
+      setIsFriendsLoading(true); 
+      setViewingFriend(friend);
       try {
           const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', friend.id, 'watches'));
           const snap = await getDocs(q);
-          setFriendWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).filter(w => w.publicVisible !== false));
-      } catch (err) { setViewingFriend(null); } finally { setIsFriendsLoading(false); }
-  };
-
-  const toggleVisibility = async (watch) => {
-      const newVal = !watch.publicVisible;
-      setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: newVal } : w));
-      if (!useLocalStorage) {
-          try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), { ...watch, publicVisible: newVal }, { merge: true }); } 
-          catch (e) { setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: !newVal } : w)); }
+          setFriendWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).filter((w: any) => w.publicVisible !== false));
+      } catch (err) { 
+          setViewingFriend(null); 
+      } finally { 
+          setIsFriendsLoading(false); 
       }
   };
 
-  const handleMoveToCollection = async (watch) => {
+  const toggleVisibility = async (watch: any) => {
+      const newVal = !watch.publicVisible;
+      setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: newVal } : w));
+      if (!useLocalStorage) {
+          try { 
+              await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), { ...watch, publicVisible: newVal }, { merge: true }); 
+          } catch (e) { 
+              setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: !newVal } : w)); 
+          }
+      }
+  };
+
+  const handleMoveToCollection = async (watch: any) => {
       if (!confirm(t('move_collection') + " ?")) return;
       const updatedWatch = { ...watch, status: 'collection', dateAdded: new Date().toISOString() };
       setWatches(prev => prev.map(w => w.id === watch.id ? updatedWatch : w));
       setSelectedWatch(updatedWatch);
-      if (!useLocalStorage) { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), updatedWatch, { merge: true }); } catch (e) {} }
+      if (!useLocalStorage) { 
+          try { 
+              await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), updatedWatch, { merge: true }); 
+          } catch (e) {} 
+      }
   };
   
-  const setAsMainImage = (index) => {
+  const setAsMainImage = (index: number) => {
       setWatchForm(prev => {
           const currentImages = [...(prev.images || [])];
           if (index >= currentImages.length) return prev;
@@ -948,8 +1027,9 @@ export default function App() {
       });
   };
 
-  const handleCalendarDayClick = (dateStr) => {
-      setSelectedCalendarDate(dateStr); setCalendarSearchTerm(''); 
+  const handleCalendarDayClick = (dateStr: string) => {
+      setSelectedCalendarDate(dateStr); 
+      setCalendarSearchTerm(''); 
       const existing = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
       setSelectedCalendarWatches(existing ? (existing.watches || []) : []);
   };
@@ -959,36 +1039,77 @@ export default function App() {
       let updatedEvents = [...calendarEvents];
       const existingIdx = updatedEvents.findIndex(e => e.id === selectedCalendarDate || e.date === selectedCalendarDate);
       const eventData = { date: selectedCalendarDate, watches: selectedCalendarWatches };
-      if (selectedCalendarWatches.length === 0) { if (existingIdx >= 0) updatedEvents.splice(existingIdx, 1); } 
-      else { if (existingIdx >= 0) updatedEvents[existingIdx] = { ...updatedEvents[existingIdx], ...eventData }; else updatedEvents.push({ id: selectedCalendarDate, ...eventData }); }
-      setCalendarEvents(updatedEvents); setSelectedCalendarDate(null);
+      if (selectedCalendarWatches.length === 0) { 
+          if (existingIdx >= 0) updatedEvents.splice(existingIdx, 1); 
+      } else { 
+          if (existingIdx >= 0) {
+              updatedEvents[existingIdx] = { ...updatedEvents[existingIdx], ...eventData }; 
+          } else {
+              updatedEvents.push({ id: selectedCalendarDate, ...eventData }); 
+          }
+      }
+      setCalendarEvents(updatedEvents); 
+      setSelectedCalendarDate(null);
+      
       if (!useLocalStorage) {
           try {
               const docRef = doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar', selectedCalendarDate);
-              if (selectedCalendarWatches.length === 0) await deleteDoc(docRef); else await setDoc(docRef, eventData);
+              if (selectedCalendarWatches.length === 0) {
+                  await deleteDoc(docRef); 
+              } else {
+                  await setDoc(docRef, eventData);
+              }
           } catch(e) {}
       }
   };
 
   const handleGoogleLogin = async () => {
     if (!firebaseReady) { setShowConfigModal(true); return; }
-    setUseLocalStorage(false); setIsAuthLoading(true);
+    setUseLocalStorage(false); 
+    setIsAuthLoading(true);
     const provider = new GoogleAuthProvider();
-    try { await signInWithPopup(auth, provider); } catch (error) { if (error.code === 'auth/unauthorized-domain') setAuthDomainError(window.location.hostname); } finally { setIsAuthLoading(false); }
+    try { 
+        await signInWithPopup(auth, provider); 
+    } catch (error: any) { 
+        if (error.code === 'auth/unauthorized-domain') {
+            setAuthDomainError(window.location.hostname); 
+        }
+    } finally { 
+        setIsAuthLoading(false); 
+    }
   };
 
   const handleLogout = async () => {
     if (!firebaseReady) { setShowProfileMenu(false); return; }
     setIsAuthLoading(true);
-    try { await signOut(auth); setShowProfileMenu(false); } finally { setIsAuthLoading(false); }
+    try { 
+        await signOut(auth); 
+        setShowProfileMenu(false); 
+    } finally { 
+        setIsAuthLoading(false); 
+    }
   };
 
   useEffect(() => {
-    if (useLocalStorage && !isAuthLoading) { setLoading(false); return; }
+    if (useLocalStorage && !isAuthLoading) { 
+        setLoading(false); 
+        return; 
+    }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) { setUser(currentUser); setError(null); setLoading(false); if (useLocalStorage) setUseLocalStorage(false); } 
-      else {
-          const timer = setTimeout(() => { if (!isAuthLoading) { signInAnonymously(auth).catch((err) => { setUseLocalStorage(true); setUser({ uid: 'local-user' }); }).finally(() => setLoading(false)); } }, 1000);
+      if (currentUser) { 
+          setUser(currentUser); 
+          setError(null); 
+          setLoading(false); 
+          if (useLocalStorage) setUseLocalStorage(false); 
+      } else {
+          const timer = setTimeout(() => { 
+              if (!isAuthLoading) { 
+                  signInAnonymously(auth).catch((err) => { 
+                      setUseLocalStorage(true); 
+                      setUser({ uid: 'local-user' }); 
+                  }).finally(() => setLoading(false)); 
+              } 
+          }, 1000);
           return () => clearTimeout(timer);
       }
     });
@@ -1007,11 +1128,28 @@ export default function App() {
     } else {
       if (!user?.uid) return;
       try {
-        const unsubW = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches')), (snap) => { setWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.dateAdded)-new Date(a.dateAdded))); setLoading(false); if(error) setError(null); }, (err) => { if (user?.isAnonymous) setUseLocalStorage(true); else setError("Erreur synchro: " + (err.code || err.message)); setLoading(false); });
-        const unsubB = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'bracelets')), (snap) => setBracelets(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.dateAdded)-new Date(a.dateAdded))));
-        const unsubC = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar')), (snap) => setCalendarEvents(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+        const unsubW = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches')), (snap) => { 
+            setWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a: any,b: any) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())); 
+            setLoading(false); 
+            if(error) setError(null); 
+        }, (err) => { 
+            if (user?.isAnonymous) setUseLocalStorage(true); 
+            else setError("Erreur synchro: " + (err.code || err.message)); 
+            setLoading(false); 
+        });
+        
+        const unsubB = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'bracelets')), (snap) => {
+            setBracelets(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a: any,b: any) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()));
+        });
+        
+        const unsubC = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar')), (snap) => {
+            setCalendarEvents(snap.docs.map(d => ({id: d.id, ...d.data()})));
+        });
+        
         return () => { unsubW(); unsubB(); unsubC(); };
-      } catch(e) { setLoading(false); }
+      } catch(e) { 
+          setLoading(false); 
+      }
     }
   }, [user, useLocalStorage]);
 
@@ -1023,7 +1161,7 @@ export default function App() {
     }
   }, [watches, bracelets, calendarEvents, useLocalStorage]);
 
-  const handleImageUpload = async (e, type) => {
+  const handleImageUpload = async (e: any, type: string) => {
     const file = e.target.files[0];
     if (!file) return;
     try { 
@@ -1037,11 +1175,13 @@ export default function App() {
           });
       } else if (type === 'invoice') {
           setWatchForm(prev => ({...prev, invoice: base64}));
-      } else { setBraceletForm(prev => ({ ...prev, image: base64 })); }
+      } else { 
+          setBraceletForm(prev => ({ ...prev, image: base64 })); 
+      }
     } catch (err) {}
   };
 
-  const removeImage = (index) => {
+  const removeImage = (index: number) => {
       setWatchForm(prev => {
           const currentImages = [...(prev.images || [])];
           currentImages.splice(index, 1);
@@ -1049,7 +1189,7 @@ export default function App() {
       });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const id = editingId || Date.now().toString();
     const isWatch = editingType === 'watch';
@@ -1057,20 +1197,36 @@ export default function App() {
     let data;
     if (isWatch) {
         const images = watchForm.images && watchForm.images.length > 0 ? watchForm.images : (watchForm.image ? [watchForm.image] : []);
-        data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice), sellingPrice: Number(watchForm.sellingPrice), minPrice: Number(watchForm.minPrice), dateAdded: new Date().toISOString(), images: images, image: images[0] || null };
-    } else { data = { ...braceletForm, id, dateAdded: new Date().toISOString() }; }
+        data = { 
+            ...watchForm, 
+            id, 
+            purchasePrice: Number(watchForm.purchasePrice), 
+            sellingPrice: Number(watchForm.sellingPrice), 
+            minPrice: Number(watchForm.minPrice), 
+            dateAdded: new Date().toISOString(), 
+            images: images, 
+            image: images[0] || null 
+        };
+    } else { 
+        data = { ...braceletForm, id, dateAdded: new Date().toISOString() }; 
+    }
 
     if (useLocalStorage) {
       if (isWatch) setWatches(prev => editingId ? prev.map(w => w.id === id ? data : w) : [data, ...prev]);
       else setBracelets(prev => editingId ? prev.map(b => b.id === id ? data : b) : [data, ...prev]);
       closeForm(data);
     } else {
-      try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, isWatch ? 'watches' : 'bracelets', id), data); closeForm(data); } catch(e) {}
+      try { 
+          await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, isWatch ? 'watches' : 'bracelets', id), data); 
+          closeForm(data); 
+      } catch(e) {}
     }
   };
 
   const exportCSV = () => {
-    const sep = ";"; let csvContent = "\uFEFF"; csvContent += "sep=;\n"; 
+    const sep = ";"; 
+    let csvContent = "\uFEFF"; 
+    csvContent += "sep=;\n"; 
     const headers = [ "Statut", "Marque", "Modele", "Prix Achat", "Prix Vente/Estim", "Prix Min", "Plus-Value", "Diametre", "Annee", "Reference", "Mouvement", "Notes" ];
     csvContent += headers.join(sep) + "\n";
     watches.forEach(w => {
@@ -1079,16 +1235,27 @@ export default function App() {
     });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "collection.csv");
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    const link = document.createElement("a"); 
+    link.setAttribute("href", url); 
+    link.setAttribute("download", "collection.csv");
+    document.body.appendChild(link); 
+    link.click(); 
+    document.body.removeChild(link);
   };
 
-  const closeForm = (data) => { 
+  const closeForm = (data: any) => { 
     if (editingType === 'watch') {
-        if(selectedWatch) { setSelectedWatch(data); setViewedImageIndex(0); }
+        if(selectedWatch) { 
+            setSelectedWatch(data); 
+            setViewedImageIndex(0); 
+        }
         setView(data.status === 'wishlist' ? 'wishlist' : 'list');
-    } else { setView('list'); }
-    setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); 
+    } else { 
+        setView('list'); 
+    }
+    setEditingId(null); 
+    setWatchForm(DEFAULT_WATCH_STATE); 
+    setBraceletForm(DEFAULT_BRACELET_STATE); 
   };
 
   const openAdd = () => {
@@ -1100,54 +1267,82 @@ export default function App() {
       setView('add');
   };
 
-  const handleEdit = (item, type) => { 
-      if (type === 'watch') { const safeImages = item.images || (item.image ? [item.image] : []); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages }); } 
-      else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item });
-      setEditingType(type); setEditingId(item.id); setView('add'); 
+  const handleEdit = (item: any, type: string) => { 
+      if (type === 'watch') { 
+          const safeImages = item.images || (item.image ? [item.image] : []); 
+          setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages }); 
+      } else {
+          setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item });
+      }
+      setEditingType(type); 
+      setEditingId(item.id); 
+      setView('add'); 
   };
   
   const handleCancelForm = () => {
       setEditingId(null);
       setWatchForm(DEFAULT_WATCH_STATE);
       setBraceletForm(DEFAULT_BRACELET_STATE);
-      if (selectedWatch) { setView('detail'); } else { setView('list'); }
+      if (selectedWatch) { 
+          setView('detail'); 
+      } else { 
+          setView('list'); 
+      }
   };
 
-  const handleDelete = async (id, type) => {
+  const handleDelete = async (id: string, type: string) => {
     if(!confirm(t('delete') + " ?")) return;
     if(useLocalStorage) { 
-        if (type === 'watch') setWatches(prev => prev.filter(w => w.id !== id)); else setBracelets(prev => prev.filter(b => b.id !== id));
+        if (type === 'watch') setWatches(prev => prev.filter(w => w.id !== id)); 
+        else setBracelets(prev => prev.filter(b => b.id !== id));
         setView('list'); 
-    } else { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, type === 'watch' ? 'watches' : 'bracelets', id)); setView('list'); }
+    } else { 
+        await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, type === 'watch' ? 'watches' : 'bracelets', id)); 
+        setView('list'); 
+    }
   };
 
-  const handleBoxClick = () => { setIsBoxOpening(true); setTimeout(() => { setFilter('collection'); setView('list'); setIsBoxOpening(false); }, 800); };
+  const handleBoxClick = () => { 
+      setIsBoxOpening(true); 
+      setTimeout(() => { 
+          setFilter('collection'); 
+          setView('list'); 
+          setIsBoxOpening(false); 
+      }, 800); 
+  };
   
   const activeWatchesCount = watches.filter(w => w.status === 'collection').length;
 
   const filteredWatches = useMemo(() => {
     let filtered = watches;
-    if (searchTerm) { const lower = searchTerm.toLowerCase(); filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower))); }
+    
+    if (searchTerm) { 
+        const lower = searchTerm.toLowerCase(); 
+        filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower))); 
+    }
+    
     let sorted = [...filtered];
 
-    const getTime = (w) => {
+    const getTime = (w: any) => {
         if (w.purchaseDate) return new Date(w.purchaseDate).getTime();
         if (w.dateAdded) return new Date(w.dateAdded).getTime();
         return 0;
     };
 
-    if (sortOrder === 'priceAsc') sorted.sort((a, b) => (a.purchasePrice || 0) - (b.purchasePrice || 0));
-    else if (sortOrder === 'priceDesc') sorted.sort((a, b) => (b.purchasePrice || 0) - (a.purchasePrice || 0));
-    else if (sortOrder === 'alpha') sorted.sort((a, b) => a.brand.localeCompare(b.brand));
-    else if (sortOrder === 'dateAsc') {
+    if (sortOrder === 'priceAsc') {
+        sorted.sort((a, b) => (a.purchasePrice || 0) - (b.purchasePrice || 0));
+    } else if (sortOrder === 'priceDesc') {
+        sorted.sort((a, b) => (b.purchasePrice || 0) - (a.purchasePrice || 0));
+    } else if (sortOrder === 'alpha') {
+        sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
+    } else if (sortOrder === 'dateAsc') {
         sorted.sort((a, b) => {
             const ta = getTime(a), tb = getTime(b);
             if (ta === 0) return 1;
             if (tb === 0) return -1;
             return ta - tb;
         });
-    }
-    else { 
+    } else { 
         sorted.sort((a, b) => {
             const ta = getTime(a), tb = getTime(b);
             if (ta === 0) return 1;
@@ -1155,6 +1350,7 @@ export default function App() {
             return tb - ta;
         });
     }
+    
     return sorted;
   }, [watches, searchTerm, sortOrder]);
 
@@ -1168,96 +1364,116 @@ export default function App() {
     );
   };
 
-  const renderBox = () => (
-    <div className={`flex flex-col items-center justify-start h-full min-h-[80vh] px-8 relative overflow-hidden pt-28 ${theme.text}`}>
-      <GraphicBackground isDark={isDark} />
-      <div className="absolute top-4 left-4 z-20">
-        <button onClick={() => { setView('friends'); setSearchTerm(''); setGallerySearchTerm(''); }} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}>
-            <Users size={18} />
-            {friendRequests.length > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}
-        </button>
-      </div>
-
-      <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-3">
-        {(!user || user?.isAnonymous) ? (
-          <button onClick={handleGoogleLogin} className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border text-xs font-medium transition-all ${theme.bgSecondary} ${theme.text} ${theme.border}`}>
-            {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : <LogIn size={14} />} {t('login_google')}
-          </button>
-        ) : (
-          <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">
-             {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
-          </button>
-        )}
-        
-        <button onClick={() => setShowSettingsModal(true)} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors z-20`}><Settings size={18} /></button>
-      </div>
-      
-      {showProfileMenu && (
-          <div className={`absolute top-16 right-16 w-64 ${theme.card} rounded-xl shadow-xl border ${theme.border} py-1 z-30`}>
-              <div className={`px-4 py-3 border-b ${theme.border}`}><p className={`text-sm font-medium ${theme.text}`}>{user.email}</p></div>
-              <button onClick={() => { setView('summary'); setShowProfileMenu(false); }} className={`w-full text-left px-4 py-3 text-sm ${theme.text} hover:opacity-80 flex items-center gap-2`}><ClipboardList size={16} /> {t('inventory')}</button>
-              <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><LogOut size={16} /> {t('logout')}</button>
+  const renderBox = () => {
+      return (
+        <div className={`flex flex-col items-center justify-start h-full min-h-[80vh] px-8 relative overflow-hidden pt-28 ${theme.text}`}>
+          <GraphicBackground isDark={isDark} />
+          <div className="absolute top-4 left-4 z-20">
+            <button onClick={() => { setView('friends'); setSearchTerm(''); setGallerySearchTerm(''); }} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}>
+                <Users size={18} />
+                {friendRequests.length > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}
+            </button>
           </div>
-      )}
 
-      <div className="z-10 mt-12 mb-1 text-center">
-          <h1 className={`font-serif text-3xl sm:text-4xl ${theme.text} tracking-[0.3em] uppercase font-light`}>{t('myWatches')}</h1>
-          <div className={`w-16 h-0.5 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} mx-auto mt-2 opacity-20`}></div>
-      </div>
-      <div className="mb-8 text-center z-10 scale-90 opacity-90"><LiveClock isDark={isDark} settings={settings} /></div>
-      <div className="z-10 mb-4"><AnalogClock isDark={isDark} settings={settings} /></div>
-      
-      <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10 -mt-12">
-        <WatchBoxLogo isOpen={isBoxOpening} isDark={isDark} settings={settings} />
-      </div>
-      <div className="-mt-6 flex flex-col items-center z-10 pb-20">
-        <p className={`${theme.text} font-mono font-bold text-sm mb-2 tracking-widest shadow-sm uppercase opacity-70`}>{activeWatchesCount} {activeWatchesCount > 1 ? t('pieces') : t('piece')}</p>
-        {error && <div className="mt-3 bg-red-50 text-red-600 px-4 py-2 rounded-lg text-xs">{String(error)}</div>}
-      </div>
-    </div>
-  );
-
-  const renderHeader = (title, withFilters = false) => (
-    <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border}`}>
-      <div className="flex justify-between items-center px-2 mb-2">
-        <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{title}</h1>
-        <div className="flex items-center gap-2">
-            {(title === t('collection') || title === t('wishlist') || title === t('bracelets') || title === t('inventory')) && (
-                <div className="relative">
-                    <select 
-                        value={sortOrder} 
-                        onChange={(e) => setSortOrder(e.target.value)}
-                        className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
-                    >
-                        <option value="dateDesc">{t('sort_date_desc')}</option>
-                        <option value="dateAsc">{t('sort_date_asc')}</option>
-                        <option value="alpha">{t('sort_alpha')}</option>
-                        <option value="priceAsc">{t('sort_price_asc')}</option>
-                        <option value="priceDesc">{t('sort_price_desc')}</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                        <ArrowUpDown size={10} />
-                    </div>
-                </div>
+          <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-3">
+            {(!user || user?.isAnonymous) ? (
+              <button onClick={handleGoogleLogin} className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border text-xs font-medium transition-all ${theme.bgSecondary} ${theme.text} ${theme.border}`}>
+                {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : <LogIn size={14} />} {t('login_google')}
+              </button>
+            ) : (
+              <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">
+                 {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
+              </button>
             )}
-            <button onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
+            <button onClick={() => setShowSettingsModal(true)} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors z-20`}><Settings size={18} /></button>
+          </div>
+          
+          {showProfileMenu && (
+              <div className={`absolute top-16 right-16 w-64 ${theme.card} rounded-xl shadow-xl border ${theme.border} py-1 z-30`}>
+                  <div className={`px-4 py-3 border-b ${theme.border}`}><p className={`text-sm font-medium ${theme.text}`}>{user.email}</p></div>
+                  <button onClick={() => { setView('summary'); setShowProfileMenu(false); }} className={`w-full text-left px-4 py-3 text-sm ${theme.text} hover:opacity-80 flex items-center gap-2`}><ClipboardList size={16} /> {t('inventory')}</button>
+                  <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><LogOut size={16} /> {t('logout')}</button>
+              </div>
+          )}
+
+          <div className="z-10 mt-12 mb-1 text-center">
+              <h1 className={`font-serif text-3xl sm:text-4xl ${theme.text} tracking-[0.3em] uppercase font-light`}>{t('myWatches')}</h1>
+              <div className={`w-16 h-0.5 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} mx-auto mt-2 opacity-20`}></div>
+          </div>
+          
+          <div className="mb-8 text-center z-10 scale-90 opacity-90">
+              <LiveClock isDark={isDark} settings={settings} />
+          </div>
+          
+          <div className="z-10 mb-4">
+              <AnalogClock isDark={isDark} settings={settings} />
+          </div>
+          
+          <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10 -mt-12">
+            <WatchBoxLogo isOpen={isBoxOpening} isDark={isDark} settings={settings} />
+          </div>
+          
+          <div className="-mt-6 flex flex-col items-center z-10 pb-20">
+            <p className={`${theme.text} font-mono font-bold text-sm mb-2 tracking-widest shadow-sm uppercase opacity-70`}>{activeWatchesCount} {activeWatchesCount > 1 ? t('pieces') : t('piece')}</p>
+            {error && <div className="mt-3 bg-red-50 text-red-600 px-4 py-2 rounded-lg text-xs">{String(error)}</div>}
+          </div>
         </div>
-      </div>
-      {isSearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
-      {withFilters && !isSearchOpen && (
-        <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
-            {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (
-                <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>
-                    {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : watches.filter(w=>w.status==='sold').length)})`}
-                </button>
-            ))}
+      );
+  };
+
+  const renderHeader = (title: string, withFilters = false) => {
+      return (
+        <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border}`}>
+          <div className="flex justify-between items-center px-2 mb-2">
+            <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{title}</h1>
+            <div className="flex items-center gap-2">
+                {(title === t('collection') || title === t('wishlist') || title === t('bracelets') || title === t('inventory')) && (
+                    <div className="relative">
+                        <select 
+                            value={sortOrder} 
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
+                        >
+                            <option value="dateDesc">{t('sort_date_desc')}</option>
+                            <option value="dateAsc">{t('sort_date_asc')}</option>
+                            <option value="alpha">{t('sort_alpha')}</option>
+                            <option value="priceAsc">{t('sort_price_asc')}</option>
+                            <option value="priceDesc">{t('sort_price_desc')}</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                            <ArrowUpDown size={10} />
+                        </div>
+                    </div>
+                )}
+                <button onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
+            </div>
+          </div>
+          {isSearchOpen && (
+              <div className="px-2 mb-3">
+                  <input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
+              </div>
+          )}
+          {withFilters && !isSearchOpen && (
+            <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
+                {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (
+                    <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>
+                        {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : watches.filter(w=>w.status==='sold').length)})`}
+                    </button>
+                ))}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
+      );
+  };
 
   const renderList = () => {
-    const displayWatches = filteredWatches.filter(w => { if (w.status === 'wishlist') return false; if (filter === 'all') return true; if (filter === 'bracelets') return false; return w.status === filter; });
+    const displayWatches = filteredWatches.filter(w => { 
+        if (w.status === 'wishlist') return false; 
+        if (filter === 'all') return true; 
+        if (filter === 'bracelets') return false; 
+        return w.status === filter; 
+    });
+    
     if (filter === 'bracelets') {
         return (
             <div className="pb-24">
@@ -1279,6 +1495,7 @@ export default function App() {
             </div>
         );
     }
+    
     return (
       <div className="pb-24">
         {renderHeader(t('collection'), true)}
@@ -1338,7 +1555,7 @@ export default function App() {
         { name: "LeBonCoin", url: `https://www.leboncoin.fr/recherche?text=${searchQuery}`, icon: MapPin },
     ];
 
-    const getWatchStats = (watchId) => {
+    const getWatchStats = (watchId: string) => {
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
@@ -1390,13 +1607,11 @@ export default function App() {
               </div>
           </div>
 
-          {/* EXPORT BUTTONS */}
           <div className="flex gap-2">
                {w.status !== 'wishlist' && <button onClick={() => setExportType('insurance')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><ShieldCheck size={16}/> {t('sheet_insurance')}</button>}
                {w.status !== 'wishlist' && <button onClick={() => setExportType('sale')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><Tag size={16}/> {t('sheet_sale')}</button>}
           </div>
 
-          {/* MARKET SEARCH LINKS */}
           <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{w.status === 'wishlist' ? t('find_used') : t('market_value')}</h3>
                <div className="grid grid-cols-2 gap-2">
@@ -1425,7 +1640,6 @@ export default function App() {
               </>
           )}
 
-          {/* USAGE STATS */}
           {w.status === 'collection' && (
               <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
                   <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider flex items-center gap-2`}>
@@ -1448,7 +1662,6 @@ export default function App() {
               </div>
           )}
           
-          {/* TECHNICAL SPECS */}
           <div>
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('specs')}</h3>
               <div className="grid grid-cols-2 gap-3">
@@ -1460,7 +1673,6 @@ export default function App() {
               </div>
           </div>
 
-          {/* MOVEMENT & DIAL */}
           <div>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3>
                <div className="grid grid-cols-2 gap-3">
@@ -1472,7 +1684,6 @@ export default function App() {
                </div>
           </div>
 
-          {/* ORIGIN & MAINTENANCE */}
           <div>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('origin_maintenance')}</h3>
                <div className="grid grid-cols-2 gap-3">
@@ -1485,7 +1696,6 @@ export default function App() {
                </div>
           </div>
           
-          {/* CONDITION & RATING */}
           {(w.conditionRating || w.conditionComment) && (
               <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
                   <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>
@@ -1503,7 +1713,6 @@ export default function App() {
               </div>
           )}
 
-          {/* DOCUMENTS & INVOICE */}
           <div className={`pt-4 border-t ${theme.border}`}>
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>
               {w.invoice ? (
@@ -1520,7 +1729,6 @@ export default function App() {
               )}
           </div>
 
-          {/* FINANCE & DATES */}
           <div>
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} & Dates</h3>
               <div className="grid grid-cols-2 gap-3 mb-3">
@@ -1533,7 +1741,6 @@ export default function App() {
               </div>
           </div>
           
-          {/* HISTORY & NOTES */}
           {w.conditionNotes && (<div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100 mt-4"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> {t('notes')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.conditionNotes}</div></div>)}
           {w.historyBrand && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_brand')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyBrand}</div></div>)}
           {w.historyModel && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_model')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyModel}</div></div>)}
@@ -1543,7 +1750,6 @@ export default function App() {
   };
   
   const renderProfile = () => {
-    // Independent Gallery Search State filtering
     const displayWatches = watches.filter(w => { 
         if (!w.image && (!w.images || w.images.length === 0)) return false; 
         
@@ -1562,79 +1768,108 @@ export default function App() {
         return false; 
     });
 
-    // Independent sort for Gallery
-    if (sortOrder === 'priceAsc') displayWatches.sort((a, b) => (a.purchasePrice || 0) - (b.purchasePrice || 0));
-    else if (sortOrder === 'priceDesc') displayWatches.sort((a, b) => (b.purchasePrice || 0) - (a.purchasePrice || 0));
-    else if (sortOrder === 'alpha') displayWatches.sort((a, b) => a.brand.localeCompare(b.brand));
-    else displayWatches.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+    if (sortOrder === 'priceAsc') {
+        displayWatches.sort((a, b) => (a.purchasePrice || 0) - (b.purchasePrice || 0));
+    } else if (sortOrder === 'priceDesc') {
+        displayWatches.sort((a, b) => (b.purchasePrice || 0) - (a.purchasePrice || 0));
+    } else if (sortOrder === 'alpha') {
+        displayWatches.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
+    } else {
+        displayWatches.sort((a, b) => new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime());
+    }
 
     return (
-    <div className="pb-24 px-2">
-      <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border} mb-2`}>
-         <div className="flex justify-between items-center px-2 mb-2">
-            <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{t('gallery')}</h1>
-            <div className="flex items-center gap-2">
-                <div className="relative">
-                    <select 
-                        value={sortOrder} 
-                        onChange={(e) => setSortOrder(e.target.value)}
-                        className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
-                    >
-                        <option value="dateDesc">{t('sort_date_desc')}</option>
-                        <option value="dateAsc">{t('sort_date_asc')}</option>
-                        <option value="alpha">{t('sort_alpha')}</option>
-                        <option value="priceAsc">{t('sort_price_asc')}</option>
-                        <option value="priceDesc">{t('sort_price_desc')}</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                        <ArrowUpDown size={10} />
+        <div className="pb-24 px-2">
+          <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border} mb-2`}>
+             <div className="flex justify-between items-center px-2 mb-2">
+                <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{t('gallery')}</h1>
+                <div className="flex items-center gap-2">
+                    <div className="relative">
+                        <select 
+                            value={sortOrder} 
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
+                        >
+                            <option value="dateDesc">{t('sort_date_desc')}</option>
+                            <option value="dateAsc">{t('sort_date_asc')}</option>
+                            <option value="alpha">{t('sort_alpha')}</option>
+                            <option value="priceAsc">{t('sort_price_asc')}</option>
+                            <option value="priceDesc">{t('sort_price_desc')}</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                            <ArrowUpDown size={10} />
+                        </div>
                     </div>
+                    <button onClick={() => { setIsGallerySearchOpen(!isGallerySearchOpen); if(isGallerySearchOpen) setGallerySearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isGallerySearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
                 </div>
-                <button onClick={() => { setIsGallerySearchOpen(!isGallerySearchOpen); if(isGallerySearchOpen) setGallerySearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isGallerySearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
-            </div>
-         </div>
-         {isGallerySearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={gallerySearchTerm} onChange={(e) => setGallerySearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
-         <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
-               <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button>
-               <button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button>
-               <button onClick={() => setShowGallerySold(!showGallerySold)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('sold')}</button>
-               <button onClick={() => setShowGalleryWishlist(!showGalleryWishlist)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('wishlist')}</button>
-         </div>
-      </div>
-      <div className="grid grid-cols-3 gap-1 mt-2 px-1">
-          {displayWatches.map(w => (
-              <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
-                  <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
-              </div>
-          ))}
-          {displayWatches.length === 0 && (
-              <div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible.</div>
-          )}
-      </div>
-    </div>
-  );
+             </div>
+             {isGallerySearchOpen && (
+                 <div className="px-2 mb-3">
+                     <input autoFocus type="text" placeholder={t('search')} value={gallerySearchTerm} onChange={(e) => setGallerySearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
+                 </div>
+             )}
+             <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
+                   <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button>
+                   <button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button>
+                   <button onClick={() => setShowGallerySold(!showGallerySold)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('sold')}</button>
+                   <button onClick={() => setShowGalleryWishlist(!showGalleryWishlist)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('wishlist')}</button>
+             </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-1 mt-2 px-1">
+              {displayWatches.map(w => (
+                  <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
+                      <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
+                  </div>
+              ))}
+              {displayWatches.length === 0 && (
+                  <div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible.</div>
+              )}
+          </div>
+        </div>
+    );
   };
 
   const renderStats = () => {
       const getTopWatches = () => {
-        const periodCounts = {};
+        const periodCounts: any = {};
         calendarEvents.forEach(evt => {
             const evtDate = new Date(evt.date);
             let inPeriod = false;
             if (statsTimeframe === 'all') inPeriod = true;
             else if (statsTimeframe === 'year') inPeriod = evtDate.getFullYear() === currentMonth.getFullYear();
             else inPeriod = evtDate.getMonth() === currentMonth.getMonth() && evtDate.getFullYear() === currentMonth.getFullYear();
-            if (inPeriod && evt.watches) evt.watches.forEach(wId => { periodCounts[wId] = (periodCounts[wId] || 0) + 1; });
+            
+            if (inPeriod && evt.watches) {
+                evt.watches.forEach((wId: string) => { 
+                    periodCounts[wId] = (periodCounts[wId] || 0) + 1; 
+                });
+            }
         });
-        return Object.entries(periodCounts).sort(([,a], [,b]) => b - a).slice(0, 5).map(([wId, count]) => { const w = watches.find(watch => watch.id === wId); return w ? { ...w, count } : null; }).filter(Boolean);
+        
+        return Object.entries(periodCounts)
+            .sort((a: any, b: any) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([wId, count]) => { 
+                const w = watches.find(watch => watch.id === wId); 
+                return w ? { ...w, count } : null; 
+            })
+            .filter(Boolean);
       };
       
       const renderCalendarGrid = () => {
-        const year = currentMonth.getFullYear(); const month = currentMonth.getMonth();
-        const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate(); const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+        const year = currentMonth.getFullYear(); 
+        const month = currentMonth.getMonth();
+        const firstDay = new Date(year, month, 1); 
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate(); 
+        const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
         const days = [];
-        for (let i = 0; i < startDay; i++) days.push(<div key={`pad-${i}`}></div>);
+        
+        for (let i = 0; i < startDay; i++) {
+            days.push(<div key={`pad-${i}`}></div>);
+        }
+        
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const event = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
@@ -1642,7 +1877,18 @@ export default function App() {
             days.push(
                 <div key={d} onClick={() => handleCalendarDayClick(dateStr)} className={`aspect-square border rounded-lg p-1 relative cursor-pointer ${theme.border} ${isToday ? 'border-indigo-500 bg-indigo-500/10' : theme.bg}`}>
                     <span className={`text-[10px] font-bold ${isToday ? 'text-indigo-500' : theme.textSub}`}>{d}</span>
-                    <div className="flex flex-wrap gap-0.5 mt-1">{event?.watches?.slice(0, 4).map((wId, idx) => { const w = watches.find(wa => wa.id === wId); if (!w) return null; const img = w.images?.[0] || w.image; return (<div key={idx} className="w-1.5 h-1.5 rounded-full bg-slate-300 overflow-hidden">{img && <img src={img} className="w-full h-full object-cover" />}</div>); })}</div>
+                    <div className="flex flex-wrap gap-0.5 mt-1">
+                        {event?.watches?.slice(0, 4).map((wId: string, idx: number) => { 
+                            const w = watches.find(wa => wa.id === wId); 
+                            if (!w) return null; 
+                            const img = w.images?.[0] || w.image; 
+                            return (
+                                <div key={idx} className="w-1.5 h-1.5 rounded-full bg-slate-300 overflow-hidden">
+                                    {img && <img src={img} className="w-full h-full object-cover" />}
+                                </div>
+                            ); 
+                        })}
+                    </div>
                 </div>
             );
         }
@@ -1650,13 +1896,19 @@ export default function App() {
       };
 
       const getTopBrands = () => {
-          const brands = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.brand) acc[w.brand] = (acc[w.brand] || 0) + 1; return acc; }, {});
-          return Object.entries(brands).sort((a,b) => b[1] - a[1]).slice(0, 5);
+          const brands = watches.filter(w => w.status === 'collection').reduce((acc, w) => { 
+              if(w.brand) acc[w.brand] = (acc[w.brand] || 0) + 1; 
+              return acc; 
+          }, {});
+          return Object.entries(brands).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
       };
       
       const getTopDials = () => {
-          const dials = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.dialColor) acc[w.dialColor] = (acc[w.dialColor] || 0) + 1; return acc; }, {});
-          return Object.entries(dials).sort((a,b) => b[1] - a[1]).slice(0, 5);
+          const dials = watches.filter(w => w.status === 'collection').reduce((acc, w) => { 
+              if(w.dialColor) acc[w.dialColor] = (acc[w.dialColor] || 0) + 1; 
+              return acc; 
+          }, {});
+          return Object.entries(dials).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
       };
 
       const topBrands = getTopBrands();
@@ -1668,39 +1920,57 @@ export default function App() {
                 <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('stats')}</h1>
             </div>
             <div className="space-y-6">
-                {/* CALENDAR */}
+                
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2`}><Calendar className="text-indigo-600" size={16} /> {t('calendar')}</h3>
-                        <div className="flex gap-2"><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className={`p-1 hover:${theme.bg} rounded ${theme.text}`}><ChevronLeft size={16}/></button><span className={`text-xs font-bold capitalize w-24 text-center ${theme.text}`}>{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className={`p-1 hover:${theme.bg} rounded ${theme.text}`}><ChevronRight size={16}/></button></div>
+                        <div className="flex gap-2">
+                            <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className={`p-1 hover:${theme.bg} rounded ${theme.text}`}><ChevronLeft size={16}/></button>
+                            <span className={`text-xs font-bold capitalize w-24 text-center ${theme.text}`}>{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+                            <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className={`p-1 hover:${theme.bg} rounded ${theme.text}`}><ChevronRight size={16}/></button>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-7 gap-1">{renderCalendarGrid()}</div>
+                    <div className="grid grid-cols-7 gap-1">
+                        {renderCalendarGrid()}
+                    </div>
                 </div>
 
-                {/* TOP WORN */}
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2`}><TrendingUp className="text-emerald-500" size={16} /> {t('top_worn')}</h3>
                         <div className={`flex ${theme.bg} rounded-lg p-0.5`}>
-                            {[{id: 'month', label: t('month')}, {id: 'year', label: t('year')}, {id: 'all', label: t('all_time')}].map(t => (<button key={t.id} onClick={() => setStatsTimeframe(t.id)} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${statsTimeframe === t.id ? `${theme.bgSecondary} shadow ${theme.text}` : theme.textSub}`}>{t.label}</button>))}
+                            {[{id: 'month', label: t('month')}, {id: 'year', label: t('year')}, {id: 'all', label: t('all_time')}].map(tObj => (
+                                <button key={tObj.id} onClick={() => setStatsTimeframe(tObj.id)} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${statsTimeframe === tObj.id ? `${theme.bgSecondary} shadow ${theme.text}` : theme.textSub}`}>{tObj.label}</button>
+                            ))}
                         </div>
                     </div>
                     <div className="space-y-3">
-                        {getTopWatches().map((w, i) => (<div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}><div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div><div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" /></div><div className="flex-1 min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div><div className="font-bold text-indigo-600 text-sm">{w.count}</div></div>))}
+                        {getTopWatches().map((w: any, i: number) => (
+                            <div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}>
+                                <div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div>
+                                <div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}>
+                                    <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div>
+                                    <div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div>
+                                </div>
+                                <div className="font-bold text-indigo-600 text-sm">{w.count}</div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* NEW: TOP BRANDS */}
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><PieChart className="text-blue-500" size={16} /> {t('fav_brands')}</h3>
                     <div className="space-y-3">
-                        {topBrands.map(([brand, count], i) => (
+                        {topBrands.map(([brand, count]: any, i: number) => (
                             <div key={brand} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / topBrands[0][1]) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / (topBrands[0][1] as number)) * 100}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -1708,17 +1978,16 @@ export default function App() {
                     </div>
                 </div>
 
-                {/* NEW: TOP DIALS */}
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><Palette className="text-purple-500" size={16} /> {t('fav_dials')}</h3>
                     <div className="space-y-3">
-                        {topDials.map(([color, count], i) => (
+                        {topDials.map(([color, count]: any, i: number) => (
                             <div key={color} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${(count / topDials[0][1]) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${(count / (topDials[0][1] as number)) * 100}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -1727,12 +1996,14 @@ export default function App() {
                 </div>
             </div>
             
-            {/* Calendar Modal */}
             {selectedCalendarDate && (
                 <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
                     <div className={`${theme.card} rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col max-h-[80vh]`}>
                         <div className={`p-4 border-b ${theme.border} ${theme.bgSecondary}`}>
-                            <div className="flex justify-between items-center mb-3"><h3 className={`font-bold ${theme.text}`}>Porté le {new Date(selectedCalendarDate).toLocaleDateString()}</h3><button onClick={() => setSelectedCalendarDate(null)}><X size={20} className={theme.textSub}/></button></div>
+                            <div className="flex justify-between items-center mb-3">
+                                <h3 className={`font-bold ${theme.text}`}>Porté le {new Date(selectedCalendarDate).toLocaleDateString()}</h3>
+                                <button onClick={() => setSelectedCalendarDate(null)}><X size={20} className={theme.textSub}/></button>
+                            </div>
                             <input autoFocus type="text" placeholder={t('search')} className={`w-full p-2 ${theme.input} rounded-lg text-sm`} value={calendarSearchTerm} onChange={(e) => setCalendarSearchTerm(e.target.value)}/>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -1740,7 +2011,9 @@ export default function App() {
                                 const isSelected = selectedCalendarWatches.includes(w.id);
                                 return (
                                 <div key={w.id} onClick={() => setSelectedCalendarWatches(prev => isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id])} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/10' : `${theme.border} hover:${theme.bg}`}`}>
-                                    <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-600 border-indigo-600' : `${theme.bgSecondary} ${theme.border}`}`}>{isSelected && <Check size={12} className="text-white" />}</div>
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-600 border-indigo-600' : `${theme.bgSecondary} ${theme.border}`}`}>
+                                        {isSelected && <Check size={12} className="text-white" />}
+                                    </div>
                                     <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-200 shrink-0">
                                         {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
                                     </div>
@@ -1752,7 +2025,9 @@ export default function App() {
                                 );
                             })}
                         </div>
-                        <div className={`p-4 border-t ${theme.border} ${theme.bgSecondary}`}><button onClick={handleCalendarSave} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">{t('save')}</button></div>
+                        <div className={`p-4 border-t ${theme.border} ${theme.bgSecondary}`}>
+                            <button onClick={handleCalendarSave} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">{t('save')}</button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -1761,16 +2036,12 @@ export default function App() {
   };
 
   const renderFinance = () => {
-    // Basic Stats
     const sCol = { buy: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
     const sSale = { buy: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
     const sSold = { buy: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
     const sTotal = { buy: sCol.buy+sSale.buy+sSold.buy, val: sCol.val+sSale.val+sSold.val, profit: sCol.profit+sSale.profit+sSold.profit };
 
-    // TIMELINE LOGIC (Revised: Group by Month, Filter by state)
-    // Create map of all months with activity
-    const timelineMap = watches.reduce((acc, w) => {
-        // Handle purchases
+    const timelineMap = watches.reduce((acc: any, w: any) => {
         if (w.purchaseDate && w.purchasePrice) {
             const d = new Date(w.purchaseDate);
             const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -1779,7 +2050,6 @@ export default function App() {
             acc[key].count += 1; 
             acc[key].boughtWatches.push(w);
         }
-        // Handle sales
         if (w.status === 'sold' && w.soldDate && w.sellingPrice) {
             const d = new Date(w.soldDate);
             const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -1790,9 +2060,9 @@ export default function App() {
         return acc;
     }, {});
     
-    const sortedTimeline = Object.values(timelineMap).sort((a,b) => b.date.localeCompare(a.date));
+    const sortedTimeline = Object.values(timelineMap).sort((a: any, b: any) => b.date.localeCompare(a.date));
     
-    const timelineByYear = sortedTimeline.reduce((acc, curr) => {
+    const timelineByYear = sortedTimeline.reduce((acc: any, curr: any) => {
         if (!acc[curr.year]) acc[curr.year] = { year: curr.year, months: [], spent: 0, gained: 0 };
         acc[curr.year].months.push(curr);
         acc[curr.year].spent += curr.spent;
@@ -1800,11 +2070,11 @@ export default function App() {
         return acc;
     }, {});
     
-    const sortedYears = Object.values(timelineByYear).sort((a,b) => b.year - a.year);
+    const sortedYears = Object.values(timelineByYear).sort((a: any, b: any) => b.year - a.year);
 
-    const formatMonthName = (dateStr) => {
+    const formatMonthName = (dateStr: string) => {
         const [y, m] = dateStr.split('-');
-        const d = new Date(y, parseInt(m)-1, 1);
+        const d = new Date(parseInt(y), parseInt(m)-1, 1);
         return d.toLocaleString(settings.lang, { month: 'long' });
     };
 
@@ -1815,20 +2085,21 @@ export default function App() {
 
     return (
       <div className="pb-24 px-3 space-y-2">
-        <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-2`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('finance')}</h1></div>
+        <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-2`}>
+            <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('finance')}</h1>
+        </div>
         
-        {/* Modals */}
-        {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter(w=>w.status==='collection')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
-        {financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter(w=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
-        {financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter(w=>w.status==='sold')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
+        {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter(w=>w.status==='collection')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
+        {financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter(w=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
+        {financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter(w=>w.status==='sold')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
         
-        {/* Cards */}
         <FinanceCardFull title={t('collection')} icon={Watch} stats={sCol} type="collection" bgColor="bg-emerald-500" onClick={() => setFinanceDetail('collection')} theme={theme} />
         <FinanceCardFull title={t('forsale')} icon={TrendingUp} stats={sSale} type="forsale" bgColor="bg-amber-500" onClick={() => setFinanceDetail('forsale')} theme={theme} />
         <FinanceCardFull title={t('sold')} icon={DollarSign} stats={sSold} type="sold" bgColor="bg-blue-600" onClick={() => setFinanceDetail('sold')} theme={theme} />
-        <div className="mt-4 pt-2"><FinanceCardFull title={t('total_value')} icon={Activity} stats={sTotal} type="total" bgColor="bg-white" onClick={() => {}} theme={theme} /></div>
+        <div className="mt-4 pt-2">
+            <FinanceCardFull title={t('total_value')} icon={Activity} stats={sTotal} type="total" bgColor="bg-white" onClick={() => {}} theme={theme} />
+        </div>
 
-        {/* TIMELINE */}
         <div className="mt-6">
             <div className="flex justify-between items-center mb-3">
                 <h3 className={`font-bold text-sm ${theme.text} uppercase tracking-wider flex items-center gap-2`}><Briefcase size={16}/> {t('finance_timeline')}</h3>
@@ -1840,103 +2111,118 @@ export default function App() {
                 </button>
             </div>
 
-            {sortedYears.map(yearData => {
-                if (timelineFilter === 'default' && yearData.year !== now.getFullYear()) return null;
+            {timelineFilter === 'default' && (
+                <div className={`mb-4 p-3 rounded-xl border-2 border-indigo-100 bg-indigo-50/50 dark:bg-indigo-900/20 dark:border-indigo-800`}>
+                    <div className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase mb-2 text-center">{t('year_summary')} {now.getFullYear()}</div>
+                    <div className="flex justify-between text-sm">
+                        <div className="text-red-500 font-bold">- {formatPrice((sortedYears.find((y: any) => y.year === now.getFullYear()) as any)?.spent || 0)}</div>
+                        <div className="font-mono font-bold text-slate-400">= {formatPrice(((sortedYears.find((y: any) => y.year === now.getFullYear()) as any)?.gained || 0) - ((sortedYears.find((y: any) => y.year === now.getFullYear()) as any)?.spent || 0))}</div>
+                        <div className="text-emerald-600 font-bold">+ {formatPrice((sortedYears.find((y: any) => y.year === now.getFullYear()) as any)?.gained || 0)}</div>
+                    </div>
+                </div>
+            )}
 
-                const monthsToDisplay = timelineFilter === 'default' 
-                    ? yearData.months.filter(m => m.date === currentMonthKey || m.date === prevMonthKey)
-                    : yearData.months;
+            <div className="space-y-3">
+                {sortedYears.map((yearData: any) => {
+                    if (timelineFilter === 'default' && yearData.year !== now.getFullYear()) return null;
 
-                if (timelineFilter === 'default' && monthsToDisplay.length === 0) {
-                     return <div key={yearData.year} className={`text-center text-xs ${theme.textSub} py-4 italic`}>Aucune activité récente.</div>;
-                }
+                    const monthsToDisplay = timelineFilter === 'default' 
+                        ? yearData.months.filter((m: any) => m.date === currentMonthKey || m.date === prevMonthKey)
+                        : yearData.months;
 
-                return (
-                    <div key={yearData.year} className="mb-6">
-                        <div className={`mb-3 p-3 rounded-xl border border-indigo-100 bg-indigo-50/50 dark:bg-indigo-900/20 dark:border-indigo-800`}>
-                            <div className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase mb-2 text-center">{t('year_summary')} {yearData.year}</div>
-                            <div className="flex justify-between text-sm">
-                                <div className="text-red-500 font-bold">- {formatPrice(yearData.spent)}</div>
-                                <div className="font-mono font-bold text-slate-400">= {formatPrice(yearData.gained - yearData.spent)}</div>
-                                <div className="text-emerald-600 font-bold">+ {formatPrice(yearData.gained)}</div>
+                    if (timelineFilter === 'default' && monthsToDisplay.length === 0) {
+                         return <div key={yearData.year} className={`text-center text-xs ${theme.textSub} py-4 italic`}>Aucune activité récente.</div>;
+                    }
+
+                    return (
+                        <div key={yearData.year} className="mb-6">
+                            {timelineFilter === 'all' && (
+                                <div className={`mb-3 p-3 rounded-xl border border-indigo-100 bg-indigo-50/50 dark:bg-indigo-900/20 dark:border-indigo-800`}>
+                                    <div className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase mb-2 text-center">{t('year_summary')} {yearData.year}</div>
+                                    <div className="flex justify-between text-sm">
+                                        <div className="text-red-500 font-bold">- {formatPrice(yearData.spent)}</div>
+                                        <div className="font-mono font-bold text-slate-400">= {formatPrice(yearData.gained - yearData.spent)}</div>
+                                        <div className="text-emerald-600 font-bold">+ {formatPrice(yearData.gained)}</div>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="space-y-3">
+                                {monthsToDisplay.map((tItem: any) => (
+                                    <div key={tItem.date} className={`${theme.card} rounded-xl border ${theme.border} overflow-hidden mb-3`}>
+                                        <div 
+                                            onClick={() => setExpandedMonth(expandedMonth === tItem.date ? null : tItem.date)}
+                                            className={`p-3 flex items-center justify-between cursor-pointer hover:${theme.bgSecondary} transition-colors`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>
+                                                    {formatMonthName(tItem.date)}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
+                                                    <span className={`font-bold text-sm ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
+                                                        {formatPrice(tItem.gained - tItem.spent)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right text-xs flex items-center gap-2">
+                                                <div>
+                                                    {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
+                                                    {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
+                                                </div>
+                                                <ChevronLeft size={16} className={`text-slate-400 transition-transform ${expandedMonth === tItem.date ? '-rotate-90' : 'rotate-180'}`} />
+                                            </div>
+                                        </div>
+                                
+                                        {/* Expanded Content */}
+                                        {expandedMonth === tItem.date && (
+                                            <div className={`border-t ${theme.border} bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-3`}>
+                                                {tItem.boughtWatches.length > 0 && (
+                                                    <div>
+                                                        <div className="text-[10px] font-bold uppercase text-red-500 mb-2">{t('purchases')}</div>
+                                                        <div className="space-y-2">
+                                                            {tItem.boughtWatches.map((w: any) => (
+                                                                <div key={`buy-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
+                                                                    <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
+                                                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
+                                                                        <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
+                                                                    </div>
+                                                                    <div className="text-xs font-bold text-red-500">- {formatPrice(w.purchasePrice)}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {tItem.soldWatches.length > 0 && (
+                                                    <div>
+                                                        <div className="text-[10px] font-bold uppercase text-emerald-500 mb-2">{t('sales')}</div>
+                                                        <div className="space-y-2">
+                                                            {tItem.soldWatches.map((w: any) => (
+                                                                <div key={`sell-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
+                                                                    <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
+                                                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
+                                                                        <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
+                                                                    </div>
+                                                                    <div className="text-xs font-bold text-emerald-500">+ {formatPrice(w.sellingPrice)}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         </div>
-                        <div className="space-y-3">
-                            {monthsToDisplay.map((tItem) => (
-                                <div key={tItem.date} className={`${theme.card} rounded-xl border ${theme.border} overflow-hidden mb-3`}>
-                                    <div 
-                                        onClick={() => setExpandedMonth(expandedMonth === tItem.date ? null : tItem.date)}
-                                        className={`p-3 flex items-center justify-between cursor-pointer hover:${theme.bgSecondary} transition-colors`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>
-                                                {formatMonthName(tItem.date)}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
-                                                <span className={`font-bold text-sm ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
-                                                    {formatPrice(tItem.gained - tItem.spent)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right text-xs flex items-center gap-2">
-                                            <div>
-                                                {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
-                                                {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
-                                            </div>
-                                            <ChevronLeft size={16} className={`text-slate-400 transition-transform ${expandedMonth === tItem.date ? '-rotate-90' : 'rotate-180'}`} />
-                                        </div>
-                                    </div>
-                            
-                                    {/* Expanded Content */}
-                                    {expandedMonth === tItem.date && (
-                                        <div className={`border-t ${theme.border} bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-3`}>
-                                            {tItem.boughtWatches.length > 0 && (
-                                                <div>
-                                                    <div className="text-[10px] font-bold uppercase text-red-500 mb-2">{t('purchases')}</div>
-                                                    <div className="space-y-2">
-                                                        {tItem.boughtWatches.map(w => (
-                                                            <div key={`buy-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
-                                                                    <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
-                                                                </div>
-                                                                <div className="text-xs font-bold text-red-500">- {formatPrice(w.purchasePrice)}</div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {tItem.soldWatches.length > 0 && (
-                                                <div>
-                                                    <div className="text-[10px] font-bold uppercase text-emerald-500 mb-2">{t('sales')}</div>
-                                                    <div className="space-y-2">
-                                                        {tItem.soldWatches.map(w => (
-                                                            <div key={`sell-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
-                                                                    <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
-                                                                </div>
-                                                                <div className="text-xs font-bold text-emerald-500">+ {formatPrice(w.sellingPrice)}</div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            })}
+                    );
+                })}
+            </div>
         </div>
       </div>
     );
@@ -1945,6 +2231,7 @@ export default function App() {
   const renderForm = () => {
       const isWatch = editingType === 'watch';
       const currentImages = isWatch ? (watchForm.images || (watchForm.image ? [watchForm.image] : [])) : [];
+      
       return (
         <div className={`pb-24 p-4 ${theme.bgSecondary} min-h-screen`}>
           <div className="flex justify-between items-center mb-6 mt-2">
@@ -1955,9 +2242,13 @@ export default function App() {
             <div className="grid grid-cols-3 gap-3">
                 {currentImages.map((img, idx) => (
                     <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
-                        <img src={img} className="w-full h-full object-cover" />
+                        <img src={img as string} className="w-full h-full object-cover" />
                         <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X size={12}/></button>
-                        {idx === 0 ? <div className="absolute bottom-0 w-full bg-emerald-500 text-white text-[8px] text-center">MAIN</div> : <button type="button" onClick={() => setAsMainImage(idx)} className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-white text-black text-[8px] px-1 rounded">Set Main</button>}
+                        {idx === 0 ? (
+                            <div className="absolute bottom-0 w-full bg-emerald-500 text-white text-[8px] text-center">MAIN</div>
+                        ) : (
+                            <button type="button" onClick={() => setAsMainImage(idx)} className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-white text-black text-[8px] px-1 rounded">Set Main</button>
+                        )}
                     </div>
                 ))}
                 {currentImages.length < 3 && (
@@ -2126,7 +2417,13 @@ export default function App() {
       );
   };
 
-  if (loading) return <div className={`flex h-screen items-center justify-center ${theme.bgSecondary}`}><Loader2 className={`animate-spin ${theme.text}`}/></div>;
+  if (loading) {
+      return (
+          <div className={`flex h-screen items-center justify-center ${theme.bgSecondary}`}>
+              <Loader2 className={`animate-spin ${theme.text}`}/>
+          </div>
+      );
+  }
 
   return (
     <div className={`${theme.bg} min-h-screen font-sans ${theme.text}`}>
@@ -2143,11 +2440,15 @@ export default function App() {
             {view === 'detail' && renderDetail()}
             {view === 'add' && renderForm()}
         </div>
+        
         {exportType && selectedWatch && <ExportView watch={selectedWatch} type={exportType} onClose={() => setExportType(null)} theme={theme} t={t} />}
         
         {renderFullScreenImage()}
+        
         {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} settings={settings} setSettings={setSettings} t={t} theme={theme} />}
+        
         {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} t={t} />}
+        
         {showRulesHelp && <RulesHelpModal onClose={() => setShowRulesHelp(false)} theme={theme} />}
 
         {view !== 'add' && (
