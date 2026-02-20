@@ -242,7 +242,7 @@ const ExportView = ({ watch, type, onClose, theme, t }: any) => {
                 )}
                 
                 {isSale && (
-                   <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500"><p>Contactez le vendeur pour plus d'informations.</p><div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">Espace Réservé (Contact / Info)</div></div>
+                   <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500"><p>Contactez le vendeur pour plus d&apos;informations.</p><div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">Espace Réservé (Contact / Info)</div></div>
                 )}
                 <div className="print:fixed print:bottom-4 print:left-0 print:w-full text-center text-[10px] text-slate-400">Généré par ChronoManager - {new Date().toLocaleDateString()}</div>
             </div>
@@ -342,7 +342,7 @@ const ConfigModal = ({ onClose, currentError, t }: any) => {
                 <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><h3 className="font-bold text-slate-800 flex items-center gap-2"><Settings size={18}/> {t('config_cloud')}</h3><button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button></div>
                 <div className="p-6 space-y-4">
                     {currentError && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs mb-4">{String(currentError)}</div>}
-                    <textarea className="w-full h-40 p-3 border rounded-lg font-mono text-xs bg-slate-50" placeholder={`{ apiKey: "...", ... }`} value={jsonConfig} onChange={(e) => setJsonConfig(e.target.value)} />
+                    <textarea className="w-full h-40 p-3 border rounded-lg font-mono text-xs bg-slate-50" placeholder={`{ apiKey: "...", ... }`} value={jsonConfig} onChange={(e: any) => setJsonConfig(e.target.value)} />
                     {parseError && <div className="text-xs text-red-500">{parseError}</div>}
                     <button onClick={handleSave} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"><Save size={18}/> {t('save')}</button>
                 </div>
@@ -371,6 +371,25 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
                     <div className="grid grid-cols-2 gap-2">
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button>
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e: any) => setSettings((s: any) => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                    </div>
+                </div>
+                <div>
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e: any) => setSettings((s: any) => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e: any) => setSettings((s: any) => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e: any) => setSettings((s: any) => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
             </div>
@@ -1268,7 +1287,7 @@ export default function App() {
           </div>
 
           <div>
-               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} &amp; {t('dial')}</h3>
+               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3>
                <div className="grid grid-cols-2 gap-3">
                   <DetailItem icon={MovementIcon} label={t('movement')} value={w.movement} theme={theme} />
                   <DetailItem icon={Settings} label={t('movement_model')} value={w.movementModel} theme={theme} />
@@ -1292,7 +1311,7 @@ export default function App() {
           
           {(w.conditionRating || w.conditionComment) && (
               <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
-                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État &amp; Condition</h3>
+                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>
                   {w.conditionRating && (
                       <div className="flex items-center gap-2 mb-2">
                           <div className={`text-lg font-bold ${theme.text} bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg`}>{w.conditionRating}/10</div>
@@ -1302,7 +1321,7 @@ export default function App() {
                       </div>
                   )}
                   {w.conditionComment && (
-                      <p className={`text-sm ${theme.text} italic`}>&quot;{w.conditionComment}&quot;</p>
+                      <p className={`text-sm ${theme.text} italic`}>"{w.conditionComment}"</p>
                   )}
               </div>
           )}
@@ -1324,7 +1343,7 @@ export default function App() {
           </div>
 
           <div>
-              <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} &amp; Dates</h3>
+              <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} & Dates</h3>
               <div className="grid grid-cols-2 gap-3 mb-3">
                   {w.purchaseDate && <DetailItem icon={Calendar} label={t('date_purchase')} value={w.purchaseDate} theme={theme} />}
                   {w.soldDate && w.status === 'sold' && <DetailItem icon={Calendar} label={t('date_sold')} value={w.soldDate} theme={theme} />}
@@ -1436,14 +1455,15 @@ export default function App() {
                 });
             }
         });
-        return Object.entries(periodCounts)
-            .sort((a: any, b: any) => b[1] - a[1])
-            .slice(0, 5)
-            .map(([wId, count]) => { 
-                const w = watches.find(watch => watch.id === wId); 
-                return w ? { ...w, count } : null; 
-            })
-            .filter(Boolean);
+        
+        const sortedCounts = Object.entries(periodCounts).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 5);
+        
+        return sortedCounts.map(item => { 
+            const wId = item[0];
+            const count = item[1];
+            const w = watches.find(watch => watch.id === wId); 
+            return w ? { ...w, count } : null; 
+        }).filter(Boolean);
       };
       
       const renderCalendarGrid = () => {
@@ -1454,9 +1474,11 @@ export default function App() {
         const daysInMonth = lastDay.getDate(); 
         const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
         const days = [];
+        
         for (let i = 0; i < startDay; i++) {
             days.push(<div key={`pad-${i}`}></div>);
         }
+        
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const event = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
@@ -1487,7 +1509,7 @@ export default function App() {
               if(w.brand) acc[w.brand] = (acc[w.brand] || 0) + 1; 
               return acc; 
           }, {});
-          return Object.entries(brands).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+          return Object.entries(brands).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 5);
       };
       
       const getTopDials = () => {
@@ -1495,14 +1517,14 @@ export default function App() {
               if(w.dialColor) acc[w.dialColor] = (acc[w.dialColor] || 0) + 1; 
               return acc; 
           }, {});
-          return Object.entries(dials).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+          return Object.entries(dials).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 5);
       };
 
       const topBrands = getTopBrands();
       const topDials = getTopDials();
       
-      const maxBrandCount = topBrands[0] ? (topBrands[0][1] as number) : 1;
-      const maxDialCount = topDials[0] ? (topDials[0][1] as number) : 1;
+      const maxBrandCount = topBrands[0] ? Number(topBrands[0][1]) : 1;
+      const maxDialCount = topDials[0] ? Number(topDials[0][1]) : 1;
 
       return (
         <div className="pb-24 px-3">
@@ -1554,34 +1576,42 @@ export default function App() {
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><PieChart className="text-blue-500" size={16} /> {t('fav_brands')}</h3>
                     <div className="space-y-3">
-                        {topBrands.map(([brand, count]: any, i: number) => (
+                        {topBrands.map((item: any, i: number) => {
+                            const brand = item[0];
+                            const count = Number(item[1]);
+                            const pct = (count / Math.max(maxBrandCount, 1)) * 100;
+                            return (
                             <div key={brand || `brand-${i}`} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${((count as number) / maxBrandCount) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${pct}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
                 </div>
 
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><Palette className="text-purple-500" size={16} /> {t('fav_dials')}</h3>
                     <div className="space-y-3">
-                        {topDials.map(([color, count]: any, i: number) => (
+                        {topDials.map((item: any, i: number) => {
+                            const color = item[0];
+                            const count = Number(item[1]);
+                            const pct = (count / Math.max(maxDialCount, 1)) * 100;
+                            return (
                             <div key={color || `color-${i}`} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${((count as number) / maxDialCount) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${pct}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
                 </div>
             </div>
