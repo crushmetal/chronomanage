@@ -1,294 +1,28 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
-  Search, AlertCircle, Tag,
-  Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt
+  Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, AlertCircle, Tag,
+  Package, DollarSign, FileText, Box, Loader2, ChevronLeft, ClipboardList, WifiOff, 
+  Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, 
+  Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, 
+  Shuffle, Save, Copy, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, 
+  Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, 
+  Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, 
+  PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt
 } from 'lucide-react';
-
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc, updateDoc } from 'firebase/firestore';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc } from 'firebase/firestore';
 
 // ==========================================================================
 // CONFIGURATION & DICTIONNAIRE
 // ==========================================================================
-
-const TRANSLATIONS = {
-  fr: {
-    box: "Coffre",
-    list: "Liste",
-    wishlist: "Souhaits",
-    finance: "Finance",
-    stats: "Stats",
-    gallery: "Galerie",
-    myWatches: "Mes Montres",
-    pieces: "pièces",
-    piece: "pièce",
-    search: "Rechercher...",
-    collection: "Ma Collection",
-    forsale: "En Vente",
-    sold: "Vendues",
-    bracelets: "Bracelets",
-    settings: "Paramètres",
-    language: "Langue",
-    theme: "Thème",
-    light: "Clair",
-    dark: "Sombre",
-    total_value: "Valeur Totale",
-    profit: "Plus-value",
-    brand: "Marque",
-    model: "Modèle",
-    reference: "Référence",
-    year: "Année", 
-    model_year: "Année du modèle",
-    price: "Prix",
-    add_new: "Ajouter",
-    edit: "Modifier",
-    delete: "Supprimer",
-    save: "Sauvegarder",
-    cancel: "Annuler",
-    notes: "Notes",
-    history: "Histoire",
-    history_brand: "Histoire Marque",
-    history_model: "Histoire Modèle",
-    specs: "Caractéristiques",
-    unknown: "Inconnu",
-    total_displayed: "montres affichées",
-    login_google: "Connexion Google",
-    logout: "Déconnexion",
-    config_cloud: "Config Cloud",
-    export_csv: "Exporter CSV",
-    filter_all: "Tout",
-    all: "Tout", 
-    inventory: "Inventaire",
-    friends: "Amis",
-    requests: "Demandes",
-    limited_edition: "EDITION LIMITÉE",
-    movement: "Mouvement",
-    movement_model: "Calibre/Modèle",
-    manual: "Manuel",
-    automatic: "Automatique",
-    quartz: "Quartz",
-    diameter: "Diamètre",
-    thickness: "Épaisseur",
-    lug_width: "Entre-corne",
-    water_res: "Étanchéité",
-    glass: "Verre",
-    dial: "Cadran",
-    country: "Pays",
-    box_included: "Boîte",
-    warranty: "Garantie",
-    revision: "Révision",
-    battery: "Pile",
-    weight: "Poids",
-    visibility_friends: "Visible par les amis",
-    private_note: "Si décoché, cette montre restera privée.",
-    move_collection: "J'ai obtenu cette montre !",
-    set_main_image: "Définir principale",
-    add_photo: "Ajouter",
-    link_web: "Lien Web",
-    visit_site: "Visiter le site marchand",
-    purchase_price: "Prix Achat",
-    selling_price: "Prix Vente/Estim",
-    min_price: "Prix Min (Privé)",
-    clock_style: "Style Horloge",
-    box_style: "Style Coffre",
-    color_digital: "Heure Digitale",
-    color_h_hand: "Aig. Heures",
-    color_m_hand: "Aig. Minutes",
-    color_s_hand: "Aig. Secondes",
-    color_index: "Index",
-    color_leather: "Cuir Extérieur",
-    color_interior: "Intérieur",
-    color_cushion: "Cushions",
-    top_worn: "Top Portées",
-    calendar: "Calendrier",
-    month: "Mois",
-    all_time: "Tout",
-    fav_brands: "Marques Favorites",
-    fav_dials: "Couleurs Cadran",
-    finance_timeline: "Chronologie Financière",
-    spent: "Dépenses",
-    gained: "Gains",
-    balance: "Bilan",
-    identity: "Identité",
-    origin_maintenance: "Origine & Entretien",
-    technical: "Technique",
-    financial_status: "Finances & Statut",
-    date_release: "Date de Sortie",
-    date_purchase: "Date d'Achat",
-    date_sold: "Date de Vente",
-    market_value: "Estimation du Marché",
-    find_used: "Trouver d'Occasion",
-    export_sheet: "Fiches & Documents",
-    sheet_insurance: "Fiche Assurance",
-    sheet_sale: "Fiche de Vente",
-    print: "Imprimer",
-    condition_rating: "État (1-10)",
-    condition_comment: "Commentaire sur l'état",
-    show_history: "Voir tout l'historique",
-    show_less: "Réduire",
-    year_summary: "Bilan Année",
-    stats_usage: "Statistiques d'Usage",
-    worn_this_month: "Ce mois",
-    worn_this_year: "Cette année",
-    worn_last_year: "Année dernière",
-    invoice: "Facture",
-    add_invoice: "Ajouter Facture",
-    view_invoice: "Voir Facture",
-    sort_date_desc: "Date d'achat (Récents)",
-    sort_date_asc: "Date d'achat (Anciens)",
-    sort_alpha: "A-Z",
-    sort_price_asc: "Prix (Croissant)",
-    sort_price_desc: "Prix (Décroissant)",
-    purchases: "Achats",
-    sales: "Ventes"
-  },
-  en: {
-    box: "Box",
-    list: "List",
-    wishlist: "Wishlist",
-    finance: "Finances",
-    stats: "Statistics",
-    gallery: "Gallery",
-    myWatches: "My Watches",
-    pieces: "pieces",
-    piece: "piece",
-    search: "Search...",
-    collection: "Collection",
-    forsale: "For Sale",
-    sold: "Sold",
-    bracelets: "Straps",
-    settings: "Settings",
-    language: "Language",
-    theme: "Theme",
-    light: "Light",
-    dark: "Dark",
-    total_value: "Total Value",
-    profit: "Profit",
-    brand: "Brand",
-    model: "Model",
-    reference: "Reference",
-    year: "Year", 
-    model_year: "Model Year",
-    price: "Price",
-    add_new: "Add New",
-    edit: "Edit",
-    delete: "Delete",
-    save: "Save",
-    cancel: "Cancel",
-    notes: "Notes",
-    history: "History",
-    history_brand: "Brand History",
-    history_model: "Model History",
-    specs: "Specifications",
-    unknown: "Unknown",
-    total_displayed: "watches displayed",
-    login_google: "Google Login",
-    logout: "Logout",
-    config_cloud: "Cloud Config",
-    export_csv: "Export CSV",
-    filter_all: "All",
-    all: "All",
-    inventory: "Inventory",
-    friends: "Friends",
-    requests: "Requests",
-    limited_edition: "LIMITED EDITION",
-    movement: "Movement",
-    movement_model: "Caliber/Model",
-    manual: "Manual",
-    automatic: "Automatic",
-    quartz: "Quartz",
-    diameter: "Diameter",
-    thickness: "Thickness",
-    lug_width: "Lug Width",
-    water_res: "Water Res.",
-    glass: "Glass",
-    dial: "Dial",
-    country: "Country",
-    box_included: "Box",
-    warranty: "Warranty",
-    revision: "Service",
-    battery: "Battery",
-    weight: "Weight",
-    visibility_friends: "Visible to friends",
-    private_note: "If unchecked, stays private.",
-    move_collection: "I got this watch!",
-    set_main_image: "Set as main",
-    add_photo: "Add",
-    link_web: "Web Link",
-    visit_site: "Visit Website",
-    purchase_price: "Purchase Price",
-    selling_price: "Selling/Estim Price",
-    min_price: "Min Price (Private)",
-    clock_style: "Clock Style",
-    box_style: "Box Style",
-    color_digital: "Digital Time",
-    color_h_hand: "Hour Hand",
-    color_m_hand: "Minute Hand",
-    color_s_hand: "Second Hand",
-    color_index: "Indexes",
-    color_leather: "Outer Leather",
-    color_interior: "Interior",
-    color_cushion: "Cushions",
-    top_worn: "Top Worn",
-    calendar: "Calendar",
-    month: "Month",
-    all_time: "All Time",
-    fav_brands: "Favorite Brands",
-    fav_dials: "Dial Colors",
-    finance_timeline: "Financial Timeline",
-    spent: "Spent",
-    gained: "Gained",
-    balance: "Balance",
-    identity: "Identity",
-    origin_maintenance: "Origin & Maintenance",
-    technical: "Technical",
-    financial_status: "Finances & Status",
-    date_release: "Release Date",
-    date_purchase: "Purchase Date",
-    date_sold: "Sold Date",
-    market_value: "Market Estimation",
-    find_used: "Find Used",
-    export_sheet: "Sheets & Docs",
-    sheet_insurance: "Insurance Sheet",
-    sheet_sale: "Sale Sheet",
-    print: "Print",
-    condition_rating: "Condition (1-10)",
-    condition_comment: "Condition Details",
-    show_history: "Show Full History",
-    show_less: "Show Less",
-    year_summary: "Year Summary",
-    stats_usage: "Usage Statistics",
-    worn_this_month: "This Month",
-    worn_this_year: "This Year",
-    worn_last_year: "Last Year",
-    invoice: "Invoice",
-    add_invoice: "Add Invoice",
-    view_invoice: "View Invoice",
-    sort_date_desc: "Purchase Date (Newest)",
-    sort_date_asc: "Purchase Date (Oldest)",
-    sort_alpha: "A-Z",
-    sort_price_asc: "Price (Asc)",
-    sort_price_desc: "Price (Desc)",
-    purchases: "Purchases",
-    sales: "Sales"
-  }
+const TRANSLATIONS: any = {
+  fr: { box: "Coffre", list: "Liste", wishlist: "Souhaits", finance: "Finance", stats: "Stats", gallery: "Galerie", myWatches: "Mes Montres", pieces: "pièces", piece: "pièce", search: "Rechercher...", collection: "Ma Collection", forsale: "En Vente", sold: "Vendues", bracelets: "Bracelets", settings: "Paramètres", language: "Langue", theme: "Thème", light: "Clair", dark: "Sombre", total_value: "Valeur Totale", profit: "Plus-value", brand: "Marque", model: "Modèle", reference: "Référence", year: "Année", model_year: "Année du modèle", price: "Prix", add_new: "Ajouter", edit: "Modifier", delete: "Supprimer", save: "Sauvegarder", cancel: "Annuler", notes: "Notes", history: "Histoire", history_brand: "Histoire Marque", history_model: "Histoire Modèle", specs: "Caractéristiques", unknown: "Inconnu", total_displayed: "montres affichées", login_google: "Connexion Google", logout: "Déconnexion", config_cloud: "Config Cloud", export_csv: "Exporter CSV", filter_all: "Tout", all: "Tout", inventory: "Inventaire", friends: "Amis", requests: "Demandes", limited_edition: "EDITION LIMITÉE", movement: "Mouvement", movement_model: "Calibre/Modèle", manual: "Manuel", automatic: "Automatique", quartz: "Quartz", diameter: "Diamètre", thickness: "Épaisseur", lug_width: "Entre-corne", water_res: "Étanchéité", glass: "Verre", dial: "Cadran", country: "Pays", box_included: "Boîte", warranty: "Garantie", revision: "Révision", battery: "Pile", weight: "Poids", visibility_friends: "Visible par les amis", private_note: "Si décoché, cette montre restera privée.", move_collection: "J'ai obtenu cette montre !", set_main_image: "Définir principale", add_photo: "Ajouter", link_web: "Lien Web", visit_site: "Visiter le site marchand", purchase_price: "Prix Achat", selling_price: "Prix Vente/Estim", min_price: "Prix Min (Privé)", clock_style: "Style Horloge", box_style: "Style Coffre", color_digital: "Heure Digitale", color_h_hand: "Aig. Heures", color_m_hand: "Aig. Minutes", color_s_hand: "Aig. Secondes", color_index: "Index", color_leather: "Cuir Extérieur", color_interior: "Intérieur", color_cushion: "Cushions", top_worn: "Top Portées", calendar: "Calendrier", month: "Mois", all_time: "Tout", fav_brands: "Marques Favorites", fav_dials: "Couleurs Cadran", finance_timeline: "Chronologie Financière", spent: "Dépenses", gained: "Gains", balance: "Bilan", identity: "Identité", origin_maintenance: "Origine & Entretien", technical: "Technique", financial_status: "Finances & Statut", date_release: "Date de Sortie", date_purchase: "Date d'Achat", date_sold: "Date de Vente", market_value: "Estimation du Marché", find_used: "Trouver d'Occasion", export_sheet: "Fiches & Documents", sheet_insurance: "Fiche Assurance", sheet_sale: "Fiche de Vente", print: "Imprimer", condition_rating: "État (1-10)", condition_comment: "Commentaire sur l'état", show_history: "Voir tout l'historique", show_less: "Réduire", year_summary: "Bilan Année", stats_usage: "Statistiques d'Usage", worn_this_month: "Ce mois", worn_this_year: "Cette année", worn_last_year: "Année dernière", invoice: "Facture", add_invoice: "Ajouter Facture", view_invoice: "Voir Facture", sort_date_desc: "Date d'achat (Récents)", sort_date_asc: "Date d'achat (Anciens)", sort_alpha: "A-Z", sort_price_asc: "Prix (Croissant)", sort_price_desc: "Prix (Décroissant)", purchases: "Achats", sales: "Ventes" },
+  en: { box: "Box", list: "List", wishlist: "Wishlist", finance: "Finances", stats: "Statistics", gallery: "Gallery", myWatches: "My Watches", pieces: "pieces", piece: "piece", search: "Search...", collection: "Collection", forsale: "For Sale", sold: "Sold", bracelets: "Straps", settings: "Settings", language: "Language", theme: "Theme", light: "Light", dark: "Dark", total_value: "Total Value", profit: "Profit", brand: "Brand", model: "Model", reference: "Reference", year: "Year", model_year: "Model Year", price: "Price", add_new: "Add New", edit: "Edit", delete: "Delete", save: "Save", cancel: "Cancel", notes: "Notes", history: "History", history_brand: "Brand History", history_model: "Model History", specs: "Specifications", unknown: "Unknown", total_displayed: "watches displayed", login_google: "Google Login", logout: "Logout", config_cloud: "Cloud Config", export_csv: "Export CSV", filter_all: "All", all: "All", inventory: "Inventory", friends: "Friends", requests: "Requests", limited_edition: "LIMITED EDITION", movement: "Movement", movement_model: "Caliber/Model", manual: "Manual", automatic: "Automatic", quartz: "Quartz", diameter: "Diameter", thickness: "Thickness", lug_width: "Lug Width", water_res: "Water Res.", glass: "Glass", dial: "Dial", country: "Country", box_included: "Box", warranty: "Warranty", revision: "Service", battery: "Battery", weight: "Weight", visibility_friends: "Visible to friends", private_note: "If unchecked, stays private.", move_collection: "I got this watch!", set_main_image: "Set as main", add_photo: "Add", link_web: "Web Link", visit_site: "Visit Website", purchase_price: "Purchase Price", selling_price: "Selling/Estim Price", min_price: "Min Price (Private)", clock_style: "Clock Style", box_style: "Box Style", color_digital: "Digital Time", color_h_hand: "Hour Hand", color_m_hand: "Minute Hand", color_s_hand: "Second Hand", color_index: "Indexes", color_leather: "Outer Leather", color_interior: "Interior", color_cushion: "Cushions", top_worn: "Top Worn", calendar: "Calendar", month: "Month", all_time: "All Time", fav_brands: "Favorite Brands", fav_dials: "Dial Colors", finance_timeline: "Financial Timeline", spent: "Spent", gained: "Gained", balance: "Balance", identity: "Identity", origin_maintenance: "Origin & Maintenance", technical: "Technical", financial_status: "Finances & Status", date_release: "Release Date", date_purchase: "Purchase Date", date_sold: "Sold Date", market_value: "Market Estimation", find_used: "Find Used", export_sheet: "Sheets & Docs", sheet_insurance: "Insurance Sheet", sheet_sale: "Sale Sheet", print: "Print", condition_rating: "Condition (1-10)", condition_comment: "Condition Details", show_history: "Show Full History", show_less: "Show Less", year_summary: "Year Summary", stats_usage: "Usage Statistics", worn_this_month: "This Month", worn_this_year: "This Year", worn_last_year: "Last Year", invoice: "Invoice", add_invoice: "Add Invoice", view_invoice: "View Invoice", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Price (Asc)", sort_price_desc: "Price (Desc)", purchases: "Purchases", sales: "Sales" }
 };
 
-const productionConfig = {
-  apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o",
-  authDomain: "chronomanagerfinal.firebaseapp.com",
-  projectId: "chronomanagerfinal",
-  storageBucket: "chronomanagerfinal.firebasestorage.app",
-  messagingSenderId: "913764049964",
-  appId: "1:913764049964:web:542604509381001b801d89"
-};
+const productionConfig = { apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o", authDomain: "chronomanagerfinal.firebaseapp.com", projectId: "chronomanagerfinal", storageBucket: "chronomanagerfinal.firebasestorage.app", messagingSenderId: "913764049964", appId: "1:913764049964:web:542604509381001b801d89" };
 
-// ==========================================================================
-// GESTIONNAIRE FIREBASE
-// ==========================================================================
 let app: any, auth: any, db: any;
 let firebaseReady = false;
 let globalInitError: string | null = null; 
@@ -300,70 +34,22 @@ const LOCAL_CONFIG_KEY = 'chrono_firebase_config';
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof window !== 'undefined' && (window as any).__app_id ? (window as any).__app_id : 'chrono-manager-universal'; 
 
-const DEFAULT_WATCH_STATE = {
-    brand: '', model: '', reference: '', 
-    diameter: '', year: '', 
-    movement: '', movementModel: '', 
-    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '',
-    dialColor: '', 
-    batteryModel: '', 
-    isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
-    publicVisible: true, 
-    box: '', warrantyDate: '', revision: '',
-    purchasePrice: '', sellingPrice: '', minPrice: '', 
-    purchaseDate: '', soldDate: '',
-    status: 'collection', conditionNotes: '', link: '', 
-    historyBrand: '', historyModel: '', 
-    conditionRating: '', conditionComment: '',
-    image: null, 
-    images: [],
-    invoice: null 
-};
-
-const DEFAULT_BRACELET_STATE = {
-    width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' 
-};
+const DEFAULT_WATCH_STATE = { brand: '', model: '', reference: '', diameter: '', year: '', movement: '', movementModel: '', country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', dialColor: '', batteryModel: '', isLimitedEdition: false, limitedNumber: '', limitedTotal: '', publicVisible: true, box: '', warrantyDate: '', revision: '', purchasePrice: '', sellingPrice: '', minPrice: '', purchaseDate: '', soldDate: '', releaseDate: '', status: 'collection', conditionNotes: '', link: '', historyBrand: '', historyModel: '', conditionRating: '', conditionComment: '', image: null, images: [], invoice: null };
+const DEFAULT_BRACELET_STATE = { width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' };
 
 const tryInitFirebase = (config: any) => {
     try {
         if (!config || !config.apiKey || config.apiKey.length < 5) return false;
-        if (getApps().length === 0) {
-            app = initializeApp(config);
-        } else {
-            app = getApp();
-        }
-        auth = getAuth(app);
-        db = getFirestore(app);
-        firebaseReady = true;
-        globalInitError = null;
+        if (getApps().length === 0) app = initializeApp(config); else app = getApp();
+        auth = getAuth(app); db = getFirestore(app); firebaseReady = true; globalInitError = null;
         return true;
-    } catch (e: any) {
-        console.error("Erreur init Firebase:", e);
-        globalInitError = e.message || String(e); 
-        return false;
-    }
+    } catch (e: any) { console.error("Erreur init Firebase:", e); globalInitError = e.message || String(e); return false; }
 };
 
-if (typeof window !== 'undefined' && (window as any).__firebase_config) {
-    try { 
-        tryInitFirebase(JSON.parse((window as any).__firebase_config)); 
-    } catch(e) {}
-}
+if (typeof window !== 'undefined' && (window as any).__firebase_config) { try { tryInitFirebase(JSON.parse((window as any).__firebase_config)); } catch(e) {} }
+if (!firebaseReady) tryInitFirebase(productionConfig);
+if (!firebaseReady) { try { const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY); if (savedConfig) tryInitFirebase(JSON.parse(savedConfig)); } catch(e) {} }
 
-if (!firebaseReady) {
-    tryInitFirebase(productionConfig);
-}
-
-if (!firebaseReady) {
-    try {
-        const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY);
-        if (savedConfig) {
-            tryInitFirebase(JSON.parse(savedConfig));
-        }
-    } catch(e) {}
-}
-
-// --- UTILS UI ---
 const formatPrice = (price: any) => {
   if (price === undefined || price === null || price === '') return '0 €';
   const numPrice = Number(price);
@@ -381,122 +67,63 @@ const compressImage = (file: File): Promise<string> => {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 800; 
-        let width = img.width;
-        let height = img.height;
-        if (width > MAX_WIDTH) { 
-            height = (height * MAX_WIDTH) / width; 
-            width = MAX_WIDTH; 
-        }
-        canvas.width = width; 
-        canvas.height = height;
+        let width = img.width; let height = img.height;
+        if (width > MAX_WIDTH) { height = (height * MAX_WIDTH) / width; width = MAX_WIDTH; }
+        canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
-        if(ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-        }
+        if(ctx) ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', 0.85));
       };
     };
   });
 };
 
-const MovementIcon = ({ size = 24, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 12 L12 2" />
-    <path d="M12 12 L4 16" />
-    <path d="M12 12 L20 16" />
-    <path d="M12 7 C14.76 7 17 9.24 17 12 C17 14.76 14.76 17 12 17 C9.24 17 7 14.76 7 12" />
-  </svg>
+const MovementIcon = ({ size = 24, className = "" }: any) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><path d="M12 12 L12 2" /><path d="M12 12 L4 16" /><path d="M12 12 L20 16" /><path d="M12 7 C14.76 7 17 9.24 17 12 C17 14.76 14.76 17 12 17 C9.24 17 7 14.76 7 12" /></svg>
 );
 
-// --- ANIMATION COFFRE ---
-const WatchBoxLogo = ({ isOpen, isDark, settings }: { isOpen: boolean, isDark: boolean, settings: any }) => {
+const WatchBoxLogo = ({ isOpen, isDark, settings }: any) => {
   const leatherColor = settings.boxLeather || (isDark ? "#3E2723" : "#5D4037");
   const interiorColor = settings.boxInterior || (isDark ? "#424242" : "#f5f5f0");
   const cushionColor = settings.boxCushion || (isDark ? "#616161" : "#fdfbf7");
-
   return (
   <div style={{ perspective: '1000px', width: '220px', height: '180px' }}>
-    <svg viewBox="0 0 200 160" className="w-full h-full drop-shadow-2xl" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 200 160" className="w-full h-full drop-shadow-2xl">
       <defs>
-        <linearGradient id="leatherGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={leatherColor} />
-          <stop offset="100%" stopColor={leatherColor} stopOpacity="0.8" />
-        </linearGradient>
-        <linearGradient id="interior" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={interiorColor} />
-          <stop offset="100%" stopColor={interiorColor} stopOpacity="0.8" />
-        </linearGradient>
-        <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-           <stop offset="0%" stopColor={cushionColor} />
-           <stop offset="100%" stopColor={cushionColor} stopOpacity="0.8" />
-        </linearGradient>
-        <linearGradient id="windowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-           <stop offset="0%" stopColor="rgba(220, 240, 255, 0.4)" />
-           <stop offset="50%" stopColor="rgba(200, 230, 255, 0.2)" />
-           <stop offset="100%" stopColor="rgba(220, 240, 255, 0.5)" />
-        </linearGradient>
-        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-           <stop offset="0%" stopColor="#FFECB3" />
-           <stop offset="50%" stopColor="#FFC107" />
-           <stop offset="100%" stopColor="#FFB300" />
-        </linearGradient>
+        <linearGradient id="leatherGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={leatherColor} /><stop offset="100%" stopColor={leatherColor} stopOpacity="0.8" /></linearGradient>
+        <linearGradient id="interior" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={interiorColor} /><stop offset="100%" stopColor={interiorColor} stopOpacity="0.8" /></linearGradient>
+        <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={cushionColor} /><stop offset="100%" stopColor={cushionColor} stopOpacity="0.8" /></linearGradient>
+        <linearGradient id="windowGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="rgba(220, 240, 255, 0.4)" /><stop offset="50%" stopColor="rgba(200, 230, 255, 0.2)" /><stop offset="100%" stopColor="rgba(220, 240, 255, 0.5)" /></linearGradient>
+        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#FFECB3" /><stop offset="50%" stopColor="#FFC107" /><stop offset="100%" stopColor="#FFB300" /></linearGradient>
       </defs>
       <path d="M30,60 L170,60 L180,100 L20,100 Z" fill="url(#interior)" stroke="#8D6E63" strokeWidth="0.5" />
-      <g transform="translate(0, 0)">
-        {[32, 66, 100, 134].map((x, i) => (
-             <rect key={i} x={x} y={65} width="28" height="30" rx="4" fill="url(#cushionGrad)" stroke="#D7CCC8" strokeWidth="0.5" />
-        ))}
-      </g>
+      <g transform="translate(0, 0)">{[32, 66, 100, 134].map((x, i) => (<rect key={i} x={x} y={65} width="28" height="30" rx="4" fill="url(#cushionGrad)" stroke="#D7CCC8" strokeWidth="0.5" />))}</g>
       <path d="M20,100 L180,100 L180,140 L20,140 Z" fill="url(#leatherGrad)" stroke="#271c19" strokeWidth="0.5"/>
-      <g transform="translate(94, 102)">
-         <rect x="0" y="0" width="12" height="10" rx="1" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" />
-         <circle cx="6" cy="5" r="1.5" fill="#3E2723" />
-      </g>
+      <g transform="translate(94, 102)"><rect x="0" y="0" width="12" height="10" rx="1" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" /><circle cx="6" cy="5" r="1.5" fill="#3E2723" /></g>
       <g className="transition-all duration-1000 ease-in-out" style={{ transformOrigin: '100px 60px', transform: isOpen ? 'rotateX(-110deg)' : 'rotateX(0deg)' }}>
           <path d="M20,100 L180,100 L170,60 L30,60 Z" fill="url(#leatherGrad)" stroke="#3E2723" strokeWidth="1" />
           <path d="M35,92 L165,92 L158,68 L42,68 Z" fill="url(#windowGrad)" stroke="#8D6E63" strokeWidth="0.5" />
           <path d="M35,92 L80,92 L75,68 L42,68 Z" fill="rgba(255,255,255,0.1)" />
           <path d="M20,100 L180,100 L180,108 L20,108 Z" fill="#3E2723" />
-          <g transform="translate(94, 100)">
-             <path d="M0,0 H12 V6 C12,8 0,8 0,6 Z" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" />
-          </g>
+          <g transform="translate(94, 100)"><path d="M0,0 H12 V6 C12,8 0,8 0,6 Z" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" /></g>
       </g>
     </svg>
   </div>
   );
 };
 
-const AnalogClock = ({ isDark, settings }: { isDark: boolean, settings: any }) => {
+const AnalogClock = ({ isDark, settings }: any) => {
   const [time, setTime] = useState(new Date());
-  
-  useEffect(() => { 
-      const timer = setInterval(() => setTime(new Date()), 1000); 
-      return () => clearInterval(timer); 
-  }, []);
-  
-  const secondsRatio = time.getSeconds() / 60;
-  const minutesRatio = (secondsRatio + time.getMinutes()) / 60;
-  const hoursRatio = (minutesRatio + time.getHours()) / 12;
-  
-  const borderColor = isDark ? 'border-slate-600' : 'border-slate-800';
-  const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
-  
-  const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); 
-  const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); 
-  const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); 
-  const sHandColor = settings.handSecond || '#ef4444'; 
+  useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
+  const secondsRatio = time.getSeconds() / 60; const minutesRatio = (secondsRatio + time.getMinutes()) / 60; const hoursRatio = (minutesRatio + time.getHours()) / 12;
+  const borderColor = isDark ? 'border-slate-600' : 'border-slate-800'; const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
+  const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); const sHandColor = settings.handSecond || '#ef4444'; 
 
   return (
     <div className="w-32 h-32 relative mx-auto mb-2">
        <div className={`w-full h-full rounded-full border-4 ${borderColor} ${bgColor} shadow-inner flex items-center justify-center relative`}>
-          {[...Array(12)].map((_, i) => (
-              <div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>
-          ))}
-          {[0, 3, 6, 9].map((i) => (
-              <div key={`thick-${i}`} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>
-          ))}
-          
+          {[...Array(12)].map((_, i) => (<div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
+          {[0, 3, 6, 9].map((i) => (<div key={`thick-${i}`} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
           <div className="absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
           <div className="absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
           <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
@@ -506,64 +133,39 @@ const AnalogClock = ({ isDark, settings }: { isDark: boolean, settings: any }) =
   );
 };
 
-const LiveClock = ({ isDark, settings }: { isDark: boolean, settings: any }) => {
+const LiveClock = ({ isDark, settings }: any) => {
   const [time, setTime] = useState(new Date());
-  useEffect(() => { 
-      const timer = setInterval(() => setTime(new Date()), 1000); 
-      return () => clearInterval(timer); 
-  }, []);
-  
-  return (
-      <div className={`font-mono text-4xl sm:text-5xl font-medium tracking-widest mb-2 opacity-90`} style={{ color: settings.digitalColor || (isDark ? '#e2e8f0' : '#1e293b') }}>
-          {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-      </div>
-  );
+  useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
+  return <div className={`font-mono text-4xl sm:text-5xl font-medium tracking-widest mb-2 opacity-90`} style={{ color: settings.digitalColor || (isDark ? '#e2e8f0' : '#1e293b') }}>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</div>;
 };
 
-const GraphicBackground = ({ isDark }: { isDark: boolean }) => (
+const GraphicBackground = ({ isDark }: any) => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
       <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(${isDark ? '#475569' : '#cbd5e1'} 1px, transparent 1px)`, backgroundSize: '30px 30px', opacity: 0.5 }}></div>
-      <svg className={`absolute -right-20 -top-20 w-96 h-96 opacity-40 ${isDark ? 'text-slate-700' : 'text-slate-200'}`} viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-        <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="0.5" />
-      </svg>
+      <svg className={`absolute -right-20 -top-20 w-96 h-96 opacity-40 ${isDark ? 'text-slate-700' : 'text-slate-200'}`} viewBox="0 0 200 200"><circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.5" /><circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="0.5" /></svg>
     </div>
 );
 
-// --- COMPOSANTS EXTERNALISÉS ---
-
-const Card = ({ children, className = "", onClick, theme }: { children: React.ReactNode, className?: string, onClick?: () => void, theme: any }) => (
-  <div onClick={onClick} className={`${theme.card} rounded-xl shadow-sm border ${theme.border} overflow-hidden ${className} ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}>
-      {children}
-  </div>
+const Card = ({ children, className = "", onClick, theme }: any) => (
+  <div onClick={onClick} className={`${theme.card} rounded-xl shadow-sm border ${theme.border} overflow-hidden ${className} ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}>{children}</div>
 );
 
-const DetailItem = ({ icon: Icon, label, value, theme }: { icon: any, label: string, value: string, theme: any }) => (
+const DetailItem = ({ icon: Icon, label, value, theme }: any) => (
     <div className={`${theme.bgSecondary} p-3 rounded-lg border ${theme.border} flex items-center`}>
-        <div className={`${theme.bg} p-2 rounded-full border ${theme.border} mr-3 ${theme.textSub} flex-shrink-0`}>
-            {Icon && <Icon size={16} />}
-        </div>
-        <div className="min-w-0">
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${theme.textSub} block opacity-70`}>{label}</span>
-            <span className={`font-serif text-sm ${theme.text} truncate block`}>{value || '-'}</span>
-        </div>
+        <div className={`${theme.bg} p-2 rounded-full border ${theme.border} mr-3 ${theme.textSub} flex-shrink-0`}>{Icon && <Icon size={16} />}</div>
+        <div className="min-w-0"><span className={`text-[10px] font-bold uppercase tracking-wider ${theme.textSub} block opacity-70`}>{label}</span><span className={`font-serif text-sm ${theme.text} truncate block`}>{value || '-'}</span></div>
     </div>
 );
 
-// EXPORT SHEET COMPONENT
-const ExportView = ({ watch, type, onClose, theme, t }: { watch: any, type: string, onClose: () => void, theme: any, t: any }) => {
+const ExportView = ({ watch, type, onClose, theme, t }: any) => {
     const isSale = type === 'sale';
     return (
         <div className="fixed inset-0 z-[200] bg-white flex flex-col overflow-auto text-black">
             <div className="print:hidden p-4 border-b flex justify-between items-center bg-slate-100 sticky top-0 z-50">
                 <h2 className="font-bold text-lg">{isSale ? t('sheet_sale') : t('sheet_insurance')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => window.print()} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700">
-                        <Printer size={16}/> {t('print')}
-                    </button>
-                    <button onClick={onClose} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">
-                        <X size={16}/>
-                    </button>
+                    <button onClick={() => window.print()} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700"><Printer size={16}/> {t('print')}</button>
+                    <button onClick={onClose} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-bold hover:bg-slate-300"><X size={16}/></button>
                 </div>
             </div>
             
@@ -574,26 +176,18 @@ const ExportView = ({ watch, type, onClose, theme, t }: { watch: any, type: stri
                         <h2 className="text-xl text-slate-600 font-medium">{watch.model}</h2>
                         {watch.reference && <p className="font-mono text-sm mt-1">REF: {watch.reference}</p>}
                     </div>
-                    <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center">
-                        <Watch size={32} />
-                    </div>
+                    <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center"><Watch size={32} /></div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
                     <div>
-                        {watch.images && watch.images[0] && (
-                            <div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4">
-                                <img src={watch.images[0]} className="w-full h-full object-cover"/>
-                            </div>
-                        )}
-                        
+                        {watch.images && watch.images[0] && (<div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4"><img src={watch.images[0]} alt="" className="w-full h-full object-cover"/></div>)}
                         {!isSale && (
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
                                  <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{t('purchase_price')}</div>
                                  <div className="text-3xl font-bold font-serif">{formatPrice(watch.purchasePrice)}</div>
                             </div>
                         )}
-                        
                         {isSale && (watch.sellingPrice || watch.purchasePrice) && (
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
                                  <div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{t('selling_price')}</div>
@@ -602,7 +196,6 @@ const ExportView = ({ watch, type, onClose, theme, t }: { watch: any, type: stri
                             </div>
                         )}
                     </div>
-                    
                     <div className="space-y-4">
                         <h3 className="font-bold uppercase border-b border-slate-200 pb-1">{t('specs')}</h3>
                         <div className="grid grid-cols-2 gap-y-2 text-sm">
@@ -617,59 +210,62 @@ const ExportView = ({ watch, type, onClose, theme, t }: { watch: any, type: stri
                             <div className="text-slate-500">{t('warranty')}:</div><div>{watch.warrantyDate || '-'}</div>
                             <div className="text-slate-500">{t('country')}:</div><div>{watch.country || '-'}</div>
                             <div className="text-slate-500">{t('weight')}:</div><div>{watch.weight ? watch.weight + ' g' : '-'}</div>
-                            {watch.batteryModel && (
-                                <>
-                                    <div className="text-slate-500">{t('battery')}:</div>
-                                    <div>{watch.batteryModel}</div>
-                                </>
-                            )}
-                            {watch.conditionRating && (
-                                <>
-                                    <div className="text-slate-500">{t('condition_rating')}:</div>
-                                    <div>{watch.conditionRating}/10</div>
-                                </>
-                            )}
+                            {watch.batteryModel && <><div className="text-slate-500">{t('battery')}:</div><div>{watch.batteryModel}</div></>}
+                            {watch.conditionRating && <><div className="text-slate-500">{t('condition_rating')}:</div><div>{watch.conditionRating}/10</div></>}
                         </div>
-                        
                         {watch.conditionNotes && (
-                            <div className="mt-6">
-                                <h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('notes')}</h3>
-                                <p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.conditionNotes}</p>
-                            </div>
+                            <div className="mt-6"><h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('notes')}</h3><p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.conditionNotes}</p></div>
                         )}
                     </div>
                 </div>
 
                 {isSale && (watch.historyBrand || watch.historyModel) && (
                     <div className="space-y-4">
-                        {watch.historyBrand && (
-                            <div>
-                                <h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_brand')}</h3>
-                                <p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyBrand}</p>
-                            </div>
-                        )}
-                        {watch.historyModel && (
-                            <div>
-                                <h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_model')}</h3>
-                                <p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyModel}</p>
-                            </div>
-                        )}
+                        {watch.historyBrand && (<div><h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_brand')}</h3><p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyBrand}</p></div>)}
+                        {watch.historyModel && (<div><h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_model')}</h3><p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyModel}</p></div>)}
                     </div>
                 )}
                 
                 {isSale && (
-                   <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500">
-                       <p>Contactez le vendeur pour plus d'informations.</p>
-                       <div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">
-                           Espace Réservé (Contact / Info)
-                       </div>
-                   </div>
+                   <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500"><p>Contactez le vendeur pour plus d'informations.</p><div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">Espace Réservé (Contact / Info)</div></div>
                 )}
-                
-                <div className="print:fixed print:bottom-4 print:left-0 print:w-full text-center text-[10px] text-slate-400">
-                    Généré par ChronoManager - {new Date().toLocaleDateString()}
-                </div>
+                <div className="print:fixed print:bottom-4 print:left-0 print:w-full text-center text-[10px] text-slate-400">Généré par ChronoManager - {new Date().toLocaleDateString()}</div>
             </div>
+        </div>
+    );
+};
+
+const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch, t }: any) => {
+    const [localSort, setLocalSort] = useState('alpha'); 
+    const sortedItems = useMemo(() => {
+        let sorted = [...items];
+        if (localSort === 'alpha') sorted.sort((a, b) => (a.brand||'').localeCompare(b.brand||'') || (a.model||'').localeCompare(b.model||''));
+        else sorted.sort((a, b) => new Date(b.dateAdded||0).getTime() - new Date(a.dateAdded||0).getTime());
+        return sorted;
+    }, [items, localSort]);
+    return (
+        <div className={`fixed inset-0 z-[60] ${theme.card} flex flex-col animate-in slide-in-from-bottom-10`}>
+          <div className={`p-4 border-b ${theme.border} flex items-center justify-between ${theme.bgSecondary}`}>
+            <h2 className={`font-serif font-bold text-lg ${theme.text} tracking-wide`}>{title}</h2>
+            <div className="flex gap-2">
+                <button onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')} className={`flex items-center gap-1 px-3 py-1.5 border rounded-lg text-xs font-medium ${theme.textSub} ${theme.bg}`}><ArrowUpDown size={14} /> {localSort === 'date' ? t('sort_date_desc') : t('sort_alpha')}</button>
+                <button onClick={onClose} className={`p-2 rounded-full shadow-sm border ${theme.border} ${theme.bg} ${theme.text}`}><X size={20}/></button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+             {sortedItems.map(w => {
+               const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image;
+               const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
+               return (
+                 <div key={w.id} onClick={() => { onClose(); onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:opacity-80`}>
+                     <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} alt="" className="w-full h-full object-cover"/>}</div>
+                     <div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div><div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div></div>
+                     <div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div><div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div>
+                 </div>
+               )
+             })}
+             {sortedItems.length === 0 && <div className={`text-center ${theme.textSub} py-10 text-sm`}>Aucune montre.</div>}
+          </div>
         </div>
     );
 };
@@ -685,27 +281,13 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, the
     return (
         <div onClick={onClick} className={`${cardBg} ${borderClass} p-4 rounded-xl shadow-md mb-3 cursor-pointer hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden relative`}>
             <div className="flex justify-between items-center mb-4 relative z-10">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${bgIcon}`}><Icon size={18} /></div>
-                    <span className={`font-serif font-bold text-lg tracking-wide ${txtMain}`}>{title}</span>
-                </div>
+                <div className="flex items-center gap-3"><div className={`p-2 rounded-lg ${bgIcon}`}><Icon size={18} /></div><span className={`font-serif font-bold text-lg tracking-wide ${txtMain}`}>{title}</span></div>
                 {type !== 'total' && <div className={`bg-white/20 p-1 rounded-full ${txtMain}`}><ChevronLeft className="rotate-180" size={16}/></div>}
             </div>
             <div className="grid grid-cols-3 gap-2 text-center relative z-10">
-                <div>
-                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div>
-                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div>
-                </div>
-                <div>
-                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div>
-                    <div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div>
-                </div>
-                <div>
-                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div>
-                    <div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>
-                        {stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}
-                    </div>
-                </div>
+                <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div></div>
+                <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div></div>
+                <div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div><div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>{stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}</div></div>
             </div>
             {!isWhite && <Icon size={120} className="absolute -bottom-4 -right-4 opacity-10 text-white transform rotate-12 pointer-events-none" />}
         </div>
@@ -715,7 +297,6 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, the
 const ConfigModal = ({ onClose, currentError, t }: any) => {
     const [jsonConfig, setJsonConfig] = useState('');
     const [parseError, setParseError] = useState<string | null>(null);
-    
     const handleSave = () => {
         try {
             let cleanJson = jsonConfig;
@@ -725,18 +306,12 @@ const ConfigModal = ({ onClose, currentError, t }: any) => {
             if (!parsed.apiKey) throw new Error("apiKey manquante");
             localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(parsed));
             window.location.reload();
-        } catch (e) { 
-            setParseError("Format invalide."); 
-        }
+        } catch (e) { setParseError("Format invalide."); }
     };
-
     return (
         <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><Settings size={18}/> {t('config_cloud')}</h3>
-                    <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
-                </div>
+                <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><h3 className="font-bold text-slate-800 flex items-center gap-2"><Settings size={18}/> {t('config_cloud')}</h3><button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button></div>
                 <div className="p-6 space-y-4">
                     {currentError && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs mb-4">{String(currentError)}</div>}
                     <textarea className="w-full h-40 p-3 border rounded-lg font-mono text-xs bg-slate-50" placeholder={`{ apiKey: "...", ... }`} value={jsonConfig} onChange={(e) => setJsonConfig(e.target.value)} />
@@ -770,8 +345,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button>
                     </div>
                 </div>
-                
-                {/* CLOCK CUSTOMIZATION */}
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
                     <div className="space-y-3">
@@ -782,8 +355,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
                         <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
-
-                {/* BOX CUSTOMIZATION */}
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label>
                     <div className="space-y-3">
@@ -813,7 +384,6 @@ const RulesHelpModal = ({ onClose, theme }: any) => (
 );
 
 // --- APPLICATION ---
-
 export default function App() {
   const [useLocalStorage, setUseLocalStorage] = useState(!firebaseReady);
   const [user, setUser] = useState<any>(useLocalStorage ? { uid: 'local-user' } : null);
@@ -1752,19 +1322,16 @@ export default function App() {
   const renderProfile = () => {
     const displayWatches = watches.filter(w => { 
         if (!w.image && (!w.images || w.images.length === 0)) return false; 
-        
         let matchSearch = true;
         if (gallerySearchTerm) {
             const lower = gallerySearchTerm.toLowerCase();
             matchSearch = (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower));
         }
         if (!matchSearch) return false;
-
         if (w.status === 'collection' && showGalleryCollection) return true; 
         if (w.status === 'forsale' && showGalleryForsale) return true; 
         if (w.status === 'sold' && showGallerySold) return true; 
         if (w.status === 'wishlist' && showGalleryWishlist) return true;
-        
         return false; 
     });
 
@@ -1839,14 +1406,12 @@ export default function App() {
             if (statsTimeframe === 'all') inPeriod = true;
             else if (statsTimeframe === 'year') inPeriod = evtDate.getFullYear() === currentMonth.getFullYear();
             else inPeriod = evtDate.getMonth() === currentMonth.getMonth() && evtDate.getFullYear() === currentMonth.getFullYear();
-            
             if (inPeriod && evt.watches) {
                 evt.watches.forEach((wId: string) => { 
                     periodCounts[wId] = (periodCounts[wId] || 0) + 1; 
                 });
             }
         });
-        
         return Object.entries(periodCounts)
             .sort((a: any, b: any) => b[1] - a[1])
             .slice(0, 5)
@@ -1865,11 +1430,9 @@ export default function App() {
         const daysInMonth = lastDay.getDate(); 
         const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
         const days = [];
-        
         for (let i = 0; i < startDay; i++) {
             days.push(<div key={`pad-${i}`}></div>);
         }
-        
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const event = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
@@ -1970,7 +1533,7 @@ export default function App() {
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / (topBrands[0][1] as number)) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${((count as number) / (topBrands[0][1] as number)) * 100}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -1987,7 +1550,7 @@ export default function App() {
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${(count / (topDials[0][1] as number)) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${((count as number) / (topDials[0][1] as number)) * 100}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -1996,6 +1559,7 @@ export default function App() {
                 </div>
             </div>
             
+            {/* Calendar Modal */}
             {selectedCalendarDate && (
                 <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
                     <div className={`${theme.card} rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col max-h-[80vh]`}>
@@ -2240,7 +1804,7 @@ export default function App() {
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-3 gap-3">
-                {currentImages.map((img, idx) => (
+                {currentImages.map((img: any, idx: number) => (
                     <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
                         <img src={img as string} className="w-full h-full object-cover" />
                         <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X size={12}/></button>
