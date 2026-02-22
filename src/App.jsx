@@ -122,6 +122,7 @@ const AnalogClock = ({ isDark, settings }: any) => {
   useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
   const secondsRatio = time.getSeconds() / 60; const minutesRatio = (secondsRatio + time.getMinutes()) / 60; const hoursRatio = (minutesRatio + time.getHours()) / 12;
   const borderColor = isDark ? 'border-slate-600' : 'border-slate-800'; const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
+  
   const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); 
   const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); 
   const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); 
@@ -372,6 +373,25 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
                     <div className="grid grid-cols-2 gap-2">
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button>
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e: any) => setSettings((s: any) => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                    </div>
+                </div>
+                <div>
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e: any) => setSettings((s: any) => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e: any) => setSettings((s: any) => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e: any) => setSettings((s: any) => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
             </div>
@@ -1163,45 +1183,6 @@ export default function App() {
         </div>
       </div>
     );
-  };
-
-  const renderFriends = () => {
-      if (user?.isAnonymous || user?.uid === 'local-user') {
-          return (
-              <div className="pb-24 px-6 flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6">
-                  <div className="p-6 bg-indigo-50 rounded-full text-indigo-600"><Users size={48}/></div>
-                  <div><h2 className={`text-xl font-bold ${theme.text} mb-2`}>Cloud Requis</h2><p className={theme.textSub}>Connectez-vous pour ajouter des amis.</p></div>
-                  <button onClick={handleGoogleLogin} className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold">{t('login_google')}</button>
-              </div>
-          );
-      }
-      
-      if (viewingFriend) {
-          return (
-              <div className={`pb-24 ${theme.bgSecondary} min-h-screen`}>
-                  <div className={`sticky top-0 ${theme.bgSecondary}/95 backdrop-blur z-10 px-4 py-3 border-b ${theme.border} flex items-center gap-3`}><button onClick={() => setViewingFriend(null)} className={theme.text}><ChevronLeft/></button><div><h1 className={`font-serif font-bold ${theme.text}`}>{viewingFriend.name}</h1></div></div>
-                  <div className="p-4 grid grid-cols-2 gap-3">
-                      {friendWatches.map(w => (
-                          <div key={w.id} onClick={() => setSelectedWatch(w)} className={`${theme.card} rounded-xl shadow-sm overflow-hidden border ${theme.border}`}>
-                              <div className={`aspect-square ${theme.bg}`}><img src={w.images?.[0] || w.image} alt="" className="w-full h-full object-cover"/></div>
-                              <div className="p-2"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div></div>
-                          </div>
-                      ))}
-                  </div>
-              </div>
-          );
-      }
-      
-      return (
-          <div className="pb-24 px-3">
-              <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-4`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('friends')}</h1></div>
-              {friendRequests.length > 0 && (<div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4"><h3 className="font-bold text-sm text-amber-700 uppercase mb-3">{t('requests')}</h3>{friendRequests.map(req => (<div key={req.id} className="bg-white p-3 rounded-lg shadow-sm flex justify-between"><span className="text-sm font-bold">{req.fromEmail}</span><div className="flex gap-2"><button onClick={() => acceptRequest(req)}><Check size={16}/></button></div></div>))}</div>)}
-              <div className="bg-indigo-600 rounded-xl p-4 text-white shadow-lg mb-6"><h3 className="font-bold text-lg mb-1">Code Ami</h3><div className="bg-white/10 p-3 rounded-lg flex justify-between"><code className="font-mono text-sm">{user?.uid}</code><button onClick={() => navigator.clipboard.writeText(user?.uid)}><Copy size={12}/></button></div></div>
-              <button onClick={handlePreviewOwnProfile} className="w-full mb-6 py-3 border-2 border-indigo-100 text-indigo-600 rounded-xl font-bold flex justify-center gap-2"><Eye size={18}/> Mon Profil</button>
-              <div className="mb-6"><div className="flex gap-2"><input type="text" placeholder="Code ami..." className={`flex-1 p-3 rounded-xl border ${theme.border} ${theme.input}`} value={addFriendId} onChange={(e: any) => setAddFriendId(e.target.value)}/><button onClick={sendFriendRequest} className="bg-slate-900 text-white p-3 rounded-xl"><UserPlus size={20}/></button></div></div>
-              <div><h3 className={`font-bold text-sm ${theme.textSub} uppercase mb-3`}>Mes Amis</h3>{friends.map(f => (<div key={f.id} onClick={() => loadFriendCollection(f)} className={`${theme.card} p-4 rounded-xl border ${theme.border} flex justify-between cursor-pointer`}><span className={`font-bold ${theme.text}`}>{f.name}</span><button onClick={(e: any) => {e.stopPropagation(); removeFriend(f.id)}}><Trash2 size={16} className="text-red-500"/></button></div>))}</div>
-          </div>
-      );
   };
 
   const renderDetail = () => {
