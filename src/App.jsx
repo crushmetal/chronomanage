@@ -623,8 +623,25 @@ const FinanceDetailList = ({ title, items, onClose, theme }) => {
     const [localSort, setLocalSort] = useState('alpha'); 
     const sortedItems = useMemo(() => {
         let sorted = [...items];
-        if (localSort === 'alpha') sorted.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model));
-        else sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+        const getTime = (w) => {
+            if (w.purchaseDate) {
+                const t = new Date(w.purchaseDate).getTime();
+                return isNaN(t) ? null : t;
+            }
+            return null;
+        };
+
+        if (localSort === 'alpha') {
+            sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || (a.model || '').localeCompare(b.model || ''));
+        } else {
+            sorted.sort((a, b) => {
+                const ta = getTime(a), tb = getTime(b);
+                if (ta === null && tb !== null) return 1;
+                if (tb === null && ta !== null) return -1;
+                if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
+                return tb - ta;
+            });
+        }
         return sorted;
     }, [items, localSort]);
     return (
@@ -1130,11 +1147,36 @@ export default function App() {
     let filtered = watches;
     if (searchTerm) { const lower = searchTerm.toLowerCase(); filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower))); }
     let sorted = [...filtered];
-    if (sortOrder === 'priceAsc') sorted.sort((a, b) => (a.purchasePrice || 0) - (b.purchasePrice || 0));
-    else if (sortOrder === 'priceDesc') sorted.sort((a, b) => (b.purchasePrice || 0) - (a.purchasePrice || 0));
-    else if (sortOrder === 'dateAsc') sorted.sort((a, b) => new Date(a.purchaseDate || a.dateAdded || 0) - new Date(b.purchaseDate || b.dateAdded || 0));
-    else if (sortOrder === 'alpha') sorted.sort((a, b) => a.brand.localeCompare(b.brand));
-    else sorted.sort((a, b) => new Date(b.purchaseDate || b.dateAdded || 0) - new Date(a.purchaseDate || a.dateAdded || 0)); // dateDesc is default
+
+    const getTime = (w) => {
+        if (w.purchaseDate) {
+            const t = new Date(w.purchaseDate).getTime();
+            return isNaN(t) ? null : t;
+        }
+        return null;
+    };
+
+    if (sortOrder === 'priceAsc') sorted.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
+    else if (sortOrder === 'priceDesc') sorted.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
+    else if (sortOrder === 'alpha') sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
+    else if (sortOrder === 'dateAsc') {
+        sorted.sort((a, b) => {
+            const ta = getTime(a), tb = getTime(b);
+            if (ta === null && tb !== null) return 1;
+            if (tb === null && ta !== null) return -1;
+            if (ta === null && tb === null) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime();
+            return ta - tb;
+        });
+    } else {
+        // dateDesc (default)
+        sorted.sort((a, b) => {
+            const ta = getTime(a), tb = getTime(b);
+            if (ta === null && tb !== null) return 1;
+            if (tb === null && ta !== null) return -1;
+            if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
+            return tb - ta;
+        });
+    }
     return sorted;
   }, [watches, searchTerm, sortOrder]);
 
