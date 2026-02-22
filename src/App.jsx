@@ -8,7 +8,7 @@ import {
   Save, Copy, Palette, Users, UserPlus, Eye, EyeOff, 
   Check, Gem, Battery, ShoppingCart, BookOpen, 
   Gift, Scale, Lock, ChevronRight, BarChart2, Moon, Sun, Clock, 
-  PieChart, Briefcase, Printer, Link as LinkIcon, Receipt
+  PieChart, Briefcase, Printer, Link as LinkIcon, Receipt, Package
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -336,7 +336,6 @@ const ConfigModal = ({ onClose, currentError, t }: any) => {
             if (cleanJson.includes('=')) cleanJson = cleanJson.substring(cleanJson.indexOf('=') + 1);
             if (cleanJson.trim().endsWith(';')) cleanJson = cleanJson.trim().slice(0, -1);
             
-            // Correction pour Vercel (éviter new Function())
             const formattedJson = cleanJson.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2": '); 
             const parsed = JSON.parse(formattedJson);
             
@@ -980,6 +979,82 @@ export default function App() {
                   );
               })}
           </div>
+      </div>
+  );
+
+  const renderFriends = () => (
+      <div className="pb-24 px-3">
+        {renderHeader(t('friends') || 'Amis')}
+        {viewingFriend ? (
+          <div className="mt-4">
+             <div className="flex items-center gap-2 mb-4">
+                <button onClick={() => setViewingFriend(null)} className={`p-2 rounded-full ${theme.bg} ${theme.text}`}><ChevronLeft size={20}/></button>
+                <h2 className={`text-lg font-bold ${theme.text}`}>{viewingFriend.name}</h2>
+             </div>
+             {isFriendsLoading ? <div className="flex justify-center py-10"><Loader2 className="animate-spin" /></div> : (
+                 <div className="grid grid-cols-2 gap-3">
+                     {friendWatches.map(w => (
+                         <Card key={w.id} theme={theme} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
+                             <img src={w.images?.[0] || w.image} className="w-full aspect-square object-cover" />
+                             <div className="p-3">
+                                <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div>
+                                <div className={`text-xs truncate ${theme.textSub}`}>{w.model}</div>
+                             </div>
+                         </Card>
+                     ))}
+                     {friendWatches.length === 0 && <p className={`col-span-2 text-center text-sm py-4 italic ${theme.textSub}`}>Aucune montre publique.</p>}
+                 </div>
+             )}
+          </div>
+        ) : (
+          <div className="space-y-6 mt-4">
+             <div className={`p-4 rounded-xl border ${theme.border} ${theme.card}`}>
+                 <h3 className={`font-bold text-sm mb-3 ${theme.text}`}>Ajouter un ami</h3>
+                 <div className="flex gap-2">
+                     <input value={addFriendId} onChange={e => setAddFriendId(e.target.value)} placeholder="UID de l'ami..." className={`flex-1 p-3 rounded-lg text-sm ${theme.input}`} />
+                     <button onClick={sendFriendRequest} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center"><UserPlus size={18}/></button>
+                 </div>
+                 <div className={`mt-4 text-xs ${theme.textSub}`}>Votre UID pour vos amis : <br/><span className={`font-mono ${theme.bg} p-2 rounded block mt-1 break-all select-all`}>{user?.uid}</span></div>
+             </div>
+             
+             {friendRequests.length > 0 && (
+                 <div>
+                     <h3 className="font-bold text-sm mb-2 text-emerald-600">Demandes en attente ({friendRequests.length})</h3>
+                     <div className="space-y-2">
+                         {friendRequests.map(req => (
+                             <div key={req.id} className={`p-3 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-900/10 flex justify-between items-center`}>
+                                 <span className="text-sm font-medium text-emerald-900 dark:text-emerald-100">{req.fromEmail || req.fromUser}</span>
+                                 <div className="flex gap-2">
+                                     <button onClick={() => acceptRequest(req)} className="p-2 bg-emerald-500 text-white rounded-md shadow-sm hover:bg-emerald-600"><Check size={16}/></button>
+                                     <button onClick={() => rejectRequest(req.id)} className="p-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200"><X size={16}/></button>
+                                 </div>
+                             </div>
+                         ))}
+                     </div>
+                 </div>
+             )}
+
+             <div>
+                 <h3 className={`font-bold text-sm mb-3 ${theme.text}`}>Mes Amis</h3>
+                 <button onClick={handlePreviewOwnProfile} className={`w-full text-left p-4 mb-3 rounded-xl border-2 border-dashed ${theme.border} ${theme.card} text-sm font-bold text-indigo-600 flex justify-between items-center hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-colors`}>
+                    <span className="flex items-center gap-2"><Eye size={16}/> Voir mon profil public</span>
+                    <ChevronRight size={16}/>
+                 </button>
+                 <div className="space-y-2">
+                     {friends.map(f => (
+                         <div key={f.id} className={`p-3 rounded-xl border ${theme.border} ${theme.card} flex justify-between items-center cursor-pointer hover:border-indigo-300 transition-colors`} onClick={() => loadFriendCollection(f)}>
+                             <div className="flex items-center gap-3">
+                                 <div className={`w-10 h-10 rounded-full ${theme.bg} flex items-center justify-center ${theme.textSub}`}><Users size={18}/></div>
+                                 <span className={`text-sm font-bold ${theme.text}`}>{f.name}</span>
+                             </div>
+                             <button onClick={(e) => { e.stopPropagation(); removeFriend(f.id); }} className="text-red-400 p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"><Trash2 size={16}/></button>
+                         </div>
+                     ))}
+                     {friends.length === 0 && <div className={`text-sm ${theme.textSub} italic text-center py-6 border border-dashed ${theme.border} rounded-xl`}>Aucun ami pour le moment.</div>}
+                 </div>
+             </div>
+          </div>
+        )}
       </div>
   );
 
@@ -1718,7 +1793,7 @@ export default function App() {
                                                     <ChevronLeft size={16} className={`text-slate-400 transition-transform ${expandedMonth === tItem.date ? '-rotate-90' : 'rotate-180'}`} />
                                                 </div>
                                             </div>
-                                    
+                                            
                                             {/* Expanded Content */}
                                             {expandedMonth === tItem.date && (
                                                 <div className={`border-t ${theme.border} bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-3`}>
