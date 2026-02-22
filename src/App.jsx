@@ -1,11 +1,12 @@
 /* eslint-disable */
+// @ts-nocheck
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, Tag,
   DollarSign, FileText, Box, Loader2, ChevronLeft, ClipboardList, 
   Ruler, Calendar, LogIn, LogOut, MapPin, Droplets, ShieldCheck, 
   Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, 
-  Save, Copy, Palette, Users, UserPlus, Eye, EyeOff, 
+  Save, Palette, Users, UserPlus, Eye, EyeOff, 
   Check, Gem, Battery, ShoppingCart, BookOpen, 
   Gift, Scale, Lock, ChevronRight, BarChart2, Moon, Sun, Clock, 
   PieChart, Briefcase, Printer, Link as LinkIcon, Receipt, Package
@@ -52,9 +53,9 @@ const tryInitFirebase = (config: any) => {
     } catch (e: any) { console.error("Erreur init Firebase:", e); globalInitError = e.message || String(e); return false; }
 };
 
-if (typeof window !== 'undefined' && (window as any).__firebase_config) { try { tryInitFirebase(JSON.parse((window as any).__firebase_config)); } catch(e) {} }
+if (typeof window !== 'undefined' && (window as any).__firebase_config) { try { tryInitFirebase(JSON.parse((window as any).__firebase_config)); } catch(e: any) {} }
 if (!firebaseReady) tryInitFirebase(productionConfig);
-if (!firebaseReady) { try { if (typeof window !== 'undefined') { const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY); if (savedConfig) tryInitFirebase(JSON.parse(savedConfig)); } } catch(e) {} }
+if (!firebaseReady) { try { if (typeof window !== 'undefined') { const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY); if (savedConfig) tryInitFirebase(JSON.parse(savedConfig)); } } catch(e: any) {} }
 
 const formatPrice = (price: any) => {
   if (price === undefined || price === null || price === '') return '0 €';
@@ -103,7 +104,7 @@ const WatchBoxLogo = ({ isOpen, isDark, settings }: any) => {
         <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#FFECB3" /><stop offset="50%" stopColor="#FFC107" /><stop offset="100%" stopColor="#FFB300" /></linearGradient>
       </defs>
       <path d="M30,60 L170,60 L180,100 L20,100 Z" fill="url(#interior)" stroke="#8D6E63" strokeWidth="0.5" />
-      <g transform="translate(0, 0)">{[32, 66, 100, 134].map((x, i) => (<rect key={i} x={x} y={65} width="28" height="30" rx="4" fill="url(#cushionGrad)" stroke="#D7CCC8" strokeWidth="0.5" />))}</g>
+      <g transform="translate(0, 0)">{[32, 66, 100, 134].map((x: any, i: number) => (<rect key={i} x={x} y={65} width="28" height="30" rx="4" fill="url(#cushionGrad)" stroke="#D7CCC8" strokeWidth="0.5" />))}</g>
       <path d="M20,100 L180,100 L180,140 L20,140 Z" fill="url(#leatherGrad)" stroke="#271c19" strokeWidth="0.5"/>
       <g transform="translate(94, 102)"><rect x="0" y="0" width="12" height="10" rx="1" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" /><circle cx="6" cy="5" r="1.5" fill="#3E2723" /></g>
       <g className="transition-all duration-1000 ease-in-out" style={{ transformOrigin: '100px 60px', transform: isOpen ? 'rotateX(-110deg)' : 'rotateX(0deg)' }}>
@@ -133,7 +134,7 @@ const AnalogClock = ({ isDark, settings }: any) => {
     <div className="w-32 h-32 relative mx-auto mb-2">
        <div className={`w-full h-full rounded-full border-4 ${borderColor} ${bgColor} shadow-inner flex items-center justify-center relative`}>
           {[...Array(12)].map((_, i) => (<div key={`tick-${i}`} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
-          {[0, 3, 6, 9].map((i) => (<div key={`thick-${i}`} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
+          {[0, 3, 6, 9].map((i: number) => (<div key={`thick-${i}`} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
           <div className="absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
           <div className="absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
           <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
@@ -226,7 +227,7 @@ const ExportView = ({ watch, type, onClose, theme, t }: any) => {
                     <div className="space-y-4">
                         <h3 className="font-bold uppercase border-b border-slate-200 pb-1">{t('specs')}</h3>
                         <div className="grid grid-cols-2 gap-y-2 text-sm">
-                            {specsData.map((s, idx) => (
+                            {specsData.map((s: any, idx: number) => (
                                 <React.Fragment key={idx}>
                                     <div className="text-slate-500">{s.label}:</div><div>{s.val}</div>
                                 </React.Fragment>
@@ -258,10 +259,16 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch, t }: a
     const [localSort, setLocalSort] = useState('alpha'); 
     const sortedItems = useMemo(() => {
         let sorted = [...items];
+        const getTime = (w: any) => { if (w.purchaseDate) { const time = new Date(w.purchaseDate).getTime(); return isNaN(time) ? 0 : time; } return 0; };
         if (localSort === 'alpha') {
-            sorted.sort((a, b) => (a.brand||'').localeCompare(b.brand||'') || (a.model||'').localeCompare(b.model||''));
+            sorted.sort((a: any, b: any) => (a.brand||'').localeCompare(b.brand||'') || (a.model||'').localeCompare(b.model||''));
         } else {
-            sorted.sort((a, b) => new Date(b.dateAdded||0).getTime() - new Date(a.dateAdded||0).getTime());
+            sorted.sort((a: any, b: any) => {
+                const ta = getTime(a), tb = getTime(b);
+                if (ta === 0 && tb !== 0) return 1; if (tb === 0 && ta !== 0) return -1;
+                if (ta === 0 && tb === 0) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
+                return tb - ta;
+            });
         }
         return sorted;
     }, [items, localSort]);
@@ -342,7 +349,7 @@ const ConfigModal = ({ onClose, currentError, t }: any) => {
             if (!parsed.apiKey) throw new Error("apiKey manquante");
             localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(parsed));
             window.location.reload();
-        } catch (e) { 
+        } catch (e: any) { 
             setParseError("Format invalide. Utilisez un format JSON strict."); 
         }
     };
@@ -353,7 +360,7 @@ const ConfigModal = ({ onClose, currentError, t }: any) => {
                 <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><h3 className="font-bold text-slate-800 flex items-center gap-2"><Settings size={18}/> {t('config_cloud')}</h3><button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button></div>
                 <div className="p-6 space-y-4">
                     {currentError && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs mb-4">{String(currentError)}</div>}
-                    <textarea className="w-full h-40 p-3 border rounded-lg font-mono text-xs bg-slate-50" placeholder={`{ apiKey: "...", ... }`} value={jsonConfig} onChange={(e) => setJsonConfig(e.target.value)}></textarea>
+                    <textarea className="w-full h-40 p-3 border rounded-lg font-mono text-xs bg-slate-50" placeholder={`{ apiKey: "...", ... }`} value={jsonConfig} onChange={(e: any) => setJsonConfig(e.target.value)}></textarea>
                     {parseError && <div className="text-xs text-red-500">{parseError}</div>}
                     <button onClick={handleSave} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"><Save size={18}/> {t('save')}</button>
                 </div>
@@ -373,8 +380,8 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('language')}</label>
                     <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => setSettings((s: any) => ({...s, lang: 'fr'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'fr' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇫🇷</span> Français</button>
-                        <button onClick={() => setSettings((s: any) => ({...s, lang: 'en'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'en' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇬🇧</span> English</button>
+                        <button onClick={() => setSettings((s: any) => ({...s, lang: 'fr'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'fr' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span role="img" aria-label="fr" className="text-lg">🇫🇷</span> Français</button>
+                        <button onClick={() => setSettings((s: any) => ({...s, lang: 'en'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'en' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span role="img" aria-label="en" className="text-lg">🇬🇧</span> English</button>
                     </div>
                 </div>
                 <div>
@@ -388,19 +395,19 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e) => setSettings((s: any) => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e) => setSettings((s: any) => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e: any) => setSettings((s: any) => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label>
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e) => setSettings((s: any) => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e) => setSettings((s: any) => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e) => setSettings((s: any) => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e: any) => setSettings((s: any) => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e: any) => setSettings((s: any) => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e: any) => setSettings((s: any) => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
             </div>
@@ -435,7 +442,7 @@ export default function App() {
               return saved ? JSON.parse(saved) : { lang: 'fr', theme: 'light' }; 
           }
           return { lang: 'fr', theme: 'light' };
-      } catch(e) { 
+      } catch(e: any) { 
           return { lang: 'fr', theme: 'light' }; 
       }
   });
@@ -535,7 +542,7 @@ export default function App() {
      if (typeof window !== 'undefined') {
          const savedFriends = localStorage.getItem(`friends_${user.uid}`);
          if (savedFriends) {
-             try { setFriends(JSON.parse(savedFriends) || []); } catch(e) {}
+             try { setFriends(JSON.parse(savedFriends) || []); } catch(e: any) {}
          }
      }
      
@@ -544,11 +551,11 @@ export default function App() {
          try {
              const requestsRef = collection(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests');
              const q = query(requestsRef, where('toUser', '==', user.uid));
-             const unsubRequests = onSnapshot(q, (snap) => { 
-                 setFriendRequests(snap.docs.map(d => ({id: d.id, ...d.data()}))); 
+             const unsubRequests = onSnapshot(q, (snap: any) => { 
+                 setFriendRequests(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))); 
              }); 
              return () => unsubRequests();
-         } catch (e) {}
+         } catch (e: any) {}
      }
   }, [user, useLocalStorage]);
 
@@ -576,21 +583,21 @@ export default function App() {
       const updatedFriends = [...(friends || []), newFriend];
       setFriends(updatedFriends);
       if (typeof window !== 'undefined') localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
-      try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', req.id)); } catch (e) {}
+      try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', req.id)); } catch (e: any) {}
   };
 
   const rejectRequest = async (reqId: string) => { 
-      try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', reqId)); } catch (e) {} 
+      try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', reqId)); } catch (e: any) {} 
   };
 
   const removeFriend = (friendId: string) => {
-      const updatedFriends = (friends || []).filter(f => f.id !== friendId);
+      const updatedFriends = (friends || []).filter((f: any) => f.id !== friendId);
       setFriends(updatedFriends);
       if (typeof window !== 'undefined') localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
   };
 
   const handlePreviewOwnProfile = () => {
-      setFriendWatches((watches || []).filter(w => w.publicVisible !== false));
+      setFriendWatches((watches || []).filter((w: any) => w.publicVisible !== false));
       setViewingFriend({ id: user.uid, name: 'Mon Profil Public' });
       if(scrollRef.current) scrollRef.current.scrollTop = 0;
   };
@@ -601,24 +608,24 @@ export default function App() {
       try {
           const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', friend.id, 'watches'));
           const snap = await getDocs(q);
-          setFriendWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).filter((w: any) => w.publicVisible !== false));
-      } catch (err) { setViewingFriend(null); } finally { setIsFriendsLoading(false); }
+          setFriendWatches(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).filter((w: any) => w.publicVisible !== false));
+      } catch (err: any) { setViewingFriend(null); } finally { setIsFriendsLoading(false); }
   };
 
   const toggleVisibility = async (watch: any) => {
       const newVal = !watch.publicVisible;
-      setWatches(prev => (prev || []).map(w => w.id === watch.id ? { ...w, publicVisible: newVal } : w));
+      setWatches(prev => (prev || []).map((w: any) => w.id === watch.id ? { ...w, publicVisible: newVal } : w));
       if (!useLocalStorage) {
-          try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), { ...watch, publicVisible: newVal }, { merge: true }); } catch (e) { setWatches(prev => (prev || []).map(w => w.id === watch.id ? { ...w, publicVisible: !newVal } : w)); }
+          try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), { ...watch, publicVisible: newVal }, { merge: true }); } catch (e: any) { setWatches(prev => (prev || []).map((w: any) => w.id === watch.id ? { ...w, publicVisible: !newVal } : w)); }
       }
   };
 
   const handleMoveToCollection = async (watch: any) => {
       if (!confirm(t('move_collection') + " ?")) return;
       const updatedWatch = { ...watch, status: 'collection', dateAdded: new Date().toISOString() };
-      setWatches(prev => (prev || []).map(w => w.id === watch.id ? updatedWatch : w));
+      setWatches(prev => (prev || []).map((w: any) => w.id === watch.id ? updatedWatch : w));
       setSelectedWatch(updatedWatch);
-      if (!useLocalStorage) { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), updatedWatch, { merge: true }); } catch (e) {} }
+      if (!useLocalStorage) { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), updatedWatch, { merge: true }); } catch (e: any) {} }
   };
   
   const setAsMainImage = (index: number) => {
@@ -632,14 +639,14 @@ export default function App() {
 
   const handleCalendarDayClick = (dateStr: string) => {
       setSelectedCalendarDate(dateStr); setCalendarSearchTerm(''); 
-      const existing = (calendarEvents || []).find(e => e.id === dateStr || e.date === dateStr);
+      const existing = (calendarEvents || []).find((e: any) => e.id === dateStr || e.date === dateStr);
       setSelectedCalendarWatches(existing ? (existing.watches || []) : []);
   };
 
   const handleCalendarSave = async () => {
       if (!selectedCalendarDate) return;
       let updatedEvents = [...(calendarEvents || [])];
-      const existingIdx = updatedEvents.findIndex(e => e.id === selectedCalendarDate || e.date === selectedCalendarDate);
+      const existingIdx = updatedEvents.findIndex((e: any) => e.id === selectedCalendarDate || e.date === selectedCalendarDate);
       const eventData = { date: selectedCalendarDate, watches: selectedCalendarWatches };
       if (selectedCalendarWatches.length === 0) { 
           if (existingIdx >= 0) updatedEvents.splice(existingIdx, 1); 
@@ -653,7 +660,7 @@ export default function App() {
           try {
               const docRef = doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar', selectedCalendarDate);
               if (selectedCalendarWatches.length === 0) await deleteDoc(docRef); else await setDoc(docRef, eventData);
-          } catch(e) {}
+          } catch(e: any) {}
       }
   };
 
@@ -672,13 +679,13 @@ export default function App() {
 
   useEffect(() => {
     if (useLocalStorage && !isAuthLoading) { setLoading(false); return; }
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser: any) => {
       if (currentUser) { 
           setUser(currentUser); setError(null); setLoading(false); 
           if (useLocalStorage) setUseLocalStorage(false); 
       } else {
           const timer = setTimeout(() => { 
-              if (!isAuthLoading) { signInAnonymously(auth).catch((err) => { setUseLocalStorage(true); setUser({ uid: 'local-user' }); }).finally(() => setLoading(false)); } 
+              if (!isAuthLoading) { signInAnonymously(auth).catch((err: any) => { setUseLocalStorage(true); setUser({ uid: 'local-user' }); }).finally(() => setLoading(false)); } 
           }, 1000);
           return () => clearTimeout(timer);
       }
@@ -694,27 +701,27 @@ export default function App() {
             const lw = localStorage.getItem(LOCAL_STORAGE_KEY); if (lw) setWatches(JSON.parse(lw));
             const lb = localStorage.getItem(LOCAL_STORAGE_BRACELETS_KEY); if (lb) setBracelets(JSON.parse(lb));
             const lc = localStorage.getItem(LOCAL_STORAGE_CALENDAR_KEY); if (lc) setCalendarEvents(JSON.parse(lc));
-          } catch(e){}
+          } catch(e: any){}
       }
       setLoading(false);
     } else {
       if (!user?.uid) return;
       try {
-        const unsubW = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches')), (snap) => { 
-            setWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a: any,b: any) => new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime())); 
+        const unsubW = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches')), (snap: any) => { 
+            setWatches(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any) => new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime())); 
             setLoading(false); setError(null); 
-        }, (err) => { 
+        }, (err: any) => { 
             if (user?.isAnonymous) setUseLocalStorage(true); else setError("Erreur synchro: " + (err.code || err.message)); 
             setLoading(false); 
         });
-        const unsubB = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'bracelets')), (snap) => {
-            setBracelets(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a: any,b: any) => new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime()));
+        const unsubB = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'bracelets')), (snap: any) => {
+            setBracelets(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any) => new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime()));
         });
-        const unsubC = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar')), (snap) => {
-            setCalendarEvents(snap.docs.map(d => ({id: d.id, ...d.data()})));
+        const unsubC = onSnapshot(query(collection(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar')), (snap: any) => {
+            setCalendarEvents(snap.docs.map((d: any) => ({id: d.id, ...d.data()})));
         });
         return () => { unsubW(); unsubB(); unsubC(); };
-      } catch(e) { setLoading(false); }
+      } catch(e: any) { setLoading(false); }
     }
   }, [user, useLocalStorage]);
 
@@ -741,7 +748,7 @@ export default function App() {
       } else if (type === 'invoice') {
           setWatchForm(prev => ({...prev, invoice: base64}));
       } else { setBraceletForm(prev => ({ ...prev, image: base64 })); }
-    } catch (err) {}
+    } catch (err: any) {}
   };
 
   const removeImage = (index: number) => {
@@ -764,11 +771,11 @@ export default function App() {
     } else { data = { ...braceletForm, id, dateAdded: new Date().toISOString() }; }
 
     if (useLocalStorage) {
-      if (isWatch) setWatches(prev => editingId ? (prev || []).map(w => w.id === id ? data : w) : [data, ...(prev || [])]);
-      else setBracelets(prev => editingId ? (prev || []).map(b => b.id === id ? data : b) : [data, ...(prev || [])]);
+      if (isWatch) setWatches(prev => editingId ? (prev || []).map((w: any) => w.id === id ? data : w) : [data, ...(prev || [])]);
+      else setBracelets(prev => editingId ? (prev || []).map((b: any) => b.id === id ? data : b) : [data, ...(prev || [])]);
       closeForm(data);
     } else {
-      try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, isWatch ? 'watches' : 'bracelets', id), data); closeForm(data); } catch(e) {}
+      try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, isWatch ? 'watches' : 'bracelets', id), data); closeForm(data); } catch(e: any) {}
     }
   };
 
@@ -776,7 +783,7 @@ export default function App() {
     const sep = ";"; let csvContent = "\uFEFF"; csvContent += "sep=;\n"; 
     const headers = [ "Statut", "Marque", "Modele", "Prix Achat", "Prix Vente/Estim", "Prix Min", "Plus-Value", "Diametre", "Annee", "Reference", "Mouvement", "Notes" ];
     csvContent += headers.join(sep) + "\n";
-    (watches || []).forEach(w => {
+    (watches || []).forEach((w: any) => {
       const row = [ w.status, w.brand, w.model, w.purchasePrice, w.sellingPrice, w.minPrice, (w.sellingPrice||0)-(w.purchasePrice||0), w.diameter, w.year, w.reference, w.movement, (w.conditionNotes||"").replace(/(\r\n|\n|\r|;)/gm, " ") ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`); 
       csvContent += row.join(sep) + "\n";
     });
@@ -813,32 +820,32 @@ export default function App() {
   const handleDelete = async (id: string, type: string) => {
     if(!confirm(t('delete') + " ?")) return;
     if(useLocalStorage) { 
-        if (type === 'watch') setWatches(prev => (prev || []).filter(w => w.id !== id)); else setBracelets(prev => (prev || []).filter(b => b.id !== id));
+        if (type === 'watch') setWatches(prev => (prev || []).filter((w: any) => w.id !== id)); else setBracelets(prev => (prev || []).filter((b: any) => b.id !== id));
         setView('list'); 
     } else { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, type === 'watch' ? 'watches' : 'bracelets', id)); setView('list'); }
   };
 
   const handleBoxClick = () => { setIsBoxOpening(true); setTimeout(() => { setFilter('collection'); setView('list'); setIsBoxOpening(false); }, 800); };
   
-  const activeWatchesCount = (watches || []).filter(w => w.status === 'collection').length;
+  const activeWatchesCount = (watches || []).filter((w: any) => w.status === 'collection').length;
 
   const filteredWatches = useMemo(() => {
     let filtered = watches || [];
-    if (searchTerm && view === 'list') { const lower = searchTerm.toLowerCase(); filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower))); }
+    if (searchTerm && view === 'list') { const lower = searchTerm.toLowerCase(); filtered = filtered.filter((w: any) => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower))); }
     let sorted = [...filtered];
-    const getTime = (w: any) => { if (w.purchaseDate) return new Date(w.purchaseDate).getTime(); return 0; };
-    if (sortOrder === 'priceAsc') sorted.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
-    else if (sortOrder === 'priceDesc') sorted.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
-    else if (sortOrder === 'alpha') sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
+    const getTime = (w: any) => { if (w.purchaseDate) { const t = new Date(w.purchaseDate).getTime(); return isNaN(t) ? 0 : t; } return 0; };
+    if (sortOrder === 'priceAsc') sorted.sort((a: any, b: any) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
+    else if (sortOrder === 'priceDesc') sorted.sort((a: any, b: any) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
+    else if (sortOrder === 'alpha') sorted.sort((a: any, b: any) => (a.brand || '').localeCompare(b.brand || ''));
     else if (sortOrder === 'dateAsc') {
-        sorted.sort((a, b) => {
+        sorted.sort((a: any, b: any) => {
             const ta = getTime(a), tb = getTime(b);
             if (ta === 0 && tb !== 0) return 1; if (tb === 0 && ta !== 0) return -1;
             if (ta === 0 && tb === 0) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime();
             return ta - tb;
         });
     } else { 
-        sorted.sort((a, b) => {
+        sorted.sort((a: any, b: any) => {
             const ta = getTime(a), tb = getTime(b);
             if (ta === 0 && tb !== 0) return 1; if (tb === 0 && ta !== 0) return -1;
             if (ta === 0 && tb === 0) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
@@ -853,7 +860,7 @@ export default function App() {
     return (
         <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-2 animate-in fade-in duration-200" onClick={() => setFullScreenImage(null)}>
             <button className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/50 rounded-full p-2"><X size={32}/></button>
-            <img src={fullScreenImage} alt="Fullscreen" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+            <img src={fullScreenImage} alt="Fullscreen" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e: any) => e.stopPropagation()} />
         </div>
     );
   };
@@ -919,7 +926,7 @@ export default function App() {
                     <div className="relative">
                         <select 
                             value={sortOrder} 
-                            onChange={(e) => setSortOrder(e.target.value)}
+                            onChange={(e: any) => setSortOrder(e.target.value)}
                             className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
                         >
                             <option value="dateDesc">{t('sort_date_desc')}</option>
@@ -938,14 +945,14 @@ export default function App() {
           </div>
           {isSearchOpen && (
               <div className="px-2 mb-3">
-                  <input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
+                  <input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e: any) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
               </div>
           )}
           {withFilters && !isSearchOpen && (
             <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
-                {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (
+                {['all', 'collection', 'forsale', 'sold', 'bracelets'].map((f: string) => (
                     <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>
-                        {t(f)} {f !== 'bracelets' && `(${f === 'all' ? (watches||[]).length : (f==='collection' ? (watches||[]).filter(w=>w.status==='collection').length : f==='forsale' ? (watches||[]).filter(w=>w.status==='forsale').length : (watches||[]).filter(w=>w.status==='sold').length)})`}
+                        {t(f)} {f !== 'bracelets' && `(${f === 'all' ? (watches||[]).length : (f==='collection' ? (watches||[]).filter((w: any)=>w.status==='collection').length : f==='forsale' ? (watches||[]).filter((w: any)=>w.status==='forsale').length : (watches||[]).filter((w: any)=>w.status==='sold').length)})`}
                     </button>
                 ))}
             </div>
@@ -961,14 +968,14 @@ export default function App() {
               <button className={`w-full p-4 text-left ${theme.card} border ${theme.border} rounded-lg shadow-sm`} onClick={exportCSV}>
                   <div className={`font-bold flex items-center ${theme.text}`}><Download className="mr-2" size={18}/> {t('export_csv')}</div>
               </button>
-              {['collection', 'forsale', 'sold'].map(cat => {
-                  const list = (filteredWatches || []).filter(w => w.status === cat);
+              {['collection', 'forsale', 'sold'].map((cat: string) => {
+                  const list = (filteredWatches || []).filter((w: any) => w.status === cat);
                   if (list.length === 0) return null;
                   return (
                       <div key={cat} className={`${theme.card} rounded-xl shadow-sm border ${theme.border}`}>
                           <div className={`px-4 py-2 border-b ${theme.border} font-bold text-sm ${theme.text}`}>{t(cat)} ({list.length})</div>
                           <div className={`divide-y ${theme.border}`}>
-                              {list.map(w => (
+                              {list.map((w: any) => (
                                   <div key={w.id} className="flex items-center p-2">
                                       <div className={`font-bold text-sm ${theme.text} whitespace-nowrap mr-2`}>{w.brand}</div>
                                       <div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div>
@@ -993,7 +1000,7 @@ export default function App() {
              </div>
              {isFriendsLoading ? <div className="flex justify-center py-10"><Loader2 className="animate-spin" /></div> : (
                  <div className="grid grid-cols-2 gap-3">
-                     {friendWatches.map(w => (
+                     {friendWatches.map((w: any) => (
                          <Card key={w.id} theme={theme} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
                              <img src={w.images?.[0] || w.image} className="w-full aspect-square object-cover" />
                              <div className="p-3">
@@ -1011,7 +1018,7 @@ export default function App() {
              <div className={`p-4 rounded-xl border ${theme.border} ${theme.card}`}>
                  <h3 className={`font-bold text-sm mb-3 ${theme.text}`}>Ajouter un ami</h3>
                  <div className="flex gap-2">
-                     <input value={addFriendId} onChange={e => setAddFriendId(e.target.value)} placeholder="UID de l'ami..." className={`flex-1 p-3 rounded-lg text-sm ${theme.input}`} />
+                     <input value={addFriendId} onChange={(e: any) => setAddFriendId(e.target.value)} placeholder="UID de l'ami..." className={`flex-1 p-3 rounded-lg text-sm ${theme.input}`} />
                      <button onClick={sendFriendRequest} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center"><UserPlus size={18}/></button>
                  </div>
                  <div className={`mt-4 text-xs ${theme.textSub}`}>Votre UID pour vos amis : <br/><span className={`font-mono ${theme.bg} p-2 rounded block mt-1 break-all select-all`}>{user?.uid}</span></div>
@@ -1021,7 +1028,7 @@ export default function App() {
                  <div>
                      <h3 className="font-bold text-sm mb-2 text-emerald-600">Demandes en attente ({friendRequests.length})</h3>
                      <div className="space-y-2">
-                         {friendRequests.map(req => (
+                         {friendRequests.map((req: any) => (
                              <div key={req.id} className={`p-3 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-900/10 flex justify-between items-center`}>
                                  <span className="text-sm font-medium text-emerald-900 dark:text-emerald-100">{req.fromEmail || req.fromUser}</span>
                                  <div className="flex gap-2">
@@ -1041,13 +1048,13 @@ export default function App() {
                     <ChevronRight size={16}/>
                  </button>
                  <div className="space-y-2">
-                     {friends.map(f => (
+                     {friends.map((f: any) => (
                          <div key={f.id} className={`p-3 rounded-xl border ${theme.border} ${theme.card} flex justify-between items-center cursor-pointer hover:border-indigo-300 transition-colors`} onClick={() => loadFriendCollection(f)}>
                              <div className="flex items-center gap-3">
                                  <div className={`w-10 h-10 rounded-full ${theme.bg} flex items-center justify-center ${theme.textSub}`}><Users size={18}/></div>
                                  <span className={`text-sm font-bold ${theme.text}`}>{f.name}</span>
                              </div>
-                             <button onClick={(e) => { e.stopPropagation(); removeFriend(f.id); }} className="text-red-400 p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"><Trash2 size={16}/></button>
+                             <button onClick={(e: any) => { e.stopPropagation(); removeFriend(f.id); }} className="text-red-400 p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"><Trash2 size={16}/></button>
                          </div>
                      ))}
                      {friends.length === 0 && <div className={`text-sm ${theme.textSub} italic text-center py-6 border border-dashed ${theme.border} rounded-xl`}>Aucun ami pour le moment.</div>}
@@ -1059,7 +1066,7 @@ export default function App() {
   );
 
   const renderList = () => {
-    const displayWatches = (filteredWatches || []).filter(w => { 
+    const displayWatches = (filteredWatches || []).filter((w: any) => { 
         if (w.status === 'wishlist') return false; 
         if (filter === 'all') return true; 
         if (filter === 'bracelets') return false; 
@@ -1071,7 +1078,7 @@ export default function App() {
             <div className="pb-24">
                 {renderHeader(t('bracelets'), true)}
                 <div className="grid grid-cols-2 gap-3 px-3 mt-3">
-                    {(bracelets || []).map(b => (
+                    {(bracelets || []).map((b: any) => (
                         <Card key={b.id} onClick={() => handleEdit(b, 'bracelet')} theme={theme}>
                             <div className={`aspect-square ${theme.bg} relative flex items-center justify-center`}>
                                 {b.image ? <img src={b.image} alt="Bracelet" className="w-full h-full object-cover"/> : <Activity className={theme.textSub}/>}
@@ -1093,7 +1100,7 @@ export default function App() {
         {renderHeader(t('collection'), true)}
         <div className={`text-center text-xs ${theme.textSub} py-2 bg-opacity-50`}>{displayWatches.length} {t('total_displayed')}</div>
         <div className="grid grid-cols-2 gap-3 px-3 mt-1">
-          {displayWatches.map(w => {
+          {displayWatches.map((w: any) => {
             const displayImage = w.images && w.images.length > 0 ? w.images[0] : w.image;
             return (
             <Card key={w.id} onClick={() => { setSelectedWatch(w); setViewedImageIndex(0); setView('detail'); }} theme={theme}>
@@ -1112,13 +1119,13 @@ export default function App() {
   };
 
   const renderWishlist = () => {
-    const wishes = (filteredWatches || []).filter(w => w.status === 'wishlist');
+    const wishes = (filteredWatches || []).filter((w: any) => w.status === 'wishlist');
     return (
       <div className="pb-24">
         {renderHeader(t('wishlist'))}
         <div className="space-y-3 px-3 mt-3">
           <button onClick={() => openAdd()} className={`w-full py-4 border-2 border-dashed ${theme.border} rounded-xl flex items-center justify-center ${theme.textSub} font-medium hover:border-rose-400 hover:text-rose-500 transition-colors`}><Plus className="mr-2" size={20}/> {t('add_new')}</button>
-          {wishes.map(w => {
+          {wishes.map((w: any) => {
             const displayImage = w.images?.[0] || w.image;
             return (
             <Card key={w.id} className="flex p-3 gap-3 relative" onClick={() => { setSelectedWatch(w); setView('detail'); }} theme={theme}>
@@ -1155,7 +1162,7 @@ export default function App() {
         let yearCount = 0;
         let lastYearCount = 0;
 
-        (calendarEvents || []).forEach(evt => {
+        (calendarEvents || []).forEach((evt: any) => {
             if (evt.watches && evt.watches.includes(watchId)) {
                 const d = new Date(evt.date);
                 const dy = d.getFullYear();
@@ -1188,7 +1195,7 @@ export default function App() {
           <div className="space-y-4">
               <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative group`} onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}>
                 {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} alt="Montre" className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
-                {displayImages.length > 1 && (<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">{displayImages.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === viewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>)}</div>)}
+                {displayImages.length > 1 && (<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">{displayImages.map((_: any, i: number) => <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === viewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>)}</div>)}
               </div>
               {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img: any, i: number) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} alt="Miniature" className="w-full h-full object-cover" /></div>))}</div>)}
               <div>
@@ -1207,7 +1214,7 @@ export default function App() {
           <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
                <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{w.status === 'wishlist' ? t('find_used') : t('market_value')}</h3>
                <div className="grid grid-cols-2 gap-2">
-                   {marketLinks.map((link) => {
+                   {marketLinks.map((link: any) => {
                        const LinkIconComponent = link.icon;
                        return (
                        <a key={link.name} href={link.url} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-lg ${theme.bg} border ${theme.border} hover:bg-indigo-50 hover:border-indigo-200 transition-colors`}>
@@ -1342,7 +1349,7 @@ export default function App() {
   };
   
   const renderProfile = () => {
-    const displayWatches = (watches || []).filter(w => { 
+    const displayWatches = (watches || []).filter((w: any) => { 
         if (!w.image && (!w.images || w.images.length === 0)) return false; 
         let matchSearch = true;
         if (gallerySearchTerm) {
@@ -1357,14 +1364,28 @@ export default function App() {
         return false; 
     });
 
+    const getTime = (w: any) => { if (w.purchaseDate) { const t = new Date(w.purchaseDate).getTime(); return isNaN(t) ? 0 : t; } return 0; };
+
     if (sortOrder === 'priceAsc') {
-        displayWatches.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
+        displayWatches.sort((a: any, b: any) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
     } else if (sortOrder === 'priceDesc') {
-        displayWatches.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
+        displayWatches.sort((a: any, b: any) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
     } else if (sortOrder === 'alpha') {
-        displayWatches.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
+        displayWatches.sort((a: any, b: any) => (a.brand || '').localeCompare(b.brand || ''));
+    } else if (sortOrder === 'dateAsc') {
+        displayWatches.sort((a: any, b: any) => {
+            const ta = getTime(a), tb = getTime(b);
+            if (ta === 0 && tb !== 0) return 1; if (tb === 0 && ta !== 0) return -1;
+            if (ta === 0 && tb === 0) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime();
+            return ta - tb;
+        });
     } else {
-        displayWatches.sort((a, b) => new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime());
+        displayWatches.sort((a: any, b: any) => {
+            const ta = getTime(a), tb = getTime(b);
+            if (ta === 0 && tb !== 0) return 1; if (tb === 0 && ta !== 0) return -1;
+            if (ta === 0 && tb === 0) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
+            return tb - ta;
+        });
     }
 
     return (
@@ -1406,7 +1427,7 @@ export default function App() {
           </div>
           
           <div className="grid grid-cols-3 gap-1 mt-2 px-1">
-              {displayWatches.map(w => (
+              {displayWatches.map((w: any) => (
                   <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
                       <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover" />
                   </div>
@@ -1422,7 +1443,7 @@ export default function App() {
   const renderStats = () => {
       const getTopWatches = () => {
           const periodCounts: Record<string, number> = {};
-          (calendarEvents || []).forEach(evt => {
+          (calendarEvents || []).forEach((evt: any) => {
               const evtDate = new Date(evt.date);
               let inPeriod = false;
               if (statsTimeframe === 'all') inPeriod = true;
@@ -1436,10 +1457,10 @@ export default function App() {
           });
           
           const countsArray = Object.keys(periodCounts).map(wId => ({ id: wId, count: periodCounts[wId] }));
-          countsArray.sort((a, b) => b.count - a.count);
+          countsArray.sort((a: any, b: any) => b.count - a.count);
           
-          return countsArray.slice(0, 5).map(item => { 
-              const w = watches.find(watch => watch.id === item.id); 
+          return countsArray.slice(0, 5).map((item: any) => { 
+              const w = watches.find((watch: any) => watch.id === item.id); 
               return w ? { ...w, count: item.count } : null; 
           }).filter(Boolean);
       };
@@ -1459,14 +1480,14 @@ export default function App() {
           
           for (let d = 1; d <= daysInMonth; d++) {
               const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-              const event = (calendarEvents || []).find(e => e.id === dateStr || e.date === dateStr);
+              const event = (calendarEvents || []).find((e: any) => e.id === dateStr || e.date === dateStr);
               const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
               days.push(
                   <div key={d} onClick={() => handleCalendarDayClick(dateStr)} className={`aspect-square border rounded-lg p-1 relative cursor-pointer ${theme.border} ${isToday ? 'border-indigo-500 bg-indigo-500/10' : theme.bg}`}>
                       <span className={`text-[10px] font-bold ${isToday ? 'text-indigo-500' : theme.textSub}`}>{d}</span>
                       <div className="flex flex-wrap gap-0.5 mt-1">
                           {(event?.watches || []).slice(0, 4).map((wId: string, idx: number) => { 
-                              const w = watches.find(wa => wa.id === wId); 
+                              const w = watches.find((wa: any) => wa.id === wId); 
                               if (!w) return null; 
                               const img = w.images?.[0] || w.image; 
                               return (
@@ -1484,27 +1505,27 @@ export default function App() {
 
       const getTopBrands = () => {
           const brandsObj: Record<string, number> = {};
-          (watches || []).forEach(w => {
+          (watches || []).forEach((w: any) => {
               if (w.status === 'collection' && w.brand) {
                   brandsObj[w.brand] = (brandsObj[w.brand] || 0) + 1;
               }
           });
           
           const brandsArray = Object.keys(brandsObj).map(brand => ({ name: brand, count: brandsObj[brand] }));
-          brandsArray.sort((a, b) => b.count - a.count);
+          brandsArray.sort((a: any, b: any) => b.count - a.count);
           return brandsArray.slice(0, 5);
       };
       
       const getTopDials = () => {
           const dialsObj: Record<string, number> = {};
-          (watches || []).forEach(w => {
+          (watches || []).forEach((w: any) => {
               if (w.status === 'collection' && w.dialColor) {
                   dialsObj[w.dialColor] = (dialsObj[w.dialColor] || 0) + 1;
               }
           });
           
           const dialsArray = Object.keys(dialsObj).map(color => ({ name: color, count: dialsObj[color] }));
-          dialsArray.sort((a, b) => b.count - a.count);
+          dialsArray.sort((a: any, b: any) => b.count - a.count);
           return dialsArray.slice(0, 5);
       };
 
@@ -1539,7 +1560,7 @@ export default function App() {
                     <div className="flex justify-between items-center mb-4">
                         <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2`}><TrendingUp className="text-emerald-500" size={16} /> {t('top_worn')}</h3>
                         <div className={`flex ${theme.bg} rounded-lg p-0.5`}>
-                            {[{id: 'month', label: t('month')}, {id: 'year', label: t('year')}, {id: 'all', label: t('all_time')}].map(tObj => (
+                            {[{id: 'month', label: t('month')}, {id: 'year', label: t('year')}, {id: 'all', label: t('all_time')}].map((tObj: any) => (
                                 <button key={tObj.id} onClick={() => setStatsTimeframe(tObj.id)} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${statsTimeframe === tObj.id ? `${theme.bgSecondary} shadow ${theme.text}` : theme.textSub}`}>{tObj.label}</button>
                             ))}
                         </div>
@@ -1612,10 +1633,10 @@ export default function App() {
                             <input autoFocus type="text" placeholder={t('search')} className={`w-full p-2 ${theme.input} rounded-lg text-sm`} value={calendarSearchTerm} onChange={(e: any) => setCalendarSearchTerm(e.target.value)}/>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                            {watches.filter(w => w.status === 'collection').filter(w => !calendarSearchTerm || w.brand.toLowerCase().includes(calendarSearchTerm.toLowerCase())).map(w => {
+                            {watches.filter((w: any) => w.status === 'collection').filter((w: any) => !calendarSearchTerm || w.brand.toLowerCase().includes(calendarSearchTerm.toLowerCase())).map((w: any) => {
                                 const isSelected = selectedCalendarWatches.includes(w.id);
                                 return (
-                                <div key={w.id} onClick={() => setSelectedCalendarWatches(prev => isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id])} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/10' : `${theme.border} hover:${theme.bg}`}`}>
+                                <div key={w.id} onClick={() => setSelectedCalendarWatches((prev: any) => isSelected ? prev.filter((id: string) => id !== w.id) : [...prev, w.id])} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/10' : `${theme.border} hover:${theme.bg}`}`}>
                                     <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-600 border-indigo-600' : `${theme.bgSecondary} ${theme.border}`}`}>
                                         {isSelected && <Check size={12} className="text-white" />}
                                     </div>
@@ -1641,9 +1662,9 @@ export default function App() {
   };
 
   const renderFinance = () => {
-    const sCol = { buy: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
-    const sSale = { buy: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
-    const sSold = { buy: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
+    const sCol = { buy: watches.filter((w: any)=>w.status==='collection').reduce((a: number,w: any)=>a+(w.purchasePrice||0),0), val: watches.filter((w: any)=>w.status==='collection').reduce((a: number,w: any)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
+    const sSale = { buy: watches.filter((w: any)=>w.status==='forsale').reduce((a: number,w: any)=>a+(w.purchasePrice||0),0), val: watches.filter((w: any)=>w.status==='forsale').reduce((a: number,w: any)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
+    const sSold = { buy: watches.filter((w: any)=>w.status==='sold').reduce((a: number,w: any)=>a+(w.purchasePrice||0),0), val: watches.filter((w: any)=>w.status==='sold').reduce((a: number,w: any)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
     const sTotal = { buy: sCol.buy+sSale.buy+sSold.buy, val: sCol.val+sSale.val+sSold.val, profit: sCol.profit+sSale.profit+sSold.profit };
 
     const timelineMap: Record<string, any> = {};
@@ -1704,9 +1725,9 @@ export default function App() {
         </div>
         
         {/* Modals */}
-        {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter(w=>w.status==='collection')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
-        {financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter(w=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
-        {financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter(w=>w.status==='sold')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
+        {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter((w: any)=>w.status==='collection')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
+        {financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter((w: any)=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
+        {financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter((w: any)=>w.status==='sold')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w: any) => {setSelectedWatch(w); setView('detail')}} theme={theme} t={t} />}
         
         <FinanceCardFull title={t('collection')} icon={Watch} stats={sCol} type="collection" bgColor="bg-emerald-500" onClick={() => setFinanceDetail('collection')} theme={theme} />
         <FinanceCardFull title={t('forsale')} icon={TrendingUp} stats={sSale} type="forsale" bgColor="bg-amber-500" onClick={() => setFinanceDetail('forsale')} theme={theme} />
@@ -2004,7 +2025,7 @@ export default function App() {
                 )}
                 
                 <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
-                    {[{id: 'collection', label: t('collection')}, {id: 'forsale', label: t('forsale')}, {id: 'sold', label: t('sold')}, {id: 'wishlist', label: t('wishlist')}].map(s => (
+                    {[{id: 'collection', label: t('collection')}, {id: 'forsale', label: t('forsale')}, {id: 'sold', label: t('sold')}, {id: 'wishlist', label: t('wishlist')}].map((s: any) => (
                         <button key={s.id} type="button" onClick={() => setWatchForm({...watchForm, status: s.id})} className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold border whitespace-nowrap ${watchForm.status === s.id ? 'bg-slate-800 text-white' : `${theme.bg} ${theme.border} ${theme.text}`}`}>{s.label}</button>
                     ))}
                 </div>
