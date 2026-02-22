@@ -122,7 +122,6 @@ const AnalogClock = ({ isDark, settings }: any) => {
   useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
   const secondsRatio = time.getSeconds() / 60; const minutesRatio = (secondsRatio + time.getMinutes()) / 60; const hoursRatio = (minutesRatio + time.getHours()) / 12;
   const borderColor = isDark ? 'border-slate-600' : 'border-slate-800'; const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
-  
   const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); 
   const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); 
   const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); 
@@ -373,25 +372,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }: any) => (
                     <div className="grid grid-cols-2 gap-2">
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button>
                         <button onClick={() => setSettings((s: any) => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button>
-                    </div>
-                </div>
-                
-                <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e: any) => setSettings((s: any) => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e: any) => setSettings((s: any) => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                    </div>
-                </div>
-                <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e: any) => setSettings((s: any) => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e: any) => setSettings((s: any) => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e: any) => setSettings((s: any) => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings((s: any) => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
             </div>
@@ -1081,34 +1061,6 @@ export default function App() {
       );
   };
 
-  const renderSummary = () => (
-      <div className="pb-24 px-2">
-          {renderHeader(t('inventory'))}
-          <div className="space-y-6 px-1 mt-2">
-              <button className={`w-full p-4 text-left ${theme.card} border ${theme.border} rounded-lg shadow-sm`} onClick={exportCSV}>
-                  <div className={`font-bold flex items-center ${theme.text}`}><Download className="mr-2" size={18}/> {t('export_csv')}</div>
-              </button>
-              {['collection', 'forsale', 'sold'].map(cat => {
-                  const list = filteredWatches.filter(w => w.status === cat);
-                  if (list.length === 0) return null;
-                  return (
-                      <div key={cat} className={`${theme.card} rounded-xl shadow-sm border ${theme.border}`}>
-                          <div className={`px-4 py-2 border-b ${theme.border} font-bold text-sm ${theme.text}`}>{t(cat)} ({list.length})</div>
-                          <div className={`divide-y ${theme.border}`}>
-                              {list.map(w => (
-                                  <div key={w.id} className="flex items-center p-2">
-                                      <div className={`font-bold text-sm ${theme.text} whitespace-nowrap mr-2`}>{w.brand}</div>
-                                      <div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div>
-                                  </div>
-                              ))}
-                          </div>
-                      </div>
-                  );
-              })}
-          </div>
-      </div>
-  );
-
   const renderList = () => {
     const displayWatches = filteredWatches.filter(w => { 
         if (w.status === 'wishlist') return false; 
@@ -1575,8 +1527,8 @@ export default function App() {
       const topBrands = getTopBrands();
       const topDials = getTopDials();
       
-      const maxBrandCount = topBrands[0] ? topBrands[0].count : 1;
-      const maxDialCount = topDials[0] ? topDials[0].count : 1;
+      const maxBrandCount = topBrands[0] ? Number(topBrands[0].count) : 1;
+      const maxDialCount = topDials[0] ? Number(topDials[0].count) : 1;
 
       return (
         <div className="pb-24 px-3">
@@ -1629,7 +1581,7 @@ export default function App() {
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><PieChart className="text-blue-500" size={16} /> {t('fav_brands')}</h3>
                     <div className="space-y-3">
                         {topBrands.map((item: any, i: number) => {
-                            const pct = (item.count / Math.max(maxBrandCount, 1)) * 100;
+                            const pct = (Number(item.count) / maxBrandCount) * 100;
                             return (
                             <div key={`brand-${i}`} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
@@ -1648,7 +1600,7 @@ export default function App() {
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><Palette className="text-purple-500" size={16} /> {t('fav_dials')}</h3>
                     <div className="space-y-3">
                         {topDials.map((item: any, i: number) => {
-                            const pct = (item.count / Math.max(maxDialCount, 1)) * 100;
+                            const pct = (Number(item.count) / maxDialCount) * 100;
                             return (
                             <div key={`color-${i}`} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 w-full">
@@ -1914,17 +1866,13 @@ export default function App() {
     );
   };
 
+  const renderInput = (f: string, p: string, t="text", c="w-full", req=false) => (
+      <input type={t} className={`p-3 rounded-lg ${theme.input} ${c}`} placeholder={p} value={(watchForm as any)[f] || ''} onChange={(e: any) => setWatchForm({...watchForm, [f]: e.target.value})} required={req} />
+  );
+
   const renderForm = () => {
       const isWatch = editingType === 'watch';
       const currentImages = isWatch ? (watchForm.images || (watchForm.image ? [watchForm.image] : [])) : [];
-      
-      const Input = ({ f, p, t="text", c="w-full", req=false }: any) => (
-          <input type={t} className={`p-3 rounded-lg ${theme.input} ${c}`} placeholder={p} value={(watchForm as any)[f] || ''} onChange={(e: any) => setWatchForm({...watchForm, [f]: e.target.value})} required={req} />
-      );
-
-      const Textarea = ({ f, p }: any) => (
-          <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={p} value={(watchForm as any)[f] || ''} onChange={(e: any) => setWatchForm({...watchForm, [f]: e.target.value})} />
-      );
 
       return (
         <div className={`pb-24 p-4 ${theme.bgSecondary} min-h-screen`}>
@@ -1932,7 +1880,7 @@ export default function App() {
               <h1 className={`text-2xl font-bold font-serif ${theme.text}`}>{editingId ? t('edit') : t('add_new')}</h1>
               <button type="button" onClick={() => handleCancelForm()} className={theme.text}><X/></button>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={(e) => handleSubmit(e)} className="space-y-6">
             <div className="grid grid-cols-3 gap-3">
                 {currentImages.map((img: any, idx: number) => (
                     <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
@@ -1955,11 +1903,11 @@ export default function App() {
             
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('identity')}</h3>
-                 <Input f="brand" p={t('brand')} req={true} />
-                 <Input f="model" p={t('model')} req={true} />
-                 <Input f="reference" p={t('reference')} />
+                 {renderInput('brand', t('brand'), 'text', 'w-full', true)}
+                 {renderInput('model', t('model'), 'text', 'w-full', true)}
+                 {renderInput('reference', t('reference'))}
                  <div className="relative">
-                     <Input f="dialColor" p={t('dial')} c="w-full pl-10" />
+                     {renderInput('dialColor', t('dial'), 'text', 'w-full pl-10')}
                      <Palette className={`absolute left-3 top-3.5 ${theme.textSub}`} size={18} />
                  </div>
                  <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
@@ -1969,9 +1917,9 @@ export default function App() {
                      </div>
                      {watchForm.isLimitedEdition && (
                         <div className="flex gap-2 pl-6 animate-in slide-in-from-top-1">
-                            <Input f="limitedNumber" p="N°" />
+                            {renderInput('limitedNumber', 'N°')}
                             <span className={`py-2 ${theme.textSub}`}>/</span>
-                            <Input f="limitedTotal" p="Total" />
+                            {renderInput('limitedTotal', 'Total')}
                         </div>
                      )}
                  </div>
@@ -1980,53 +1928,53 @@ export default function App() {
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('technical')}</h3>
                  <div className="grid grid-cols-2 gap-3">
-                    <Input f="diameter" p={`${t('diameter')} (mm)`} t="number" />
-                    <Input f="thickness" p={`${t('thickness')} (mm)`} t="number" />
-                    <Input f="strapWidth" p={`${t('lug_width')} (mm)`} t="number" />
-                    <Input f="waterResistance" p={`${t('water_res')} (ATM)`} t="number" />
-                    <Input f="weight" p={`${t('weight')} (g)`} t="number" />
+                    {renderInput('diameter', `${t('diameter')} (mm)`, 'number')}
+                    {renderInput('thickness', `${t('thickness')} (mm)`, 'number')}
+                    {renderInput('strapWidth', `${t('lug_width')} (mm)`, 'number')}
+                    {renderInput('waterResistance', `${t('water_res')} (ATM)`, 'number')}
+                    {renderInput('weight', `${t('weight')} (g)`, 'number')}
                  </div>
                  <div className="grid grid-cols-2 gap-3">
-                    <Input f="movement" p={t('movement')} />
-                    <Input f="movementModel" p={t('movement_model')} />
+                    {renderInput('movement', t('movement'))}
+                    {renderInput('movementModel', t('movement_model'))}
                  </div>
                  {['quartz', 'pile', 'battery'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
                      <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
                         <div className={`flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider ${theme.textSub}`}><Battery size={14}/> {t('battery')}</div>
-                        <Input f="batteryModel" p="Ref Pile (ex: 377)" />
+                        {renderInput('batteryModel', 'Ref Pile (ex: 377)')}
                      </div>
                  )}
-                 <Input f="glass" p={t('glass')} />
+                 {renderInput('glass', t('glass'))}
             </div>
 
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('origin_maintenance')}</h3>
                  <div className="grid grid-cols-3 gap-3">
-                    <Input f="country" p={t('country')} />
-                    <Input f="year" p={t('model_year')} t="number" />
-                    <Input f="box" p={t('box_included')} />
+                    {renderInput('country', t('country'))}
+                    {renderInput('year', t('model_year'), 'number')}
+                    {renderInput('box', t('box_included'))}
                  </div>
                  
                  <div className="grid grid-cols-2 gap-3">
                      <div>
                          <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_release')}</label>
-                         <Input f="releaseDate" t="date" />
+                         {renderInput('releaseDate', '', 'date')}
                      </div>
                      <div>
                          <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_purchase')}</label>
-                         <Input f="purchaseDate" t="date" />
+                         {renderInput('purchaseDate', '', 'date')}
                      </div>
                  </div>
                  {watchForm.status === 'sold' && (
                      <div>
                          <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label>
-                         <Input f="soldDate" t="date" />
+                         {renderInput('soldDate', '', 'date')}
                      </div>
                  )}
                  
                  <div className="grid grid-cols-2 gap-3">
-                    <Input f="warrantyDate" p={t('warranty')} />
-                    <Input f="revision" p={t('revision')} />
+                    {renderInput('warrantyDate', t('warranty'))}
+                    {renderInput('revision', t('revision'))}
                  </div>
             </div>
             
@@ -2059,19 +2007,19 @@ export default function App() {
                         onChange={(e: any) => setWatchForm({...watchForm, conditionRating: parseInt(e.target.value)})}
                      />
                  </div>
-                 <Textarea f="conditionComment" p={t('condition_comment')} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[60px] ${theme.input}`} placeholder={t('condition_comment')} value={watchForm.conditionComment || ''} onChange={(e: any) => setWatchForm({...watchForm, conditionComment: e.target.value})} />
             </div>
 
             <div className="space-y-3">
                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('financial_status')}</h3>
                 <div className="grid grid-cols-2 gap-4">
-                    <Input f="purchasePrice" p={t('purchase_price')} t="number" />
-                    <Input f="sellingPrice" p={t('selling_price')} t="number" />
+                    {renderInput('purchasePrice', t('purchase_price'), 'number')}
+                    {renderInput('sellingPrice', t('selling_price'), 'number')}
                 </div>
                 {watchForm.status !== 'wishlist' && (
                     <div className={`p-2 rounded-lg border ${theme.border} ${theme.bg} flex items-center gap-2`}>
                         <Lock size={16} className="text-amber-600" />
-                        <Input f="minPrice" p={t('min_price')} t="number" c="bg-transparent border-none focus:ring-0 text-sm" />
+                        {renderInput('minPrice', t('min_price'), 'number', 'bg-transparent border-none focus:ring-0 text-sm')}
                     </div>
                 )}
                 
@@ -2083,7 +2031,7 @@ export default function App() {
 
                 <div className={`relative ${watchForm.status === 'wishlist' ? 'animate-pulse-slow' : ''}`}>
                     <LinkIcon className={`absolute left-3 top-3.5 ${theme.textSub}`} size={18}/>
-                    <Input f="link" p={t('link_web')} c={`w-full pl-10 ${watchForm.status === 'wishlist' ? 'border-indigo-300 ring-1 ring-indigo-100' : ''}`} />
+                    {renderInput('link', t('link_web'), 'text', `w-full pl-10 ${watchForm.status === 'wishlist' ? 'border-indigo-300 ring-1 ring-indigo-100' : ''}`)}
                 </div>
 
                 <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
@@ -2100,9 +2048,9 @@ export default function App() {
 
             <div className="space-y-3">
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('notes')} &amp; Histoire</h3>
-                 <Textarea f="conditionNotes" p={t('notes')} />
-                 <Textarea f="historyBrand" p={t('history_brand')} />
-                 <Textarea f="historyModel" p={t('history_model')} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={(e: any) => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_brand')} value={watchForm.historyBrand || ''} onChange={(e: any) => setWatchForm({...watchForm, historyBrand: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_model')} value={watchForm.historyModel || ''} onChange={(e: any) => setWatchForm({...watchForm, historyModel: e.target.value})} />
             </div>
 
             <button type="submit" className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold shadow-lg">{t('save')}</button>
@@ -2111,7 +2059,7 @@ export default function App() {
       );
   };
 
-  const NavBtn = ({ id, icon: Icon, label, colorClass }: any) => (
+  const renderNavBtn = (id: string, Icon: any, label: string, colorClass: string) => (
       <button onClick={() => { if(id==='list') setFilter('all'); setView(id); }} className={`flex flex-col items-center w-1/6 ${view === id ? colorClass : ''}`}>
           <Icon size={20}/><span className="mt-1">{label}</span>
       </button>
@@ -2149,13 +2097,13 @@ export default function App() {
 
         {view !== 'add' && (
           <nav className={`fixed bottom-0 w-full max-w-md ${theme.nav} border-t flex justify-between px-4 py-2 z-50 text-[10px] font-medium ${theme.textSub}`}>
-            <NavBtn id="box" icon={Box} label={t('box')} colorClass="text-amber-600" />
-            <NavBtn id="list" icon={Watch} label={t('list')} colorClass="text-indigo-600" />
-            <NavBtn id="wishlist" icon={Heart} label={t('wishlist')} colorClass="text-rose-600" />
+            {renderNavBtn('box', Box, t('box'), 'text-amber-600')}
+            {renderNavBtn('list', Watch, t('list'), 'text-indigo-600')}
+            {renderNavBtn('wishlist', Heart, t('wishlist'), 'text-rose-600')}
             <button onClick={openAdd} className="flex-none flex items-center justify-center w-12 h-12 bg-slate-900 text-white rounded-full shadow-lg -mt-4 border-2 border-slate-50"><Plus size={24}/></button>
-            <NavBtn id="finance" icon={TrendingUp} label={t('finance')} colorClass="text-emerald-600" />
-            <NavBtn id="stats" icon={BarChart2} label={t('stats')} colorClass="text-blue-600" />
-            <NavBtn id="profile" icon={Grid} label={t('gallery')} colorClass="text-slate-900" />
+            {renderNavBtn('finance', TrendingUp, t('finance'), 'text-emerald-600')}
+            {renderNavBtn('stats', BarChart2, t('stats'), 'text-blue-600')}
+            {renderNavBtn('profile', Grid, t('gallery'), 'text-slate-900')}
           </nav>
         )}
       </div>
