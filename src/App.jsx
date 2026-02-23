@@ -874,6 +874,7 @@ export default function App() {
   const [exportType, setExportType] = useState(null); 
 
   const [timelineFilter, setTimelineFilter] = useState('default'); 
+  const [expandedMonth, setExpandedMonth] = useState(null);
 
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
@@ -1844,22 +1845,73 @@ export default function App() {
                         </div>
                         <div className="space-y-3">
                             {monthsToDisplay.map((tItem) => (
-                                <div key={tItem.date} className={`${theme.card} p-3 rounded-xl border ${theme.border} flex items-center justify-between`}>
-                                    <div className="flex items-center gap-3">
-                                        <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>
-                                            {formatMonthName(tItem.date)}
+                                <div key={tItem.date} className={`${theme.card} rounded-xl border ${theme.border} overflow-hidden mb-3`}>
+                                    <div 
+                                        onClick={() => setExpandedMonth(expandedMonth === tItem.date ? null : tItem.date)}
+                                        className={`p-3 flex items-center justify-between cursor-pointer hover:${theme.bgSecondary} transition-colors`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>
+                                                {formatMonthName(tItem.date)}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
+                                                <span className={`font-bold text-sm ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
+                                                    {formatPrice(tItem.gained - tItem.spent)}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
-                                            <span className={`font-bold text-sm ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
-                                                {formatPrice(tItem.gained - tItem.spent)}
-                                            </span>
+                                        <div className="text-right text-xs flex items-center gap-2">
+                                            <div>
+                                                {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
+                                                {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
+                                            </div>
+                                            <ChevronLeft size={16} className={`text-slate-400 transition-transform ${expandedMonth === tItem.date ? '-rotate-90' : 'rotate-180'}`} />
                                         </div>
                                     </div>
-                                    <div className="text-right text-xs">
-                                        {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
-                                        {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
-                                    </div>
+                                    
+                                    {expandedMonth === tItem.date && (
+                                        <div className={`border-t ${theme.border} bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-3`}>
+                                            {tItem.boughtWatches.length > 0 && (
+                                                <div>
+                                                    <div className="text-[10px] font-bold uppercase text-red-500 mb-2">{t('purchases')}</div>
+                                                    <div className="space-y-2">
+                                                        {tItem.boughtWatches.map((w) => (
+                                                            <div key={`buy-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
+                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
+                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
+                                                                    <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
+                                                                </div>
+                                                                <div className="text-xs font-bold text-red-500">- {formatPrice(w.purchasePrice)}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {tItem.soldWatches.length > 0 && (
+                                                <div>
+                                                    <div className="text-[10px] font-bold uppercase text-emerald-500 mb-2">{t('sales')}</div>
+                                                    <div className="space-y-2">
+                                                        {tItem.soldWatches.map((w) => (
+                                                            <div key={`sell-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
+                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
+                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
+                                                                    <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
+                                                                </div>
+                                                                <div className="text-xs font-bold text-emerald-500">+ {formatPrice(w.sellingPrice)}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
