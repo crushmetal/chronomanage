@@ -621,7 +621,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
     );
 };
 
-const FinanceDetailList = ({ title, items, onClose, theme }) => {
+const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
     const [localSort, setLocalSort] = useState('alpha'); 
     const sortedItems = useMemo(() => {
         let sorted = [...items];
@@ -662,7 +662,7 @@ const FinanceDetailList = ({ title, items, onClose, theme }) => {
                const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image;
                const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
                return (
-                 <div key={w.id} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border}`}>
+                 <div key={w.id} onClick={() => { onClose(); onSelectWatch && onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
                      <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover"/>}</div>
                      <div className="flex-1 min-w-0">
                         <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div>
@@ -1805,9 +1805,9 @@ export default function App() {
       <div className="pb-24 px-3 space-y-2">
         <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-2`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('finance')}</h1></div>
         
-        {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter(w=>w.status==='collection')} onClose={() => setFinanceDetail(null)} theme={theme} />}
-        {financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter(w=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} theme={theme} />}
-        {financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter(w=>w.status==='sold')} onClose={() => setFinanceDetail(null)} theme={theme} />}
+        {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter(w=>w.status==='collection')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w) => {setSelectedWatch(w); setView('detail');}} theme={theme} />}
+        {financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter(w=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w) => {setSelectedWatch(w); setView('detail');}} theme={theme} />}
+        {financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter(w=>w.status==='sold')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w) => {setSelectedWatch(w); setView('detail');}} theme={theme} />}
         
         <FinanceCardFull title={t('collection')} icon={Watch} stats={sCol} type="collection" bgColor="bg-emerald-500" onClick={() => setFinanceDetail('collection')} theme={theme} />
         <FinanceCardFull title={t('forsale')} icon={TrendingUp} stats={sSale} type="forsale" bgColor="bg-amber-500" onClick={() => setFinanceDetail('forsale')} theme={theme} />
