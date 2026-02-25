@@ -100,7 +100,8 @@ const TRANSLATIONS = {
     color_h_hand: "Aig. Heures",
     color_m_hand: "Aig. Minutes",
     color_s_hand: "Aig. Secondes",
-    color_index: "Index",
+    color_index_main: "Gros Index",
+    color_index_small: "Petits Index",
     color_leather: "Cuir Extérieur",
     color_interior: "Intérieur",
     color_cushion: "Cushions",
@@ -230,7 +231,8 @@ const TRANSLATIONS = {
     color_h_hand: "Hour Hand",
     color_m_hand: "Minute Hand",
     color_s_hand: "Second Hand",
-    color_index: "Indexes",
+    color_index_main: "Large Indexes",
+    color_index_small: "Small Indexes",
     color_leather: "Outer Leather",
     color_interior: "Interior",
     color_cushion: "Cushions",
@@ -472,7 +474,8 @@ const AnalogClock = ({ isDark, settings }) => {
   const borderColor = isDark ? 'border-slate-600' : 'border-slate-800';
   const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
   
-  const tickColor = settings.indexColor || (isDark ? '#94a3b8' : '#1e293b'); 
+  const tickColor = settings.indexColorSmall || (isDark ? '#64748b' : '#94a3b8'); 
+  const thickColor = settings.indexColorMain || (isDark ? '#cbd5e1' : '#1e293b'); 
   const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); 
   const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); 
   const sHandColor = settings.handSecond || '#ef4444'; 
@@ -481,7 +484,7 @@ const AnalogClock = ({ isDark, settings }) => {
     <div className="w-32 h-32 relative mx-auto mb-2">
        <div className={`w-full h-full rounded-full border-4 ${borderColor} ${bgColor} shadow-inner flex items-center justify-center relative`}>
           {[...Array(12)].map((_, i) => (<div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
-          {[0, 3, 6, 9].map((i) => (<div key={i} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
+          {[0, 3, 6, 9].map((i) => (<div key={i} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: thickColor }}></div>))}
           <div className="absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
           <div className="absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
           <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
@@ -767,11 +770,12 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#000000'} onChange={(e) => setSettings(s => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#000000'} onChange={(e) => setSettings(s => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#000000'} onChange={(e) => setSettings(s => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#FF0000'} onChange={(e) => setSettings(s => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
-                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColor || '#000000'} onChange={(e) => setSettings(s => ({...s, indexColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, indexColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#ef4444'} onChange={(e) => setSettings(s => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index_main')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColorMain || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, indexColorMain: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, indexColorMain: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
+                        <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index_small')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColorSmall || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, indexColorSmall: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, indexColorSmall: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
 
@@ -1045,20 +1049,27 @@ export default function App() {
   }, [watches, bracelets, calendarEvents, useLocalStorage]);
 
   const handleImageUpload = async (e, type) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (!files || files.length === 0) return;
     try { 
-      const base64 = await compressImage(file); 
       if (type === 'watch') {
+          const base64Images = await Promise.all(files.map(file => compressImage(file)));
           setWatchForm(prev => {
               const currentImages = prev.images || (prev.image ? [prev.image] : []);
-              if (currentImages.length >= 3) { alert("Max 3 photos"); return prev; }
-              const newImages = [...currentImages, base64];
-              return { ...prev, images: newImages, image: newImages[0] };
+              const combined = [...currentImages, ...base64Images];
+              if (combined.length > 3) { 
+                  alert("Max 3 photos"); 
+                  combined.splice(3);
+              }
+              return { ...prev, images: combined, image: combined[0] || null };
           });
       } else if (type === 'invoice') {
+          const base64 = await compressImage(files[0]);
           setWatchForm(prev => ({...prev, invoice: base64}));
-      } else { setBraceletForm(prev => ({ ...prev, image: base64 })); }
+      } else { 
+          const base64 = await compressImage(files[0]);
+          setBraceletForm(prev => ({ ...prev, image: base64 })); 
+      }
     } catch (err) {}
   };
 
@@ -1937,14 +1948,16 @@ export default function App() {
                 {currentImages.map((img, idx) => (
                     <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
                         <img src={img} className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X size={12}/></button>
-                        {idx === 0 ? <div className="absolute bottom-0 w-full bg-emerald-500 text-white text-[8px] text-center">MAIN</div> : <button type="button" onClick={() => setAsMainImage(idx)} className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-white text-black text-[8px] px-1 rounded">Set Main</button>}
+                        <div className="absolute top-1 left-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10">{idx + 1}/{Math.max(3, currentImages.length)}</div>
+                        <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 z-10"><X size={12}/></button>
+                        {idx === 0 ? <div className="absolute bottom-0 w-full bg-emerald-500 text-white text-[8px] text-center font-bold py-0.5 z-10">PRINCIPALE</div> : <button type="button" onClick={() => setAsMainImage(idx)} className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-white text-black text-[8px] px-2 py-0.5 rounded font-bold shadow z-10">Set Main</button>}
                     </div>
                 ))}
                 {currentImages.length < 3 && (
-                    <label className={`aspect-square ${theme.bg} rounded-xl flex flex-col items-center justify-center border-2 border-dashed ${theme.border} cursor-pointer`}>
+                    <label className={`aspect-square ${theme.bg} rounded-xl flex flex-col items-center justify-center border-2 border-dashed ${theme.border} cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors`}>
                         <Camera className={theme.textSub} size={24}/>
-                        <input type="file" onChange={(e) => handleImageUpload(e, 'watch')} className="hidden" accept="image/*"/>
+                        <span className={`text-[10px] font-bold mt-2 ${theme.textSub}`}>{3 - currentImages.length} place(s)</span>
+                        <input type="file" multiple onChange={(e) => handleImageUpload(e, 'watch')} className="hidden" accept="image/*"/>
                     </label>
                 )}
             </div>
