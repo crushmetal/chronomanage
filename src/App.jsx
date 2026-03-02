@@ -1,6 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
   Search, AlertCircle,
@@ -848,6 +848,8 @@ export default function App() {
   const [showGalleryWishlist, setShowGalleryWishlist] = useState(false);
 
   const [fullScreenImage, setFullScreenImage] = useState(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('box'); 
   const [filter, setFilter] = useState('all');
@@ -1196,10 +1198,29 @@ export default function App() {
 
   const renderFullScreenImage = () => {
     if (!fullScreenImage) return null;
+
+    const handleImageClick = (e) => {
+        e.stopPropagation();
+        if (!isZoomed) {
+            // Calcule la position du clic/tap pour zoomer au bon endroit
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            setZoomPos({ x, y });
+        }
+        setIsZoomed(!isZoomed);
+    };
+
     return (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-2 animate-in fade-in duration-200" onClick={() => setFullScreenImage(null)}>
-            <button className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/50 rounded-full p-2"><X size={32}/></button>
-            <img src={fullScreenImage} className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-2 animate-in fade-in duration-200 overflow-hidden" onClick={() => { setFullScreenImage(null); setIsZoomed(false); }}>
+            <button className="absolute top-4 right-4 z-[110] text-white/80 hover:text-white bg-black/50 rounded-full p-2"><X size={32}/></button>
+            <img 
+                src={fullScreenImage} 
+                className={`max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl transition-transform duration-300 ease-out cursor-zoom-${isZoomed ? 'out' : 'in'}`} 
+                style={isZoomed ? { transform: 'scale(2.5)', transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : { transform: 'scale(1)' }}
+                onClick={handleImageClick}
+                alt="Fullscreen" 
+            />
         </div>
     );
   };
