@@ -115,7 +115,7 @@ const TRANSLATIONS = {
     spent: "Dépenses",
     gained: "Gains",
     balance: "Bilan",
-    identity: "Identity",
+    identity: "Identité",
     origin_maintenance: "Origine & Entretien",
     technical: "Technique",
     financial_status: "Finances & Statut",
@@ -452,10 +452,10 @@ const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
          <circle cx="6" cy="5" r="1.5" fill="#3E2723" />
       </g>
       <g className="transition-all duration-1000 ease-in-out" style={{ transformOrigin: '100px 60px', transform: isOpen ? 'rotateX(-110deg)' : 'rotateX(0deg)' }}>
-          <path d="M20,100 L180,100 L180,108 L20,108 Z" fill="#3E2723" />
+          <path d="M20,100 L180,100 L170,60 L30,60 Z" fill="url(#leatherGrad)" stroke="#3E2723" strokeWidth="1" />
           <path d="M35,92 L165,92 L158,68 L42,68 Z" fill="url(#windowGrad)" stroke="#8D6E63" strokeWidth="0.5" />
           <path d="M35,92 L80,92 L75,68 L42,68 Z" fill="rgba(255,255,255,0.1)" />
-          <path d="M20,100 L180,100 L170,60 L30,60 Z" fill="url(#leatherGrad)" stroke="#3E2723" strokeWidth="1" />
+          <path d="M20,100 L180,100 L180,108 L20,108 Z" fill="#3E2723" />
           <g transform="translate(94, 100)">
              <path d="M0,0 H12 V6 C12,8 0,8 0,6 Z" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" />
           </g>
@@ -483,12 +483,12 @@ const AnalogClock = ({ isDark, settings }) => {
   return (
     <div className="w-32 h-32 relative mx-auto mb-2">
        <div className={`w-full h-full rounded-full border-4 ${borderColor} ${bgColor} shadow-inner flex items-center justify-center relative`}>
-         {[...Array(12)].map((_, i) => (<div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
-         {[0, 3, 6, 9].map((i) => (<div key={i} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: thickColor }}></div>))}
-         <div className="absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
-         <div className="absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
-         <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
-         <div className={`absolute w-3 h-3 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} rounded-full border-2 border-white z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}></div>
+          {[...Array(12)].map((_, i) => (<div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
+          {[0, 3, 6, 9].map((i) => (<div key={i} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: thickColor }}></div>))}
+          <div className="absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
+          <div className="absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
+          <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
+          <div className={`absolute w-3 h-3 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} rounded-full border-2 border-white z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}></div>
        </div>
     </div>
   );
@@ -1294,7 +1294,6 @@ export default function App() {
 
   const renderList = () => {
     const displayWatches = filteredWatches.filter(w => { if (w.status === 'wishlist') return false; if (filter === 'all') return true; if (filter === 'bracelets') return false; return w.status === filter; });
-    
     if (filter === 'bracelets') {
         return (
             <div className="pb-24">
@@ -1316,7 +1315,6 @@ export default function App() {
             </div>
         );
     }
-    
     return (
       <div className="pb-24">
         {renderHeader(t('collection'), true)}
@@ -1329,20 +1327,16 @@ export default function App() {
               <div className={`aspect-square ${theme.bg} relative`}>
                 {displayImage ? <img src={displayImage} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
                 {(w.purchasePrice) && (<div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{formatPrice(w.purchasePrice)}</div>)}
-                
-                {/* --- LA MODIFICATION EST ICI --- */}
                 <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">
-                    {w.status === 'sold' ? (
-                        <>
-                            <span className="text-emerald-600 font-extrabold">{t('sold')}</span>
-                            <span className="text-emerald-600">{formatPrice(w.sellingPrice || w.purchasePrice)}</span>
-                        </>
-                    ) : (
-                        formatPrice(w.sellingPrice || w.purchasePrice)
-                    )}
+                  {w.status === 'sold' ? (
+                    <>
+                      <span className="text-emerald-600 font-extrabold uppercase">{t('sold')}</span>
+                      <span className="text-emerald-500 font-bold text-[9px]">{formatPrice(w.sellingPrice)}</span>
+                    </>
+                  ) : (
+                    formatPrice(w.sellingPrice || w.purchasePrice)
+                  )}
                 </div>
-                {/* ----------------------------- */}
-
                 <div className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer z-10" onClick={(e) => { e.stopPropagation(); toggleVisibility(w); }}>{w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}</div>
               </div>
               <div className="p-3"><div className={`font-bold font-serif text-sm truncate ${theme.text}`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div>
@@ -2126,3 +2120,51 @@ export default function App() {
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('notes')} & {t('history')}</h3>
                  <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
                  <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_brand')} value={watchForm.historyBrand || ''} onChange={e => setWatchForm({...watchForm, historyBrand: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_model')} value={watchForm.historyModel || ''} onChange={e => setWatchForm({...watchForm, historyModel: e.target.value})} />
+            </div>
+
+            <button className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold shadow-lg">{t('save')}</button>
+          </form>
+        </div>
+      );
+  };
+
+  if (loading) return <div className={`flex h-screen items-center justify-center ${theme.bgSecondary}`}><Loader2 className={`animate-spin ${theme.text}`}/></div>;
+
+  return (
+    <div className={`${theme.bg} min-h-screen font-sans ${theme.text}`}>
+      <div className={`max-w-md mx-auto ${theme.bgSecondary} min-h-screen shadow-2xl relative`}>
+        <div ref={scrollRef} className="h-full overflow-y-auto p-4 scrollbar-hide">
+            {view === 'box' && renderBox()}
+            {view === 'list' && renderList()}
+            {view === 'wishlist' && renderWishlist()}
+            {view === 'finance' && renderFinance()}
+            {view === 'stats' && renderStats()}
+            {view === 'profile' && renderProfile()}
+            {view === 'friends' && renderFriends()}
+            {view === 'summary' && renderSummary()}
+            {view === 'detail' && renderDetail()}
+            {view === 'add' && renderForm()}
+        </div>
+        {exportType && selectedWatch && <ExportView watch={selectedWatch} type={exportType} onClose={() => setExportType(null)} theme={theme} t={t} />}
+        
+        {renderFullScreenImage()}
+        {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} settings={settings} setSettings={setSettings} t={t} theme={theme} />}
+        {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} t={t} />}
+        {showRulesHelp && <RulesHelpModal onClose={() => setShowRulesHelp(false)} theme={theme} />}
+
+        {view !== 'add' && (
+          <nav className={`fixed bottom-0 w-full max-w-md ${theme.nav} border-t flex justify-between px-4 py-2 z-50 text-[10px] font-medium ${theme.textSub}`}>
+            <button onClick={() => setView('box')} className={`flex flex-col items-center w-1/6 ${view === 'box' ? 'text-amber-600' : ''}`}><Box size={20}/><span className="mt-1">{t('box')}</span></button>
+            <button onClick={() => { setFilter('all'); setView('list'); }} className={`flex flex-col items-center w-1/6 ${view === 'list' ? 'text-indigo-600' : ''}`}><Watch size={20}/><span className="mt-1">{t('list')}</span></button>
+            <button onClick={() => setView('wishlist')} className={`flex flex-col items-center w-1/6 ${view === 'wishlist' ? 'text-rose-600' : ''}`}><Heart size={20}/><span className="mt-1">{t('wishlist')}</span></button>
+            <button onClick={() => openAdd()} className="flex-none flex items-center justify-center w-12 h-12 bg-slate-900 text-white rounded-full shadow-lg -mt-4 border-2 border-slate-50"><Plus size={24}/></button>
+            <button onClick={() => setView('finance')} className={`flex flex-col items-center w-1/6 ${view === 'finance' ? 'text-emerald-600' : ''}`}><TrendingUp size={20}/><span className="mt-1">{t('finance')}</span></button>
+            <button onClick={() => setView('stats')} className={`flex flex-col items-center w-1/6 ${view === 'stats' ? 'text-blue-600' : ''}`}><BarChart2 size={20}/><span className="mt-1">{t('stats')}</span></button>
+            <button onClick={() => setView('profile')} className={`flex flex-col items-center w-1/6 ${view === 'profile' ? 'text-slate-900' : ''}`}><Grid size={20}/><span className="mt-1">{t('gallery')}</span></button>
+          </nav>
+        )}
+      </div>
+    </div>
+  );
+}
