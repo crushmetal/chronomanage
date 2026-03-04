@@ -146,7 +146,8 @@ const TRANSLATIONS = {
     sort_price_asc: "Prix (Croissant)",
     sort_price_desc: "Prix (Décroissant)",
     purchases: "Achats",
-    sales: "Ventes"
+    sales: "Ventes",
+    show_all: "Voir tout"
   },
   en: {
     box: "Box",
@@ -277,7 +278,8 @@ const TRANSLATIONS = {
     sort_price_asc: "Price (Asc)",
     sort_price_desc: "Price (Desc)",
     purchases: "Purchases",
-    sales: "Sales"
+    sales: "Sales",
+    show_all: "Show All"
   }
 };
 
@@ -985,6 +987,7 @@ export default function App() {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
   const [selectedCalendarWatches, setSelectedCalendarWatches] = useState([]);
   const [statsTimeframe, setStatsTimeframe] = useState('month'); 
+  const [isTopWornExpanded, setIsTopWornExpanded] = useState(false);
   const [calendarSearchTerm, setCalendarSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('dateDesc');
   const [error, setError] = useState(null); 
@@ -1800,7 +1803,7 @@ export default function App() {
             else inPeriod = evtDate.getMonth() === currentMonth.getMonth() && evtDate.getFullYear() === currentMonth.getFullYear();
             if (inPeriod && evt.watches) evt.watches.forEach(wId => { periodCounts[wId] = (periodCounts[wId] || 0) + 1; });
         });
-        return Object.entries(periodCounts).sort(([,a], [,b]) => b - a).slice(0, 5).map(([wId, count]) => { const w = watches.find(watch => watch.id === wId); return w ? { ...w, count } : null; }).filter(Boolean);
+        return Object.entries(periodCounts).sort(([,a], [,b]) => b - a).map(([wId, count]) => { const w = watches.find(watch => watch.id === wId); return w ? { ...w, count } : null; }).filter(Boolean);
       };
       
       const renderCalendarGrid = () => {
@@ -1836,6 +1839,9 @@ export default function App() {
       const topBrands = getTopBrands();
       const topDials = getTopDials();
       
+      const allTopWatches = getTopWatches();
+      const displayedTopWatches = isTopWornExpanded ? allTopWatches : allTopWatches.slice(0, 5);
+
       return (
         <div className="pb-24 px-3">
             <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-3 border-b ${theme.border} mb-4 flex justify-between items-center`}>
@@ -1860,8 +1866,16 @@ export default function App() {
                         </div>
                     </div>
                     <div className="space-y-3">
-                        {getTopWatches().map((w, i) => (<div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}><div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div><div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" /></div><div className="flex-1 min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div><div className="font-bold text-indigo-600 text-sm">{w.count}</div></div>))}
+                        {displayedTopWatches.map((w, i) => (<div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}><div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div><div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" /></div><div className="flex-1 min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div><div className="font-bold text-indigo-600 text-sm">{w.count}</div></div>))}
                     </div>
+                    {allTopWatches.length > 5 && (
+                        <button 
+                            onClick={() => setIsTopWornExpanded(!isTopWornExpanded)}
+                            className={`w-full mt-3 py-2 text-xs font-bold rounded-lg border border-dashed transition-colors ${theme.textSub} ${theme.border} hover:bg-slate-50 dark:hover:bg-slate-800`}
+                        >
+                            {isTopWornExpanded ? t('show_less') : `${t('show_all')} (${allTopWatches.length})`}
+                        </button>
+                    )}
                 </div>
 
                 {/* NEW: TOP BRANDS */}
