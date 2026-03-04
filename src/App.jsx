@@ -1399,7 +1399,7 @@ export default function App() {
             <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
                 {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (
                     <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>
-                        {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : watches.filter(w=>w.status==='sold').length)})`}
+                        {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.filter(w => w.status !== 'wishlist').length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : watches.filter(w=>w.status==='sold').length)})`}
                     </button>
                 ))}
             </div>
