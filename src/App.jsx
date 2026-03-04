@@ -523,6 +523,124 @@ const DetailItem = ({ icon: Icon, label, value, theme }) => (
     </div>
 );
 
+// NEW: Advanced Zoom Component (Mouse + Pinch)
+const FullScreenImageViewer = ({ src, onClose }) => {
+    const [scale, setScale] = useState(1);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [pinchDist, setPinchDist] = useState(null);
+    const [lastScale, setLastScale] = useState(1);
+
+    const handleWheel = (e) => {
+        const zoomSpeed = 0.1;
+        let newScale = e.deltaY < 0 ? scale + zoomSpeed : scale - zoomSpeed;
+        newScale = Math.min(Math.max(1, newScale), 5);
+        if (newScale === 1) setPosition({ x: 0, y: 0 });
+        setScale(newScale);
+    };
+
+    const handlePointerDown = (e) => {
+        if (scale > 1 && e.pointerType === 'mouse') {
+            setIsDragging(true);
+            setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+        }
+    };
+
+    const handlePointerMove = (e) => {
+        if (isDragging && scale > 1 && e.pointerType === 'mouse') {
+            setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+        }
+    };
+
+    const handlePointerUp = (e) => {
+        if (e.pointerType === 'mouse') setIsDragging(false);
+    };
+
+    const handleTouchStart = (e) => {
+        if (e.touches.length === 2) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            setPinchDist(dist);
+            setLastScale(scale);
+        } else if (e.touches.length === 1 && scale > 1) {
+            setIsDragging(true);
+            setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (e.touches.length === 2 && pinchDist) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            let newScale = lastScale * (dist / pinchDist);
+            newScale = Math.min(Math.max(1, newScale), 5);
+            if (newScale === 1) setPosition({ x: 0, y: 0 });
+            setScale(newScale);
+        } else if (e.touches.length === 1 && isDragging && scale > 1) {
+            setPosition({ x: e.touches[0].clientX - dragStart.x, y: e.touches[0].clientY - dragStart.y });
+        }
+    };
+
+    const handleTouchEnd = (e) => {
+        if (e.touches.length < 2) setPinchDist(null);
+        if (e.touches.length === 0) setIsDragging(false);
+    };
+
+    const handleDoubleClick = () => {
+        if (scale > 1) {
+            setScale(1);
+            setPosition({ x: 0, y: 0 });
+        } else {
+            setScale(2.5);
+        }
+    };
+
+    return (
+        <div 
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center overflow-hidden touch-none animate-in fade-in duration-200"
+            onClick={onClose}
+            onWheel={handleWheel}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+        >
+            <button 
+                className="absolute top-4 right-4 z-[110] text-white/80 hover:text-white bg-black/50 rounded-full p-2" 
+                onClick={onClose}
+            >
+                <X size={32} />
+            </button>
+            <div 
+                className="w-full h-full flex items-center justify-center relative touch-none"
+                onClick={(e) => e.stopPropagation()}
+                onDoubleClick={handleDoubleClick}
+                onPointerDown={handlePointerDown}
+                onTouchStart={handleTouchStart}
+            >
+                <img 
+                    src={src} 
+                    draggable={false}
+                    className="max-w-full max-h-[90vh] object-contain shadow-2xl" 
+                    style={{ 
+                        transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                        transition: isDragging || pinchDist ? 'none' : 'transform 0.2s ease-out',
+                        cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in'
+                    }}
+                    alt="Fullscreen View"
+                />
+            </div>
+        </div>
+    );
+};
+
 // NEW: Export / Print View Component
 const ExportView = ({ watch, type, onClose, theme, t }) => {
     const isSale = type === 'sale';
@@ -848,8 +966,6 @@ export default function App() {
   const [showGalleryWishlist, setShowGalleryWishlist] = useState(false);
 
   const [fullScreenImage, setFullScreenImage] = useState(null);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('box'); 
   const [filter, setFilter] = useState('all');
@@ -862,6 +978,8 @@ export default function App() {
   const [financeDetail, setFinanceDetail] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [gallerySearchTerm, setGallerySearchTerm] = useState(''); 
+  const [isGallerySearchOpen, setIsGallerySearchOpen] = useState(false);
   
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
@@ -1155,8 +1273,6 @@ export default function App() {
     } else { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, type === 'watch' ? 'watches' : 'bracelets', id)); setView('list'); }
   };
 
-  const handleBoxClick = () => { setIsBoxOpening(true); setTimeout(() => { setFilter('collection'); setView('list'); setIsBoxOpening(false); }, 800); };
-  
   const activeWatchesCount = watches.filter(w => w.status === 'collection').length;
 
   const filteredWatches = useMemo(() => {
@@ -1166,8 +1282,8 @@ export default function App() {
 
     const getTime = (w) => {
         if (w.purchaseDate) {
-            const t = new Date(w.purchaseDate).getTime();
-            return isNaN(t) ? null : t;
+            const time = new Date(w.purchaseDate).getTime();
+            return isNaN(time) ? null : time;
         }
         return null;
     };
@@ -1196,124 +1312,100 @@ export default function App() {
     return sorted;
   }, [watches, searchTerm, sortOrder]);
 
-  const renderFullScreenImage = () => {
-    if (!fullScreenImage) return null;
+  function renderBox() {
+      const handleBoxClick = () => { setIsBoxOpening(true); setTimeout(() => { setFilter('collection'); setView('list'); setIsBoxOpening(false); }, 800); };
+      return (
+        <div className={`flex flex-col items-center justify-start h-full min-h-[80vh] px-8 relative overflow-hidden pt-28 ${theme.text}`}>
+          <GraphicBackground isDark={isDark} />
+          <div className="absolute top-4 left-4 z-20">
+            <button onClick={() => setView('friends')} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}>
+                <Users size={18} />
+                {friendRequests.length > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}
+            </button>
+          </div>
 
-    const handleImageClick = (e) => {
-        e.stopPropagation();
-        if (!isZoomed) {
-            // Calcule la position du clic/tap pour zoomer au bon endroit
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
-            setZoomPos({ x, y });
-        }
-        setIsZoomed(!isZoomed);
-    };
+          <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-3">
+            {(!user || user?.isAnonymous) ? (
+              <button onClick={handleGoogleLogin} className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border text-xs font-medium transition-all ${theme.bgSecondary} ${theme.text} ${theme.border}`}>
+                {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : <LogIn size={14} />} {t('login_google')}
+              </button>
+            ) : (
+              <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">
+                 {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
+              </button>
+            )}
+            
+            <button onClick={() => setShowSettingsModal(true)} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors z-20`}><Settings size={18} /></button>
+          </div>
+          
+          {showProfileMenu && (
+              <div className={`absolute top-16 right-16 w-64 ${theme.card} rounded-xl shadow-xl border ${theme.border} py-1 z-30`}>
+                  <div className={`px-4 py-3 border-b ${theme.border}`}><p className={`text-sm font-medium ${theme.text}`}>{user.email}</p></div>
+                  <button onClick={() => { setView('summary'); setShowProfileMenu(false); }} className={`w-full text-left px-4 py-3 text-sm ${theme.text} hover:opacity-80 flex items-center gap-2`}><ClipboardList size={16} /> {t('inventory')}</button>
+                  <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><LogOut size={16} /> {t('logout')}</button>
+              </div>
+          )}
 
+          <div className="z-10 mt-12 mb-1 text-center">
+              <h1 className={`font-serif text-3xl sm:text-4xl ${theme.text} tracking-[0.3em] uppercase font-light`}>{t('myWatches')}</h1>
+              <div className={`w-16 h-0.5 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} mx-auto mt-2 opacity-20`}></div>
+          </div>
+          <div className="mb-8 text-center z-10 scale-90 opacity-90"><LiveClock isDark={isDark} settings={settings} /></div>
+          <div className="z-10 mb-4"><AnalogClock isDark={isDark} settings={settings} /></div>
+          
+          <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10 -mt-12">
+            <WatchBoxLogo isOpen={isBoxOpening} isDark={isDark} settings={settings} />
+          </div>
+          <div className="-mt-6 flex flex-col items-center z-10 pb-20">
+            <p className={`${theme.text} font-mono font-bold text-sm mb-2 tracking-widest shadow-sm uppercase opacity-70`}>{activeWatchesCount} {activeWatchesCount > 1 ? t('pieces') : t('piece')}</p>
+            {error ? <div className="mt-3 bg-red-50 text-red-600 px-4 py-2 rounded-lg text-xs">{String(error)}</div> : null}
+          </div>
+        </div>
+      );
+  }
+
+  function renderHeader(title, withFilters = false) {
     return (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-2 animate-in fade-in duration-200 overflow-hidden" onClick={() => { setFullScreenImage(null); setIsZoomed(false); }}>
-            <button className="absolute top-4 right-4 z-[110] text-white/80 hover:text-white bg-black/50 rounded-full p-2"><X size={32}/></button>
-            <img 
-                src={fullScreenImage} 
-                className={`max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl transition-transform duration-300 ease-out cursor-zoom-${isZoomed ? 'out' : 'in'}`} 
-                style={isZoomed ? { transform: 'scale(2.5)', transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : { transform: 'scale(1)' }}
-                onClick={handleImageClick}
-                alt="Fullscreen" 
-            />
+        <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border}`}>
+          <div className="flex justify-between items-center px-2 mb-2">
+            <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{title}</h1>
+            <div className="flex items-center gap-2">
+                {(title === t('collection') || title === t('wishlist') || title === t('bracelets') || title === t('inventory')) && (
+                    <div className="relative">
+                        <select 
+                            value={sortOrder} 
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
+                        >
+                            <option value="dateDesc">{t('sort_date_desc')}</option>
+                            <option value="dateAsc">{t('sort_date_asc')}</option>
+                            <option value="alpha">{t('sort_alpha')}</option>
+                            <option value="priceAsc">{t('sort_price_asc')}</option>
+                            <option value="priceDesc">{t('sort_price_desc')}</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                            <ArrowUpDown size={10} />
+                        </div>
+                    </div>
+                )}
+                <button onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
+            </div>
+          </div>
+          {isSearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
+          {withFilters && !isSearchOpen && (
+            <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
+                {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (
+                    <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>
+                        {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : watches.filter(w=>w.status==='sold').length)})`}
+                    </button>
+                ))}
+            </div>
+          )}
         </div>
     );
-  };
+  }
 
-  const renderBox = () => (
-    <div className={`flex flex-col items-center justify-start h-full min-h-[80vh] px-8 relative overflow-hidden pt-28 ${theme.text}`}>
-      <GraphicBackground isDark={isDark} />
-      <div className="absolute top-4 left-4 z-20">
-        <button onClick={() => setView('friends')} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}>
-            <Users size={18} />
-            {friendRequests.length > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}
-        </button>
-      </div>
-
-      <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-3">
-        {(!user || user?.isAnonymous) ? (
-          <button onClick={handleGoogleLogin} className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border text-xs font-medium transition-all ${theme.bgSecondary} ${theme.text} ${theme.border}`}>
-            {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : <LogIn size={14} />} {t('login_google')}
-          </button>
-        ) : (
-          <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">
-             {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
-          </button>
-        )}
-        
-        <button onClick={() => setShowSettingsModal(true)} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors z-20`}><Settings size={18} /></button>
-      </div>
-      
-      {showProfileMenu && (
-          <div className={`absolute top-16 right-16 w-64 ${theme.card} rounded-xl shadow-xl border ${theme.border} py-1 z-30`}>
-              <div className={`px-4 py-3 border-b ${theme.border}`}><p className={`text-sm font-medium ${theme.text}`}>{user.email}</p></div>
-              <button onClick={() => { setView('summary'); setShowProfileMenu(false); }} className={`w-full text-left px-4 py-3 text-sm ${theme.text} hover:opacity-80 flex items-center gap-2`}><ClipboardList size={16} /> {t('inventory')}</button>
-              <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><LogOut size={16} /> {t('logout')}</button>
-          </div>
-      )}
-
-      <div className="z-10 mt-12 mb-1 text-center">
-          <h1 className={`font-serif text-3xl sm:text-4xl ${theme.text} tracking-[0.3em] uppercase font-light`}>{t('myWatches')}</h1>
-          <div className={`w-16 h-0.5 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} mx-auto mt-2 opacity-20`}></div>
-      </div>
-      <div className="mb-8 text-center z-10 scale-90 opacity-90"><LiveClock isDark={isDark} settings={settings} /></div>
-      <div className="z-10 mb-4"><AnalogClock isDark={isDark} settings={settings} /></div>
-      
-      <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10 -mt-12">
-        <WatchBoxLogo isOpen={isBoxOpening} isDark={isDark} settings={settings} />
-      </div>
-      <div className="-mt-6 flex flex-col items-center z-10 pb-20">
-        <p className={`${theme.text} font-mono font-bold text-sm mb-2 tracking-widest shadow-sm uppercase opacity-70`}>{activeWatchesCount} {activeWatchesCount > 1 ? t('pieces') : t('piece')}</p>
-        {error && <div className="mt-3 bg-red-50 text-red-600 px-4 py-2 rounded-lg text-xs">{String(error)}</div>}
-      </div>
-    </div>
-  );
-
-  const renderHeader = (title, withFilters = false) => (
-    <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border}`}>
-      <div className="flex justify-between items-center px-2 mb-2">
-        <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{title}</h1>
-        <div className="flex items-center gap-2">
-            {(title === t('collection') || title === t('wishlist') || title === t('bracelets') || title === t('inventory')) && (
-                <div className="relative">
-                    <select 
-                        value={sortOrder} 
-                        onChange={(e) => setSortOrder(e.target.value)}
-                        className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
-                    >
-                        <option value="dateDesc">{t('sort_date_desc')}</option>
-                        <option value="dateAsc">{t('sort_date_asc')}</option>
-                        <option value="alpha">{t('sort_alpha')}</option>
-                        <option value="priceAsc">{t('sort_price_asc')}</option>
-                        <option value="priceDesc">{t('sort_price_desc')}</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                        <ArrowUpDown size={10} />
-                    </div>
-                </div>
-            )}
-            <button onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
-        </div>
-      </div>
-      {isSearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
-      {withFilters && !isSearchOpen && (
-        <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
-            {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (
-                <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>
-                    {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : watches.filter(w=>w.status==='sold').length)})`}
-                </button>
-            ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderList = () => {
+  function renderList() {
     const displayWatches = filteredWatches.filter(w => { if (w.status === 'wishlist') return false; if (filter === 'all') return true; if (filter === 'bracelets') return false; return w.status === filter; });
     if (filter === 'bracelets') {
         return (
@@ -1366,9 +1458,9 @@ export default function App() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderWishlist = () => {
+  function renderWishlist() {
     const wishes = filteredWatches.filter(w => w.status === 'wishlist');
     return (
       <div className="pb-24">
@@ -1389,9 +1481,9 @@ export default function App() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderDetail = () => {
+  function renderDetail() {
     if(!selectedWatch) return null;
     const w = selectedWatch;
     const displayImages = w.images && w.images.length > 0 ? w.images : (w.image ? [w.image] : []);
@@ -1596,60 +1688,108 @@ export default function App() {
         </div>
       </div>
     );
-  };
+  }
   
-  const renderProfile = () => (
-    <div className="pb-24 px-2">
-      <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border} mb-2`}>
-         <div className="flex justify-between items-center px-2 mb-2">
-            <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{t('gallery')}</h1>
-            <div className="flex items-center gap-2">
-                <div className="relative">
-                    <select 
-                        value={sortOrder} 
-                        onChange={(e) => setSortOrder(e.target.value)}
-                        className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
-                    >
-                        <option value="dateDesc">{t('sort_date_desc')}</option>
-                        <option value="dateAsc">{t('sort_date_asc')}</option>
-                        <option value="alpha">{t('sort_alpha')}</option>
-                        <option value="priceAsc">{t('sort_price_asc')}</option>
-                        <option value="priceDesc">{t('sort_price_desc')}</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                        <ArrowUpDown size={10} />
-                    </div>
-                </div>
-            </div>
-         </div>
-         <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
-               <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button>
-               <button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button>
-               <button onClick={() => setShowGallerySold(!showGallerySold)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('sold')}</button>
-               <button onClick={() => setShowGalleryWishlist(!showGalleryWishlist)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('wishlist')}</button>
-         </div>
-      </div>
-      <div className="grid grid-cols-3 gap-1 mt-2 px-1">
-          {filteredWatches.filter(w => { 
-             if (!w.image && (!w.images || w.images.length === 0)) return false; 
-             if (w.status === 'collection' && showGalleryCollection) return true; 
-             if (w.status === 'forsale' && showGalleryForsale) return true; 
-             if (w.status === 'sold' && showGallerySold) return true; 
-             if (w.status === 'wishlist' && showGalleryWishlist) return true;
-             return false; 
-          }).map(w => (
-              <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
-                  <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
-              </div>
-          ))}
-          {filteredWatches.filter(w => { if (!w.image && (!w.images || w.images.length === 0)) return false; if (w.status === 'collection' && showGalleryCollection) return true; if (w.status === 'forsale' && showGalleryForsale) return true; if (w.status === 'sold' && showGallerySold) return true; if (w.status === 'wishlist' && showGalleryWishlist) return true; return false; }).length === 0 && (
-              <div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible.</div>
-          )}
-      </div>
-    </div>
-  );
+  function renderProfile() {
+    const displayWatches = watches.filter(w => { 
+        if (!w.image && (!w.images || w.images.length === 0)) return false; 
+        let matchSearch = true;
+        if (gallerySearchTerm) {
+            const lower = gallerySearchTerm.toLowerCase();
+            matchSearch = (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower));
+        }
+        if (!matchSearch) return false;
+        if (w.status === 'collection' && showGalleryCollection) return true; 
+        if (w.status === 'forsale' && showGalleryForsale) return true; 
+        if (w.status === 'sold' && showGallerySold) return true; 
+        if (w.status === 'wishlist' && showGalleryWishlist) return true;
+        return false; 
+    });
 
-  const renderStats = () => {
+    const getTime = (w) => {
+        if (w.purchaseDate) {
+            const t = new Date(w.purchaseDate).getTime();
+            return isNaN(t) ? null : t;
+        }
+        return null;
+    };
+
+    if (sortOrder === 'priceAsc') {
+        displayWatches.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
+    } else if (sortOrder === 'priceDesc') {
+        displayWatches.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
+    } else if (sortOrder === 'alpha') {
+        displayWatches.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
+    } else if (sortOrder === 'dateAsc') {
+        displayWatches.sort((a, b) => {
+            const ta = getTime(a), tb = getTime(b);
+            if (ta === null && tb !== null) return 1;
+            if (tb === null && ta !== null) return -1;
+            if (ta === null && tb === null) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime();
+            return ta - tb;
+        });
+    } else {
+        displayWatches.sort((a, b) => {
+            const ta = getTime(a), tb = getTime(b);
+            if (ta === null && tb !== null) return 1;
+            if (tb === null && ta !== null) return -1;
+            if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
+            return tb - ta;
+        });
+    }
+
+    return (
+        <div className="pb-24 px-2">
+          <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border} mb-2`}>
+             <div className="flex justify-between items-center px-2 mb-2">
+                <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{t('gallery')}</h1>
+                <div className="flex items-center gap-2">
+                    <div className="relative">
+                        <select 
+                            value={sortOrder} 
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
+                        >
+                            <option value="dateDesc">{t('sort_date_desc')}</option>
+                            <option value="dateAsc">{t('sort_date_asc')}</option>
+                            <option value="alpha">{t('sort_alpha')}</option>
+                            <option value="priceAsc">{t('sort_price_asc')}</option>
+                            <option value="priceDesc">{t('sort_price_desc')}</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                            <ArrowUpDown size={10} />
+                        </div>
+                    </div>
+                    <button onClick={() => { setIsGallerySearchOpen(!isGallerySearchOpen); if(isGallerySearchOpen) setGallerySearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isGallerySearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
+                </div>
+             </div>
+             {isGallerySearchOpen && (
+                 <div className="px-2 mb-3">
+                     <input autoFocus type="text" placeholder={t('search')} value={gallerySearchTerm} onChange={(e) => setGallerySearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
+                 </div>
+             )}
+             <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
+                   <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button>
+                   <button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button>
+                   <button onClick={() => setShowGallerySold(!showGallerySold)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('sold')}</button>
+                   <button onClick={() => setShowGalleryWishlist(!showGalleryWishlist)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('wishlist')}</button>
+             </div>
+          </div>
+          <div className="grid grid-cols-3 gap-1 mt-2 px-1">
+              {displayWatches.map(w => (
+                  <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
+                      <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
+                  </div>
+              ))}
+              {displayWatches.length === 0 && (
+                  <div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible.</div>
+              )}
+          </div>
+        </div>
+    );
+  }
+
+  function renderStats() {
       const getTopWatches = () => {
         const periodCounts = {};
         calendarEvents.forEach(evt => {
@@ -1716,7 +1856,7 @@ export default function App() {
                     <div className="flex justify-between items-center mb-4">
                         <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2`}><TrendingUp className="text-emerald-500" size={16} /> {t('top_worn')}</h3>
                         <div className={`flex ${theme.bg} rounded-lg p-0.5`}>
-                            {[{id: 'month', label: t('month')}, {id: 'year', label: t('year')}, {id: 'all', label: t('all_time')}].map(t => (<button key={t.id} onClick={() => setStatsTimeframe(t.id)} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${statsTimeframe === t.id ? `${theme.bgSecondary} shadow ${theme.text}` : theme.textSub}`}>{t.label}</button>))}
+                            {[{id: 'month', label: t('month')}, {id: 'year', label: t('year')}, {id: 'all', label: t('all_time')}].map(tObj => (<button key={tObj.id} onClick={() => setStatsTimeframe(tObj.id)} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${statsTimeframe === tObj.id ? `${theme.bgSecondary} shadow ${theme.text}` : theme.textSub}`}>{tObj.label}</button>))}
                         </div>
                     </div>
                     <div className="space-y-3">
@@ -1734,7 +1874,7 @@ export default function App() {
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / topBrands[0][1]) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / (topBrands[0]?.[1] || 1)) * 100}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -1752,7 +1892,7 @@ export default function App() {
                                     <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
                                     <div className="flex-1">
                                         <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${(count / topDials[0][1]) * 100}%`}}></div></div>
+                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${(count / (topDials[0]?.[1] || 1)) * 100}%`}}></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -1792,9 +1932,9 @@ export default function App() {
             )}
         </div>
       );
-  };
+  }
 
-  const renderFinance = () => {
+  function renderFinance() {
     const sCol = { buy: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
     const sSale = { buy: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
     const sSold = { buy: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
@@ -1962,9 +2102,9 @@ export default function App() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderForm = () => {
+  function renderForm() {
       const isWatch = editingType === 'watch';
       const currentImages = isWatch ? (watchForm.images || (watchForm.image ? [watchForm.image] : [])) : [];
       return (
@@ -2148,7 +2288,7 @@ export default function App() {
           </form>
         </div>
       );
-  };
+  }
 
   if (loading) return <div className={`flex h-screen items-center justify-center ${theme.bgSecondary}`}><Loader2 className={`animate-spin ${theme.text}`}/></div>;
 
@@ -2169,7 +2309,8 @@ export default function App() {
         </div>
         {exportType && selectedWatch && <ExportView watch={selectedWatch} type={exportType} onClose={() => setExportType(null)} theme={theme} t={t} />}
         
-        {renderFullScreenImage()}
+        {fullScreenImage && <FullScreenImageViewer src={fullScreenImage} onClose={() => setFullScreenImage(null)} />}
+
         {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} settings={settings} setSettings={setSettings} t={t} theme={theme} />}
         {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} t={t} />}
         {showRulesHelp && <RulesHelpModal onClose={() => setShowRulesHelp(false)} theme={theme} />}
