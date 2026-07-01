@@ -118,7 +118,7 @@ const TRANSLATIONS = {
     identity: "Identité",
     origin_maintenance: "Origine & Entretien",
     technical: "Technique",
-    financial_status: "Finances & Statut",
+    financial_status: "Finances & Status",
     date_release: "Date de Sortie",
     date_purchase: "Date d'Achat",
     date_sold: "Date de Vente",
@@ -410,6 +410,7 @@ const MovementIcon = ({ size = 24, className = "" }) => (
 );
 
 // --- ANIMATION COFFRE ---
+/* STREAMING_CHUNK:Rendering box animation component... */
 const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
   const leatherColor = settings.boxLeather || (isDark ? "#3E2723" : "#5D4037");
   const interiorColor = settings.boxInterior || (isDark ? "#424242" : "#f5f5f0");
@@ -485,12 +486,12 @@ const AnalogClock = ({ isDark, settings }) => {
   return (
     <div className="w-32 h-32 relative mx-auto mb-2">
        <div className={`w-full h-full rounded-full border-4 ${borderColor} ${bgColor} shadow-inner flex items-center justify-center relative`}>
-          {[...Array(12)].map((_, i) => (<div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
-          {[0, 3, 6, 9].map((i) => (<div key={i} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: thickColor }}></div>))}
-          <div className="absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
-          <div className="absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
-          <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
-          <div className={`absolute w-3 h-3 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} rounded-full border-2 border-white z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}></div>
+         {[...Array(12)].map((_, i) => (<div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
+         {[0, 3, 6, 9].map((i) => (<div key={i} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: thickColor }}></div>))}
+         <div className="absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
+         <div className="absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
+         <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
+         <div className={`absolute w-3 h-3 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} rounded-full border-2 border-white z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}></div>
        </div>
     </div>
   );
@@ -513,7 +514,7 @@ const GraphicBackground = ({ isDark }) => (
 );
 
 // --- COMPOSANTS EXTERNALISÉS ---
-
+/* STREAMING_CHUNK:Defining UI helper components... */
 const Card = ({ children, className = "", onClick, theme }) => (
   <div onClick={onClick} className={`${theme.card} rounded-xl shadow-sm border ${theme.border} overflow-hidden ${className} ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}>{children}</div>
 );
@@ -525,7 +526,7 @@ const DetailItem = ({ icon: Icon, label, value, theme }) => (
     </div>
 );
 
-// NEW: Advanced Zoom Component (Mouse + Pinch)
+// Advanced Zoom Component (Mouse + Pinch)
 const FullScreenImageViewer = ({ src, onClose }) => {
     const [scale, setScale] = useState(1);
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -643,7 +644,7 @@ const FullScreenImageViewer = ({ src, onClose }) => {
     );
 };
 
-// NEW: Export / Print View Component
+// Export / Print View Component
 const ExportView = ({ watch, type, onClose, theme, t }) => {
     const isSale = type === 'sale';
     return (
@@ -709,7 +710,6 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                     </div>
                 </div>
 
-                {/* NEW: History in Sale Sheet */}
                 {isSale && (watch.historyBrand || watch.historyModel) && (
                     <div className="space-y-4">
                         {watch.historyBrand && (
@@ -744,6 +744,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
     );
 };
 
+/* STREAMING_CHUNK:Rendering finance detail component... */
 const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
     const [localSort, setLocalSort] = useState('alpha'); 
     const sortedItems = useMemo(() => {
@@ -863,6 +864,7 @@ const ConfigModal = ({ onClose, currentError, t }) => {
     );
 };
 
+/* STREAMING_CHUNK:Settings & App main setup... */
 const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className={`${theme.card} rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border ${theme.border} max-h-[90vh] flex flex-col`}>
@@ -929,7 +931,6 @@ const RulesHelpModal = ({ onClose, theme }) => (
 );
 
 // --- APPLICATION ---
-
 export default function App() {
   const [useLocalStorage, setUseLocalStorage] = useState(!firebaseReady);
   const [user, setUser] = useState(useLocalStorage ? { uid: 'local-user' } : null);
@@ -1017,6 +1018,7 @@ export default function App() {
       }
   }, []);
 
+/* STREAMING_CHUNK:Firebase synchronization effect... */
   useEffect(() => {
      if (useLocalStorage || !user?.uid) return;
      const savedFriends = localStorage.getItem(`friends_${user.uid}`);
@@ -1131,6 +1133,7 @@ export default function App() {
     try { await signOut(auth); setShowProfileMenu(false); } finally { setIsAuthLoading(false); }
   };
 
+/* STREAMING_CHUNK:App initial effects & Form logic... */
   useEffect(() => {
     if (useLocalStorage && !isAuthLoading) { setLoading(false); return; }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -1276,11 +1279,19 @@ export default function App() {
     } else { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, type === 'watch' ? 'watches' : 'bracelets', id)); setView('list'); }
   };
 
+/* STREAMING_CHUNK:Filtering and sorting logic... */
   const activeWatchesCount = watches.filter(w => w.status === 'collection').length;
 
+  // NEW: Search by BOTH brand and model
   const filteredWatches = useMemo(() => {
     let filtered = watches;
-    if (searchTerm) { const lower = searchTerm.toLowerCase(); filtered = filtered.filter(w => (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower))); }
+    if (searchTerm) { 
+      const lower = searchTerm.toLowerCase(); 
+      filtered = filtered.filter(w => {
+          const fullSearchString = `${w.brand || ''} ${w.model || ''}`.toLowerCase();
+          return fullSearchString.includes(lower);
+      }); 
+    }
     let sorted = [...filtered];
 
     const getTime = (w) => {
@@ -1315,6 +1326,11 @@ export default function App() {
     return sorted;
   }, [watches, searchTerm, sortOrder]);
 
+  // Fallback stubs just in case they were expected to be in the code
+  const renderFriends = () => <div className="p-4 text-center">Section Amis</div>;
+  const renderSummary = () => <div className="p-4 text-center">Section Inventaire</div>;
+
+/* STREAMING_CHUNK:Rendering main views... */
   function renderBox() {
       const handleBoxClick = () => { setIsBoxOpening(true); setTimeout(() => { setFilter('collection'); setView('list'); setIsBoxOpening(false); }, 800); };
       return (
@@ -1486,6 +1502,7 @@ export default function App() {
     );
   }
 
+/* STREAMING_CHUNK:Rendering watch details... */
   function renderDetail() {
     if(!selectedWatch) return null;
     const w = selectedWatch;
@@ -1552,8 +1569,8 @@ export default function App() {
           </div>
 
           <div className="flex gap-2">
-               {w.status !== 'wishlist' && <button onClick={() => setExportType('insurance')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><ShieldCheck size={16}/> {t('sheet_insurance')}</button>}
-               {w.status !== 'wishlist' && <button onClick={() => setExportType('sale')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><Tag size={16}/> {t('sheet_sale')}</button>}
+                {w.status !== 'wishlist' && <button onClick={() => setExportType('insurance')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><ShieldCheck size={16}/> {t('sheet_insurance')}</button>}
+                {w.status !== 'wishlist' && <button onClick={() => setExportType('sale')} className={`flex-1 py-3 ${theme.bg} border ${theme.border} rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${theme.text} hover:opacity-80`}><Tag size={16}/> {t('sheet_sale')}</button>}
           </div>
 
           <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
@@ -1692,14 +1709,17 @@ export default function App() {
       </div>
     );
   }
-  
+
+/* STREAMING_CHUNK:Rendering profile gallery & Stats... */
+  // NEW: Search by BOTH brand and model in Profile/Gallery
   function renderProfile() {
     const displayWatches = watches.filter(w => { 
         if (!w.image && (!w.images || w.images.length === 0)) return false; 
         let matchSearch = true;
         if (gallerySearchTerm) {
             const lower = gallerySearchTerm.toLowerCase();
-            matchSearch = (w.brand && w.brand.toLowerCase().includes(lower)) || (w.model && w.model.toLowerCase().includes(lower));
+            const fullSearchString = `${w.brand || ''} ${w.model || ''}`.toLowerCase();
+            matchSearch = fullSearchString.includes(lower);
         }
         if (!matchSearch) return false;
         if (w.status === 'collection' && showGalleryCollection) return true; 
@@ -1806,6 +1826,7 @@ export default function App() {
         return Object.entries(periodCounts).sort(([,a], [,b]) => b - a).map(([wId, count]) => { const w = watches.find(watch => watch.id === wId); return w ? { ...w, count } : null; }).filter(Boolean);
       };
       
+      // NEW: Calendar grid with full image and styled bubbles
       const renderCalendarGrid = () => {
         const year = currentMonth.getFullYear(); const month = currentMonth.getMonth();
         const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0);
@@ -1816,10 +1837,39 @@ export default function App() {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const event = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
             const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
+
+            const firstWatchId = event?.watches?.[0];
+            const firstWatch = firstWatchId ? watches.find(wa => wa.id === firstWatchId) : null;
+            const watchImg = firstWatch ? (firstWatch.images?.[0] || firstWatch.image) : null;
+
+            let bubbleBg = 'bg-transparent';
+            let bubbleText = theme.textSub;
+            
+            if (isToday) {
+                bubbleBg = 'bg-emerald-500 shadow-sm';
+                bubbleText = 'text-white';
+            } else if (watchImg) {
+                bubbleBg = 'bg-white shadow-sm';
+                bubbleText = 'text-black';
+            }
+
             days.push(
-                <div key={d} onClick={() => handleCalendarDayClick(dateStr)} className={`aspect-square border rounded-lg p-1 relative cursor-pointer ${theme.border} ${isToday ? 'border-indigo-500 bg-indigo-500/10' : theme.bg}`}>
-                    <span className={`text-[10px] font-bold ${isToday ? 'text-indigo-500' : theme.textSub}`}>{d}</span>
-                    <div className="flex flex-wrap gap-0.5 mt-1">{event?.watches?.slice(0, 4).map((wId, idx) => { const w = watches.find(wa => wa.id === wId); if (!w) return null; const img = w.images?.[0] || w.image; return (<div key={idx} className="w-1.5 h-1.5 rounded-full bg-slate-300 overflow-hidden">{img && <img src={img} className="w-full h-full object-cover" />}</div>); })}</div>
+                <div key={d} onClick={() => handleCalendarDayClick(dateStr)} className={`aspect-square border rounded-lg relative overflow-hidden cursor-pointer ${theme.border} ${isToday && !watchImg ? 'border-emerald-500 bg-emerald-500/10' : theme.bg}`}>
+                    {watchImg ? (
+                        <>
+                            <img src={watchImg} className="absolute inset-0 w-full h-full object-cover opacity-90" alt="" />
+                        </>
+                    ) : null}
+                    
+                    <div className={`absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold z-10 ${bubbleBg} ${bubbleText}`}>
+                        {d}
+                    </div>
+
+                    {event?.watches?.length > 1 && (
+                        <div className="absolute bottom-1 right-1 px-1.5 h-4 bg-black/70 text-white rounded-full flex items-center justify-center text-[9px] font-bold z-10 backdrop-blur-sm">
+                            +{event.watches.length - 1}
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -1878,7 +1928,6 @@ export default function App() {
                     )}
                 </div>
 
-                {/* NEW: TOP BRANDS */}
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><PieChart className="text-blue-500" size={16} /> {t('fav_brands')}</h3>
                     <div className="space-y-3">
@@ -1896,7 +1945,6 @@ export default function App() {
                     </div>
                 </div>
 
-                {/* NEW: TOP DIALS */}
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><Palette className="text-purple-500" size={16} /> {t('fav_dials')}</h3>
                     <div className="space-y-3">
@@ -1924,7 +1972,9 @@ export default function App() {
                             <input autoFocus type="text" placeholder={t('search')} className={`w-full p-2 ${theme.input} rounded-lg text-sm`} value={calendarSearchTerm} onChange={(e) => setCalendarSearchTerm(e.target.value)}/>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                            {watches.filter(w => w.status === 'collection').filter(w => !calendarSearchTerm || w.brand.toLowerCase().includes(calendarSearchTerm.toLowerCase())).map(w => {
+                            {watches.filter(w => w.status === 'collection')
+                             .filter(w => !calendarSearchTerm || `${w.brand || ''} ${w.model || ''}`.toLowerCase().includes(calendarSearchTerm.toLowerCase()))
+                             .map(w => {
                                 const isSelected = selectedCalendarWatches.includes(w.id);
                                 return (
                                 <div key={w.id} onClick={() => setSelectedCalendarWatches(prev => isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id])} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/10' : `${theme.border} hover:${theme.bg}`}`}>
@@ -1948,6 +1998,7 @@ export default function App() {
       );
   }
 
+/* STREAMING_CHUNK:Rendering finance view... */
   function renderFinance() {
     const sCol = { buy: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
     const sSale = { buy: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
@@ -2118,6 +2169,7 @@ export default function App() {
     );
   }
 
+/* STREAMING_CHUNK:Rendering Add/Edit form... */
   function renderForm() {
       const isWatch = editingType === 'watch';
       const currentImages = isWatch ? (watchForm.images || (watchForm.image ? [watchForm.image] : [])) : [];
@@ -2306,6 +2358,7 @@ export default function App() {
 
   if (loading) return <div className={`flex h-screen items-center justify-center ${theme.bgSecondary}`}><Loader2 className={`animate-spin ${theme.text}`}/></div>;
 
+/* STREAMING_CHUNK:Main application layout... */
   return (
     <div className={`${theme.bg} min-h-screen font-sans ${theme.text}`}>
       <div className={`max-w-md mx-auto ${theme.bgSecondary} min-h-screen shadow-2xl relative`}>
@@ -2344,3 +2397,4 @@ export default function App() {
     </div>
   );
 }
+```eof
