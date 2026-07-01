@@ -22,268 +22,60 @@ import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, ge
 
 const TRANSLATIONS = {
   fr: {
-    box: "Coffre",
-    list: "Liste",
-    wishlist: "Souhaits",
-    finance: "Finance",
-    stats: "Stats",
-    gallery: "Galerie",
-    myWatches: "Mes Montres",
-    pieces: "pièces",
-    piece: "pièce",
-    search: "Rechercher...",
-    collection: "Ma Collection",
-    forsale: "En Vente",
-    sold: "Vendues",
-    bracelets: "Bracelets",
-    settings: "Paramètres",
-    language: "Langue",
-    theme: "Thème",
-    light: "Clair",
-    dark: "Sombre",
-    total_value: "Valeur Totale",
-    profit: "Plus-value",
-    brand: "Marque",
-    model: "Modèle",
-    reference: "Référence",
-    year: "Année", 
-    model_year: "Année du modèle",
-    price: "Prix",
-    add_new: "Ajouter",
-    edit: "Modifier",
-    delete: "Supprimer",
-    save: "Sauvegarder",
-    cancel: "Annuler",
-    notes: "Notes",
-    history: "Histoire",
-    history_brand: "Histoire Marque",
-    history_model: "Histoire Modèle",
-    specs: "Caractéristiques",
-    unknown: "Inconnu",
-    total_displayed: "montres affichées",
-    login_google: "Connexion Google",
-    logout: "Déconnexion",
-    config_cloud: "Config Cloud",
-    export_csv: "Exporter CSV",
-    filter_all: "Tout",
-    all: "Tout", 
-    inventory: "Inventaire",
-    friends: "Amis",
-    requests: "Demandes",
-    limited_edition: "EDITION LIMITÉE",
-    movement: "Mouvement",
-    movement_model: "Calibre/Modèle",
-    manual: "Manuel",
-    automatic: "Automatique",
-    quartz: "Quartz",
-    diameter: "Diamètre",
-    thickness: "Épaisseur",
-    lug_width: "Entre-corne",
-    water_res: "Étanchéité",
-    glass: "Verre",
-    dial: "Cadran",
-    country: "Pays",
-    box_included: "Boîte",
-    warranty: "Garantie",
-    revision: "Révision",
-    battery: "Pile",
-    weight: "Poids",
-    visibility_friends: "Visible par les amis",
-    private_note: "Si décoché, cette montre restera privée.",
-    move_collection: "J'ai obtenu cette montre !",
-    set_main_image: "Définir principale",
-    add_photo: "Ajouter",
-    link_web: "Lien Web",
-    visit_site: "Visiter le site marchand",
-    purchase_price: "Prix Achat",
-    selling_price: "Prix Vente/Estim",
-    min_price: "Prix Min (Privé)",
-    clock_style: "Style Horloge",
-    box_style: "Style Coffre",
-    color_digital: "Heure Digitale",
-    color_h_hand: "Aig. Heures",
-    color_m_hand: "Aig. Minutes",
-    color_s_hand: "Aig. Secondes",
-    color_index_main: "Gros Index",
-    color_index_small: "Petits Index",
-    color_leather: "Cuir Extérieur",
-    color_interior: "Intérieur",
-    color_cushion: "Cushions",
-    top_worn: "Top Portées",
-    calendar: "Calendrier",
-    month: "Mois",
-    all_time: "Tout",
-    fav_brands: "Marques Favorites",
-    fav_dials: "Couleurs Cadran",
-    finance_timeline: "Chronologie Financière",
-    spent: "Dépenses",
-    gained: "Gains",
-    balance: "Bilan",
-    identity: "Identité",
-    origin_maintenance: "Origine & Entretien",
-    technical: "Technique",
-    financial_status: "Finances & Status",
-    date_release: "Date de Sortie",
-    date_purchase: "Date d'Achat",
-    date_sold: "Date de Vente",
-    market_value: "Estimation du Marché",
-    find_used: "Trouver d'Occasion",
-    export_sheet: "Fiches & Documents",
-    sheet_insurance: "Fiche Assurance",
-    sheet_sale: "Fiche de Vente",
-    print: "Imprimer",
-    condition_rating: "État (1-10)",
-    condition_comment: "Commentaire sur l'état",
-    show_history: "Voir tout l'historique",
-    show_less: "Réduire",
-    year_summary: "Bilan Année",
-    stats_usage: "Statistiques d'Usage",
-    worn_this_month: "Ce mois",
-    worn_this_year: "Cette année",
-    worn_last_year: "Année dernière",
-    invoice: "Facture",
-    add_invoice: "Ajouter Facture",
-    view_invoice: "Voir Facture",
-    sort_date_desc: "Date d'achat (Récents)",
-    sort_date_asc: "Date d'achat (Anciens)",
-    sort_alpha: "A-Z",
-    sort_price_asc: "Prix (Croissant)",
-    sort_price_desc: "Prix (Décroissant)",
-    purchases: "Achats",
-    sales: "Ventes",
-    show_all: "Voir tout"
+    box: "Coffre", list: "Liste", wishlist: "Souhaits", finance: "Finance", stats: "Stats",
+    gallery: "Galerie", myWatches: "Mes Montres", pieces: "pièces", piece: "pièce", search: "Rechercher...",
+    collection: "Ma Collection", forsale: "En Vente", sold: "Vendues", bracelets: "Bracelets", settings: "Paramètres",
+    language: "Langue", theme: "Thème", light: "Clair", dark: "Sombre", total_value: "Valeur Totale", profit: "Plus-value",
+    brand: "Marque", model: "Modèle", reference: "Référence", year: "Année", model_year: "Année du modèle",
+    price: "Prix", add_new: "Ajouter", edit: "Modifier", delete: "Supprimer", save: "Sauvegarder", cancel: "Annuler",
+    notes: "Notes", history: "Histoire", history_brand: "Histoire Marque", history_model: "Histoire Modèle", specs: "Caractéristiques",
+    unknown: "Inconnu", total_displayed: "montres affichées", login_google: "Connexion Google", logout: "Déconnexion",
+    config_cloud: "Config Cloud", export_csv: "Exporter CSV", filter_all: "Tout", all: "Tout", inventory: "Inventaire",
+    friends: "Amis", requests: "Demandes", limited_edition: "EDITION LIMITÉE", movement: "Mouvement", movement_model: "Calibre/Modèle",
+    manual: "Manuel", automatic: "Automatique", quartz: "Quartz", diameter: "Diamètre", thickness: "Épaisseur",
+    lug_width: "Entre-corne", water_res: "Étanchéité", glass: "Verre", dial: "Cadran", country: "Pays", box_included: "Boîte",
+    warranty: "Garantie", revision: "Révision", battery: "Pile", weight: "Poids", visibility_friends: "Visible par les amis",
+    private_note: "Si décoché, cette montre restera privée.", move_collection: "J'ai obtenu cette montre !", set_main_image: "Définir principale",
+    add_photo: "Ajouter", link_web: "Lien Web", visit_site: "Visiter le site marchand", purchase_price: "Prix Achat",
+    selling_price: "Prix Vente/Estim", min_price: "Prix Min (Privé)", clock_style: "Style Horloge", box_style: "Style Coffre",
+    color_digital: "Heure Digitale", color_h_hand: "Aig. Heures", color_m_hand: "Aig. Minutes", color_s_hand: "Aig. Secondes",
+    color_index_main: "Gros Index", color_index_small: "Petits Index", color_leather: "Cuir Extérieur", color_interior: "Intérieur",
+    color_cushion: "Cushions", top_worn: "Top Portées", calendar: "Calendrier", month: "Mois", all_time: "Tout",
+    fav_brands: "Marques Favorites", fav_dials: "Couleurs Cadran", finance_timeline: "Chronologie Financière", spent: "Dépenses",
+    gained: "Gains", balance: "Bilan", identity: "Identité", origin_maintenance: "Origine & Entretien", technical: "Technique",
+    financial_status: "Finances & Status", date_release: "Date de Sortie", date_purchase: "Date d'Achat", date_sold: "Date de Vente",
+    market_value: "Estimation du Marché", find_used: "Trouver d'Occasion", export_sheet: "Fiches & Documents", sheet_insurance: "Fiche Assurance",
+    sheet_sale: "Fiche de Vente", print: "Imprimer", condition_rating: "État (1-10)", condition_comment: "Commentaire sur l'état",
+    show_history: "Voir tout l'historique", show_less: "Réduire", year_summary: "Bilan Année", stats_usage: "Statistiques d'Usage",
+    worn_this_month: "Ce mois", worn_this_year: "Cette année", worn_last_year: "Année dernière", invoice: "Facture",
+    add_invoice: "Ajouter Facture", view_invoice: "Voir Facture", sort_date_desc: "Date d'achat (Récents)", sort_date_asc: "Date d'achat (Anciens)",
+    sort_alpha: "A-Z", sort_price_asc: "Prix (Croissant)", sort_price_desc: "Prix (Décroissant)", purchases: "Achats", sales: "Ventes", show_all: "Voir tout"
   },
   en: {
-    box: "Box",
-    list: "List",
-    wishlist: "Wishlist",
-    finance: "Finances",
-    stats: "Statistics",
-    gallery: "Gallery",
-    myWatches: "My Watches",
-    pieces: "pieces",
-    piece: "piece",
-    search: "Search...",
-    collection: "Collection",
-    forsale: "For Sale",
-    sold: "Sold",
-    bracelets: "Straps",
-    settings: "Settings",
-    language: "Language",
-    theme: "Theme",
-    light: "Light",
-    dark: "Dark",
-    total_value: "Total Value",
-    profit: "Profit",
-    brand: "Brand",
-    model: "Model",
-    reference: "Reference",
-    year: "Year", 
-    model_year: "Model Year",
-    price: "Price",
-    add_new: "Add New",
-    edit: "Edit",
-    delete: "Delete",
-    save: "Save",
-    cancel: "Cancel",
-    notes: "Notes",
-    history: "History",
-    history_brand: "Brand History",
-    history_model: "Model History",
-    specs: "Specifications",
-    unknown: "Unknown",
-    total_displayed: "watches displayed",
-    login_google: "Google Login",
-    logout: "Logout",
-    config_cloud: "Cloud Config",
-    export_csv: "Export CSV",
-    filter_all: "All",
-    all: "All",
-    inventory: "Inventory",
-    friends: "Friends",
-    requests: "Requests",
-    limited_edition: "LIMITED EDITION",
-    movement: "Movement",
-    movement_model: "Caliber/Model",
-    manual: "Manual",
-    automatic: "Automatic",
-    quartz: "Quartz",
-    diameter: "Diameter",
-    thickness: "Thickness",
-    lug_width: "Lug Width",
-    water_res: "Water Res.",
-    glass: "Glass",
-    dial: "Dial",
-    country: "Country",
-    box_included: "Box",
-    warranty: "Warranty",
-    revision: "Service",
-    battery: "Battery",
-    weight: "Weight",
-    visibility_friends: "Visible to friends",
-    private_note: "If unchecked, stays private.",
-    move_collection: "I got this watch!",
-    set_main_image: "Set as main",
-    add_photo: "Add",
-    link_web: "Web Link",
-    visit_site: "Visit Website",
-    purchase_price: "Purchase Price",
-    selling_price: "Selling/Estim Price",
-    min_price: "Min Price (Private)",
-    clock_style: "Clock Style",
-    box_style: "Box Style",
-    color_digital: "Digital Time",
-    color_h_hand: "Hour Hand",
-    color_m_hand: "Minute Hand",
-    color_s_hand: "Second Hand",
-    color_index_main: "Large Indexes",
-    color_index_small: "Small Indexes",
-    color_leather: "Outer Leather",
-    color_interior: "Interior",
-    color_cushion: "Cushions",
-    top_worn: "Top Worn",
-    calendar: "Calendar",
-    month: "Month",
-    all_time: "All Time",
-    fav_brands: "Favorite Brands",
-    fav_dials: "Dial Colors",
-    finance_timeline: "Financial Timeline",
-    spent: "Spent",
-    gained: "Gained",
-    balance: "Balance",
-    identity: "Identity",
-    origin_maintenance: "Origin & Maintenance",
-    technical: "Technical",
-    financial_status: "Finances & Status",
-    date_release: "Release Date",
-    date_purchase: "Purchase Date",
-    date_sold: "Sold Date",
-    market_value: "Market Estimation",
-    find_used: "Find Used",
-    export_sheet: "Sheets & Docs",
-    sheet_insurance: "Insurance Sheet",
-    sheet_sale: "Sale Sheet",
-    print: "Print",
-    condition_rating: "Condition (1-10)",
-    condition_comment: "Condition Details",
-    show_history: "Show Full History",
-    show_less: "Show Less",
-    year_summary: "Year Summary",
-    stats_usage: "Usage Statistics",
-    worn_this_month: "This Month",
-    worn_this_year: "This Year",
-    worn_last_year: "Last Year",
-    invoice: "Invoice",
-    add_invoice: "Add Invoice",
-    view_invoice: "View Invoice",
-    sort_date_desc: "Purchase Date (Newest)",
-    sort_date_asc: "Purchase Date (Oldest)",
-    sort_alpha: "A-Z",
-    sort_price_asc: "Price (Asc)",
-    sort_price_desc: "Price (Desc)",
-    purchases: "Purchases",
-    sales: "Sales",
-    show_all: "Show All"
+    box: "Box", list: "List", wishlist: "Wishlist", finance: "Finances", stats: "Statistics", gallery: "Gallery", myWatches: "My Watches",
+    pieces: "pieces", piece: "piece", search: "Search...", collection: "Collection", forsale: "For Sale", sold: "Sold", bracelets: "Straps",
+    settings: "Settings", language: "Language", theme: "Theme", light: "Light", dark: "Dark", total_value: "Total Value", profit: "Profit",
+    brand: "Brand", model: "Model", reference: "Reference", year: "Year", model_year: "Model Year", price: "Price", add_new: "Add New",
+    edit: "Edit", delete: "Delete", save: "Save", cancel: "Cancel", notes: "Notes", history: "History", history_brand: "Brand History",
+    history_model: "Model History", specs: "Specifications", unknown: "Unknown", total_displayed: "watches displayed", login_google: "Google Login",
+    logout: "Logout", config_cloud: "Cloud Config", export_csv: "Export CSV", filter_all: "All", all: "All", inventory: "Inventory",
+    friends: "Friends", requests: "Requests", limited_edition: "LIMITED EDITION", movement: "Movement", movement_model: "Caliber/Model",
+    manual: "Manual", automatic: "Automatic", quartz: "Quartz", diameter: "Diameter", thickness: "Thickness", lug_width: "Lug Width",
+    water_res: "Water Res.", glass: "Glass", dial: "Dial", country: "Country", box_included: "Box", warranty: "Warranty", revision: "Service",
+    battery: "Battery", weight: "Weight", visibility_friends: "Visible to friends", private_note: "If unchecked, stays private.",
+    move_collection: "I got this watch!", set_main_image: "Set as main", add_photo: "Add", link_web: "Web Link", visit_site: "Visit Website",
+    purchase_price: "Purchase Price", selling_price: "Selling/Estim Price", min_price: "Min Price (Private)", clock_style: "Clock Style",
+    box_style: "Box Style", color_digital: "Digital Time", color_h_hand: "Hour Hand", color_m_hand: "Minute Hand", color_s_hand: "Second Hand",
+    color_index_main: "Large Indexes", color_index_small: "Small Indexes", color_leather: "Outer Leather", color_interior: "Interior",
+    color_cushion: "Cushions", top_worn: "Top Worn", calendar: "Calendar", month: "Month", all_time: "All Time", fav_brands: "Favorite Brands",
+    fav_dials: "Dial Colors", finance_timeline: "Financial Timeline", spent: "Spent", gained: "Gained", balance: "Balance", identity: "Identity",
+    origin_maintenance: "Origin & Maintenance", technical: "Technical", financial_status: "Finances & Status", date_release: "Release Date",
+    date_purchase: "Purchase Date", date_sold: "Sold Date", market_value: "Market Estimation", find_used: "Find Used", export_sheet: "Sheets & Docs",
+    sheet_insurance: "Insurance Sheet", sheet_sale: "Sale Sheet", print: "Print", condition_rating: "Condition (1-10)", condition_comment: "Condition Details",
+    show_history: "Show Full History", show_less: "Show Less", year_summary: "Year Summary", stats_usage: "Usage Statistics",
+    worn_this_month: "This Month", worn_this_year: "This Year", worn_last_year: "Last Year", invoice: "Invoice", add_invoice: "Add Invoice",
+    view_invoice: "View Invoice", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z",
+    sort_price_asc: "Price (Asc)", sort_price_desc: "Price (Desc)", purchases: "Purchases", sales: "Sales", show_all: "Show All"
   }
 };
 
@@ -312,60 +104,34 @@ const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manag
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
-    diameter: '', year: '', 
-    movement: '', movementModel: '', 
+    diameter: '', year: '', movement: '', movementModel: '', 
     country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '',
-    dialColor: '', 
-    batteryModel: '', 
+    dialColor: '', batteryModel: '', 
     isLimitedEdition: false, limitedNumber: '', limitedTotal: '',
-    publicVisible: true, 
-    box: '', warrantyDate: '', revision: '',
-    purchasePrice: '', sellingPrice: '', minPrice: '', 
-    purchaseDate: '', soldDate: '',
-    status: 'collection', conditionNotes: '', link: '', 
-    historyBrand: '', historyModel: '', 
-    conditionRating: '', conditionComment: '',
-    image: null, 
-    images: [],
-    invoice: null 
+    publicVisible: true, box: '', warrantyDate: '', revision: '',
+    purchasePrice: '', sellingPrice: '', minPrice: '', purchaseDate: '', soldDate: '',
+    status: 'collection', conditionNotes: '', link: '', historyBrand: '', historyModel: '', 
+    conditionRating: '', conditionComment: '', image: null, images: [], invoice: null 
 };
 
-const DEFAULT_BRACELET_STATE = {
-    width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' 
-};
+const DEFAULT_BRACELET_STATE = { width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' };
 
-// Fonction pour tenter d'initialiser Firebase
 const tryInitFirebase = (config) => {
     try {
         if (!config || !config.apiKey || config.apiKey.length < 5) return false;
-        if (getApps().length === 0) {
-            app = initializeApp(config);
-        } else {
-            app = getApp();
-        }
-        auth = getAuth(app);
-        db = getFirestore(app);
-        firebaseReady = true;
-        globalInitError = null;
-        return true;
+        if (getApps().length === 0) app = initializeApp(config);
+        else app = getApp();
+        auth = getAuth(app); db = getFirestore(app);
+        firebaseReady = true; globalInitError = null; return true;
     } catch (e) {
-        console.error("Erreur init Firebase:", e);
-        globalInitError = e.message || String(e); 
-        return false;
+        console.error("Erreur init Firebase:", e); globalInitError = e.message || String(e); return false;
     }
 };
 
-if (typeof __firebase_config !== 'undefined') {
-    try { tryInitFirebase(JSON.parse(__firebase_config)); } catch(e) {}
-}
+if (typeof __firebase_config !== 'undefined') { try { tryInitFirebase(JSON.parse(__firebase_config)); } catch(e) {} }
+if (!firebaseReady) tryInitFirebase(productionConfig);
 if (!firebaseReady) {
-    tryInitFirebase(productionConfig);
-}
-if (!firebaseReady) {
-    try {
-        const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY);
-        if (savedConfig) { tryInitFirebase(JSON.parse(savedConfig)); }
-    } catch(e) {}
+    try { const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY); if (savedConfig) tryInitFirebase(JSON.parse(savedConfig)); } catch(e) {}
 }
 
 // --- UTILS UI ---
@@ -386,14 +152,9 @@ const compressImage = (file) => {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 800; 
-        let width = img.width;
-        let height = img.height;
-        if (width > MAX_WIDTH) {
-          height = (height * MAX_WIDTH) / width;
-          width = MAX_WIDTH;
-        }
-        canvas.width = width;
-        canvas.height = height;
+        let width = img.width; let height = img.height;
+        if (width > MAX_WIDTH) { height = (height * MAX_WIDTH) / width; width = MAX_WIDTH; }
+        canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', 0.85));
@@ -423,47 +184,31 @@ const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
     <svg viewBox="0 0 200 160" className="w-full h-full drop-shadow-2xl" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="leatherGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={leatherColor} />
-          <stop offset="100%" stopColor={leatherColor} stopOpacity="0.8" />
+          <stop offset="0%" stopColor={leatherColor} /><stop offset="100%" stopColor={leatherColor} stopOpacity="0.8" />
         </linearGradient>
         <linearGradient id="interior" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={interiorColor} />
-          <stop offset="100%" stopColor={interiorColor} stopOpacity="0.8" />
+          <stop offset="0%" stopColor={interiorColor} /><stop offset="100%" stopColor={interiorColor} stopOpacity="0.8" />
         </linearGradient>
         <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-           <stop offset="0%" stopColor={cushionColor} />
-           <stop offset="100%" stopColor={cushionColor} stopOpacity="0.8" />
+           <stop offset="0%" stopColor={cushionColor} /><stop offset="100%" stopColor={cushionColor} stopOpacity="0.8" />
         </linearGradient>
         <linearGradient id="windowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-           <stop offset="0%" stopColor="rgba(220, 240, 255, 0.4)" />
-           <stop offset="50%" stopColor="rgba(200, 230, 255, 0.2)" />
-           <stop offset="100%" stopColor="rgba(220, 240, 255, 0.5)" />
+           <stop offset="0%" stopColor="rgba(220, 240, 255, 0.4)" /><stop offset="50%" stopColor="rgba(200, 230, 255, 0.2)" /><stop offset="100%" stopColor="rgba(220, 240, 255, 0.5)" />
         </linearGradient>
         <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-           <stop offset="0%" stopColor="#FFECB3" />
-           <stop offset="50%" stopColor="#FFC107" />
-           <stop offset="100%" stopColor="#FFB300" />
+           <stop offset="0%" stopColor="#FFECB3" /><stop offset="50%" stopColor="#FFC107" /><stop offset="100%" stopColor="#FFB300" />
         </linearGradient>
       </defs>
       <path d="M30,60 L170,60 L180,100 L20,100 Z" fill="url(#interior)" stroke="#8D6E63" strokeWidth="0.5" />
-      <g transform="translate(0, 0)">
-        {[32, 66, 100, 134].map((x, i) => (
-             <rect key={i} x={x} y={65} width="28" height="30" rx="4" fill="url(#cushionGrad)" stroke="#D7CCC8" strokeWidth="0.5" />
-        ))}
-      </g>
+      <g transform="translate(0, 0)">{[32, 66, 100, 134].map((x, i) => (<rect key={i} x={x} y={65} width="28" height="30" rx="4" fill="url(#cushionGrad)" stroke="#D7CCC8" strokeWidth="0.5" />))}</g>
       <path d="M20,100 L180,100 L180,140 L20,140 Z" fill="url(#leatherGrad)" stroke="#271c19" strokeWidth="0.5"/>
-      <g transform="translate(94, 102)">
-         <rect x="0" y="0" width="12" height="10" rx="1" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" />
-         <circle cx="6" cy="5" r="1.5" fill="#3E2723" />
-      </g>
+      <g transform="translate(94, 102)"><rect x="0" y="0" width="12" height="10" rx="1" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" /><circle cx="6" cy="5" r="1.5" fill="#3E2723" /></g>
       <g className="transition-all duration-1000 ease-in-out" style={{ transformOrigin: '100px 60px', transform: isOpen ? 'rotateX(-110deg)' : 'rotateX(0deg)' }}>
           <path d="M20,100 L180,100 L170,60 L30,60 Z" fill="url(#leatherGrad)" stroke="#3E2723" strokeWidth="1" />
           <path d="M35,92 L165,92 L158,68 L42,68 Z" fill="url(#windowGrad)" stroke="#8D6E63" strokeWidth="0.5" />
           <path d="M35,92 L80,92 L75,68 L42,68 Z" fill="rgba(255,255,255,0.1)" />
           <path d="M20,100 L180,100 L180,108 L20,108 Z" fill="#3E2723" />
-          <g transform="translate(94, 100)">
-             <path d="M0,0 H12 V6 C12,8 0,8 0,6 Z" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" />
-          </g>
+          <g transform="translate(94, 100)"><path d="M0,0 H12 V6 C12,8 0,8 0,6 Z" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" /></g>
       </g>
     </svg>
   </div>
@@ -557,30 +302,20 @@ const FullScreenImageViewer = ({ src, onClose }) => {
         }
     };
 
-    const handlePointerUp = (e) => {
-        if (e.pointerType === 'mouse') setIsDragging(false);
-    };
+    const handlePointerUp = (e) => { if (e.pointerType === 'mouse') setIsDragging(false); };
 
     const handleTouchStart = (e) => {
         if (e.touches.length === 2) {
-            const dist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
-            setPinchDist(dist);
-            setLastScale(scale);
+            const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            setPinchDist(dist); setLastScale(scale);
         } else if (e.touches.length === 1 && scale > 1) {
-            setIsDragging(true);
-            setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+            setIsDragging(true); setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
         }
     };
 
     const handleTouchMove = (e) => {
         if (e.touches.length === 2 && pinchDist) {
-            const dist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
+            const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
             let newScale = lastScale * (dist / pinchDist);
             newScale = Math.min(Math.max(1, newScale), 5);
             if (newScale === 1) setPosition({ x: 0, y: 0 });
@@ -596,50 +331,14 @@ const FullScreenImageViewer = ({ src, onClose }) => {
     };
 
     const handleDoubleClick = () => {
-        if (scale > 1) {
-            setScale(1);
-            setPosition({ x: 0, y: 0 });
-        } else {
-            setScale(2.5);
-        }
+        if (scale > 1) { setScale(1); setPosition({ x: 0, y: 0 }); } else setScale(2.5);
     };
 
     return (
-        <div 
-            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center overflow-hidden touch-none animate-in fade-in duration-200"
-            onClick={onClose}
-            onWheel={handleWheel}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onTouchCancel={handleTouchEnd}
-        >
-            <button 
-                className="absolute top-4 right-4 z-[110] text-white/80 hover:text-white bg-black/50 rounded-full p-2" 
-                onClick={onClose}
-            >
-                <X size={32} />
-            </button>
-            <div 
-                className="w-full h-full flex items-center justify-center relative touch-none"
-                onClick={(e) => e.stopPropagation()}
-                onDoubleClick={handleDoubleClick}
-                onPointerDown={handlePointerDown}
-                onTouchStart={handleTouchStart}
-            >
-                <img 
-                    src={src} 
-                    draggable={false}
-                    className="max-w-full max-h-[90vh] object-contain shadow-2xl" 
-                    style={{ 
-                        transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                        transition: isDragging || pinchDist ? 'none' : 'transform 0.2s ease-out',
-                        cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in'
-                    }}
-                    alt="Vue agrandie"
-                />
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center overflow-hidden touch-none animate-in fade-in duration-200" onClick={onClose} onWheel={handleWheel} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
+            <button className="absolute top-4 right-4 z-[110] text-white/80 hover:text-white bg-black/50 rounded-full p-2" onClick={onClose}><X size={32} /></button>
+            <div className="w-full h-full flex items-center justify-center relative touch-none" onClick={(e) => e.stopPropagation()} onDoubleClick={handleDoubleClick} onPointerDown={handlePointerDown} onTouchStart={handleTouchStart}>
+                <img src={src} draggable={false} className="max-w-full max-h-[90vh] object-contain shadow-2xl" style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, transition: isDragging || pinchDist ? 'none' : 'transform 0.2s ease-out', cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in' }} alt="Vue agrandie" />
             </div>
         </div>
     );
@@ -650,7 +349,6 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
     const isSale = type === 'sale';
     return (
         <div className="fixed inset-0 z-[200] bg-white flex flex-col overflow-auto text-black">
-            {/* Header Toolbar (Hidden when printing) */}
             <div className="print:hidden p-4 border-b flex justify-between items-center bg-slate-100 sticky top-0 z-50">
                 <h2 className="font-bold text-lg">{isSale ? t('sheet_sale') : t('sheet_insurance')}</h2>
                 <div className="flex gap-2">
@@ -659,7 +357,6 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                 </div>
             </div>
             
-            {/* Content (Printable) */}
             <div className="p-8 max-w-3xl mx-auto w-full space-y-8 print:p-0 print:space-y-4">
                 <div className="flex items-center justify-between border-b-2 border-black pb-4">
                     <div>
@@ -667,10 +364,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                         <h2 className="text-xl text-slate-600 font-medium">{watch.model}</h2>
                         {watch.reference && <p className="font-mono text-sm mt-1">REF: {watch.reference}</p>}
                     </div>
-                    {/* Logo Placeholder */}
-                    <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center">
-                        <Watch size={32} />
-                    </div>
+                    <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center"><Watch size={32} /></div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
@@ -713,33 +407,19 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
 
                 {isSale && (watch.historyBrand || watch.historyModel) && (
                     <div className="space-y-4">
-                        {watch.historyBrand && (
-                            <div>
-                                <h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_brand')}</h3>
-                                <p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyBrand}</p>
-                            </div>
-                        )}
-                        {watch.historyModel && (
-                            <div>
-                                <h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_model')}</h3>
-                                <p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyModel}</p>
-                            </div>
-                        )}
+                        {watch.historyBrand && (<div><h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_brand')}</h3><p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyBrand}</p></div>)}
+                        {watch.historyModel && (<div><h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_model')}</h3><p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyModel}</p></div>)}
                     </div>
                 )}
                 
                 {isSale && (
                    <div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500">
                        <p>Contactez le vendeur pour plus d'informations.</p>
-                       <div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">
-                           QR Code / Contact Info Placeholder
-                       </div>
+                       <div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">QR Code / Contact Info Placeholder</div>
                    </div>
                 )}
                 
-                <div className="print:fixed print:bottom-4 print:left-0 print:w-full text-center text-[10px] text-slate-400">
-                    Généré par ChronoManager - {new Date().toLocaleDateString()}
-                </div>
+                <div className="print:fixed print:bottom-4 print:left-0 print:w-full text-center text-[10px] text-slate-400">Généré par ChronoManager - {new Date().toLocaleDateString()}</div>
             </div>
         </div>
     );
@@ -749,25 +429,9 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
     const [localSort, setLocalSort] = useState('alpha'); 
     const sortedItems = useMemo(() => {
         let sorted = [...items];
-        const getTime = (w) => {
-            if (w.purchaseDate) {
-                const t = new Date(w.purchaseDate).getTime();
-                return isNaN(t) ? null : t;
-            }
-            return null;
-        };
-
-        if (localSort === 'alpha') {
-            sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || (a.model || '').localeCompare(b.model || ''));
-        } else {
-            sorted.sort((a, b) => {
-                const ta = getTime(a), tb = getTime(b);
-                if (ta === null && tb !== null) return 1;
-                if (tb === null && ta !== null) return -1;
-                if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
-                return tb - ta;
-            });
-        }
+        const getTime = (w) => { if (w.purchaseDate) { const t = new Date(w.purchaseDate).getTime(); return isNaN(t) ? null : t; } return null; };
+        if (localSort === 'alpha') { sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || (a.model || '').localeCompare(b.model || '')); } 
+        else { sorted.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime(); return tb - ta; }); }
         return sorted;
     }, [items, localSort]);
     return (
@@ -775,9 +439,7 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
           <div className={`p-4 border-b ${theme.border} flex items-center justify-between ${theme.bgSecondary}`}>
             <h2 className={`font-serif font-bold text-lg ${theme.text} tracking-wide`}>{title}</h2>
             <div className="flex gap-2">
-                <button onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')} className={`flex items-center gap-1 px-3 py-1.5 border rounded-lg text-xs font-medium ${theme.textSub} ${theme.bg}`}>
-                    <ArrowUpDown size={14} /> {localSort === 'date' ? 'Date' : 'A-Z'}
-                </button>
+                <button onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')} className={`flex items-center gap-1 px-3 py-1.5 border rounded-lg text-xs font-medium ${theme.textSub} ${theme.bg}`}><ArrowUpDown size={14} /> {localSort === 'date' ? 'Date' : 'A-Z'}</button>
                 <button onClick={onClose} className={`p-2 rounded-full shadow-sm border ${theme.border} ${theme.bg} ${theme.text}`}><X size={20}/></button>
             </div>
           </div>
@@ -787,17 +449,9 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
                const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
                return (
                  <div key={w.id} onClick={() => { onClose(); onSelectWatch && onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                     <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>
-                         {thumb && <img src={thumb} className="w-full h-full object-cover" alt="Miniature" />}
-                     </div>
-                     <div className="flex-1 min-w-0">
-                        <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div>
-                        <div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div>
-                     </div>
-                     <div className="text-right">
-                        <div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div>
-                        <div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div>
-                     </div>
+                     <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover" alt="Miniature" />}</div>
+                     <div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div><div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div></div>
+                     <div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div><div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div>
                  </div>
                )
              })}
@@ -818,10 +472,7 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, the
     return (
         <div onClick={onClick} className={`${cardBg} ${borderClass} p-4 rounded-xl shadow-md mb-3 cursor-pointer hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden relative`}>
             <div className="flex justify-between items-center mb-4 relative z-10">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${bgIcon}`}><Icon size={18} /></div>
-                    <span className={`font-serif font-bold text-lg tracking-wide ${txtMain}`}>{title}</span>
-                </div>
+                <div className="flex items-center gap-3"><div className={`p-2 rounded-lg ${bgIcon}`}><Icon size={18} /></div><span className={`font-serif font-bold text-lg tracking-wide ${txtMain}`}>{title}</span></div>
                 {type !== 'total' && <div className={`bg-white/20 p-1 rounded-full ${txtMain}`}><ChevronLeft className="rotate-180" size={16}/></div>}
             </div>
             <div className="grid grid-cols-3 gap-2 text-center relative z-10">
@@ -835,26 +486,20 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, the
 };
 
 const ConfigModal = ({ onClose, currentError, t }) => {
-    const [jsonConfig, setJsonConfig] = useState('');
-    const [parseError, setParseError] = useState(null);
+    const [jsonConfig, setJsonConfig] = useState(''); const [parseError, setParseError] = useState(null);
     const handleSave = () => {
         try {
-            let cleanJson = jsonConfig;
-            if (cleanJson.includes('=')) cleanJson = cleanJson.substring(cleanJson.indexOf('=') + 1);
+            let cleanJson = jsonConfig; if (cleanJson.includes('=')) cleanJson = cleanJson.substring(cleanJson.indexOf('=') + 1);
             if (cleanJson.trim().endsWith(';')) cleanJson = cleanJson.trim().slice(0, -1);
             const parsed = new Function('return ' + cleanJson)();
             if (!parsed.apiKey) throw new Error("apiKey manquante");
-            localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(parsed));
-            window.location.reload();
+            localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(parsed)); window.location.reload();
         } catch (e) { setParseError("Format invalide."); }
     };
     return (
         <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><Settings size={18}/> {t('config_cloud')}</h3>
-                    <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button>
-                </div>
+                <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><h3 className="font-bold text-slate-800 flex items-center gap-2"><Settings size={18}/> {t('config_cloud')}</h3><button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600"/></button></div>
                 <div className="p-6 space-y-4">
                     {currentError && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs mb-4">{String(currentError)}</div>}
                     <textarea className="w-full h-40 p-3 border rounded-lg font-mono text-xs bg-slate-50" placeholder={`{ apiKey: "...", ... }`} value={jsonConfig} onChange={(e) => setJsonConfig(e.target.value)} />
@@ -869,10 +514,7 @@ const ConfigModal = ({ onClose, currentError, t }) => {
 const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className={`${theme.card} rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border ${theme.border} max-h-[90vh] flex flex-col`}>
-            <div className={`p-4 border-b ${theme.border} ${theme.bgSecondary} flex justify-between items-center flex-shrink-0`}>
-                <h3 className={`font-bold ${theme.text} flex items-center gap-2`}><Settings size={18}/> {t('settings')}</h3>
-                <button onClick={onClose}><X size={20} className={theme.textSub}/></button>
-            </div>
+            <div className={`p-4 border-b ${theme.border} ${theme.bgSecondary} flex justify-between items-center flex-shrink-0`}><h3 className={`font-bold ${theme.text} flex items-center gap-2`}><Settings size={18}/> {t('settings')}</h3><button onClick={onClose}><X size={20} className={theme.textSub}/></button></div>
             <div className="p-6 space-y-6 overflow-y-auto">
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('language')}</label>
@@ -888,8 +530,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
                         <button onClick={() => setSettings(s => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button>
                     </div>
                 </div>
-                
-                {/* CLOCK CUSTOMIZATION */}
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label>
                     <div className="space-y-3">
@@ -901,8 +541,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
                         <div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index_small')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColorSmall || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, indexColorSmall: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, indexColorSmall: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div>
                     </div>
                 </div>
-
-                {/* BOX CUSTOMIZATION */}
                 <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label>
                     <div className="space-y-3">
@@ -919,14 +557,8 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
 const RulesHelpModal = ({ onClose, theme }) => (
     <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
         <div className={`${theme.card} rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden`}>
-            <div className={`${theme.bgSecondary} p-4 border-b ${theme.border} flex justify-between items-center`}>
-                <h3 className={`font-bold ${theme.text} flex items-center gap-2`}><ShieldCheck className="text-emerald-600"/> Permissions Cloud</h3>
-                <button onClick={onClose}><X size={20} className={theme.textSub}/></button>
-            </div>
-            <div className="p-6 space-y-4">
-                <p className={`text-sm ${theme.text}`}>Le système de partage requiert des permissions spécifiques pour que vos amis puissent voir votre collection.</p>
-                <button onClick={onClose} className={`w-full py-3 ${theme.bg} border ${theme.border} ${theme.text} rounded-xl font-bold`}>J'ai compris</button>
-            </div>
+            <div className={`${theme.bgSecondary} p-4 border-b ${theme.border} flex justify-between items-center`}><h3 className={`font-bold ${theme.text} flex items-center gap-2`}><ShieldCheck className="text-emerald-600"/> Permissions Cloud</h3><button onClick={onClose}><X size={20} className={theme.textSub}/></button></div>
+            <div className="p-6 space-y-4"><p className={`text-sm ${theme.text}`}>Le système de partage requiert des permissions spécifiques pour que vos amis puissent voir votre collection.</p><button onClick={onClose} className={`w-full py-3 ${theme.bg} border ${theme.border} ${theme.text} rounded-xl font-bold`}>J'ai compris</button></div>
         </div>
     </div>
 );
@@ -943,12 +575,9 @@ export default function App() {
   const t = (key) => TRANSLATIONS[settings.lang][key] || key;
   const isDark = settings.theme === 'dark';
   const theme = {
-      bg: isDark ? 'bg-slate-950' : 'bg-slate-50',
-      bgSecondary: isDark ? 'bg-slate-900' : 'bg-white',
-      text: isDark ? 'text-slate-100' : 'text-slate-900',
-      textSub: isDark ? 'text-slate-400' : 'text-slate-500',
-      border: isDark ? 'border-slate-800' : 'border-slate-200',
-      card: isDark ? 'bg-slate-900' : 'bg-white',
+      bg: isDark ? 'bg-slate-950' : 'bg-slate-50', bgSecondary: isDark ? 'bg-slate-900' : 'bg-white',
+      text: isDark ? 'text-slate-100' : 'text-slate-900', textSub: isDark ? 'text-slate-400' : 'text-slate-500',
+      border: isDark ? 'border-slate-800' : 'border-slate-200', card: isDark ? 'bg-slate-900' : 'bg-white',
       input: isDark ? 'bg-slate-900 border-slate-700 text-white focus:ring-slate-500' : 'bg-white border-slate-200 text-slate-900 focus:ring-indigo-500',
       nav: isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
   };
@@ -956,35 +585,29 @@ export default function App() {
   const [watches, setWatches] = useState([]);
   const [bracelets, setBracelets] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
-  
   const [friends, setFriends] = useState([]); 
   const [friendRequests, setFriendRequests] = useState([]); 
   const [viewingFriend, setViewingFriend] = useState(null); 
   const [friendWatches, setFriendWatches] = useState([]); 
   const [addFriendId, setAddFriendId] = useState(''); 
   const [isFriendsLoading, setIsFriendsLoading] = useState(false);
-  
   const [showGalleryCollection, setShowGalleryCollection] = useState(true);
   const [showGalleryForsale, setShowGalleryForsale] = useState(true);
   const [showGallerySold, setShowGallerySold] = useState(false);
   const [showGalleryWishlist, setShowGalleryWishlist] = useState(false);
-
   const [fullScreenImage, setFullScreenImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('box'); 
   const [filter, setFilter] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [editingType, setEditingType] = useState('watch');
-
   const [selectedWatch, setSelectedWatch] = useState(null);
   const [viewedImageIndex, setViewedImageIndex] = useState(0); 
-
   const [financeDetail, setFinanceDetail] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [gallerySearchTerm, setGallerySearchTerm] = useState(''); 
   const [isGallerySearchOpen, setIsGallerySearchOpen] = useState(false);
-  
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
   const [selectedCalendarWatches, setSelectedCalendarWatches] = useState([]);
@@ -1000,10 +623,8 @@ export default function App() {
   const [showRulesHelp, setShowRulesHelp] = useState(false); 
   const [isAuthLoading, setIsAuthLoading] = useState(false); 
   const [exportType, setExportType] = useState(null); 
-
   const [timelineFilter, setTimelineFilter] = useState('default'); 
   const [expandedMonth, setExpandedMonth] = useState(null);
-
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
 
@@ -1012,10 +633,7 @@ export default function App() {
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [view, viewingFriend, financeDetail]);
 
   useEffect(() => {
-      if (!firebaseReady && productionConfig.apiKey) {
-          tryInitFirebase(productionConfig);
-          if (firebaseReady) { setUseLocalStorage(false); setLoading(true); }
-      }
+      if (!firebaseReady && productionConfig.apiKey) { tryInitFirebase(productionConfig); if (firebaseReady) { setUseLocalStorage(false); setLoading(true); } }
   }, []);
 
   useEffect(() => {
@@ -1036,72 +654,44 @@ export default function App() {
   const sendFriendRequest = async () => {
       if (!addFriendId || addFriendId.length < 5) return alert("Code invalide");
       if (addFriendId === user.uid) return alert("Impossible de s'ajouter soi-même");
-      try {
-          await addDoc(collection(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests'), { fromUser: user.uid, fromEmail: user.email, toUser: addFriendId, status: 'pending', createdAt: new Date().toISOString() });
-          alert("Demande envoyée !"); setAddFriendId('');
-      } catch (e) { if (e.code === 'permission-denied') setShowRulesHelp(true); else alert("Erreur: " + e.message); }
+      try { await addDoc(collection(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests'), { fromUser: user.uid, fromEmail: user.email, toUser: addFriendId, status: 'pending', createdAt: new Date().toISOString() }); alert("Demande envoyée !"); setAddFriendId(''); } catch (e) { if (e.code === 'permission-denied') setShowRulesHelp(true); else alert("Erreur: " + e.message); }
   };
   
   const acceptRequest = async (req) => {
       const newFriend = { id: req.fromUser, name: req.fromEmail || 'Ami' };
-      const updatedFriends = [...friends, newFriend];
-      setFriends(updatedFriends);
-      localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+      const updatedFriends = [...friends, newFriend]; setFriends(updatedFriends); localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
       try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', req.id)); } catch (e) {}
   };
   
   const rejectRequest = async (reqId) => { try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', reqId)); } catch (e) {} };
   
   const removeFriend = (friendId) => {
-      const updatedFriends = friends.filter(f => f.id !== friendId);
-      setFriends(updatedFriends);
-      localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
+      const updatedFriends = friends.filter(f => f.id !== friendId); setFriends(updatedFriends); localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
   };
   
-  const handlePreviewOwnProfile = () => {
-      setFriendWatches(watches.filter(w => w.publicVisible !== false));
-      setViewingFriend({ id: user.uid, name: 'Mon Profil Public' });
-      if(scrollRef.current) scrollRef.current.scrollTop = 0;
-  };
+  const handlePreviewOwnProfile = () => { setFriendWatches(watches.filter(w => w.publicVisible !== false)); setViewingFriend({ id: user.uid, name: 'Mon Profil Public' }); if(scrollRef.current) scrollRef.current.scrollTop = 0; };
   
   const loadFriendCollection = async (friend) => {
       if (!firebaseReady) return;
       setIsFriendsLoading(true); setViewingFriend(friend);
       try {
           const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', friend.id, 'watches'));
-          const snap = await getDocs(q);
-          setFriendWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).filter(w => w.publicVisible !== false));
+          const snap = await getDocs(q); setFriendWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).filter(w => w.publicVisible !== false));
       } catch (err) { setViewingFriend(null); } finally { setIsFriendsLoading(false); }
   };
 
   const toggleVisibility = async (watch) => {
-      const newVal = !watch.publicVisible;
-      setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: newVal } : w));
-      if (!useLocalStorage) {
-          try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), { ...watch, publicVisible: newVal }, { merge: true }); } 
-          catch (e) { setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: !newVal } : w)); }
-      }
+      const newVal = !watch.publicVisible; setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: newVal } : w));
+      if (!useLocalStorage) { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), { ...watch, publicVisible: newVal }, { merge: true }); } catch (e) { setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: !newVal } : w)); } }
   };
 
   const handleMoveToCollection = async (watch) => {
       if (!confirm(t('move_collection') + " ?")) return;
       const updatedWatch = { ...watch, status: 'collection', dateAdded: new Date().toISOString() };
-      setWatches(prev => prev.map(w => w.id === watch.id ? updatedWatch : w));
-      setSelectedWatch(updatedWatch);
+      setWatches(prev => prev.map(w => w.id === watch.id ? updatedWatch : w)); setSelectedWatch(updatedWatch);
       if (!useLocalStorage) { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), updatedWatch, { merge: true }); } catch (e) {} }
   };
   
-  const setAsMainImage = (index) => {
-      setWatchForm(prev => {
-          const currentImages = [...(prev.images || [])];
-          if (index >= currentImages.length) return prev;
-          const temp = currentImages[0];
-          currentImages[0] = currentImages[index];
-          currentImages[index] = temp;
-          return { ...prev, images: currentImages, image: currentImages[0] };
-      });
-  };
-
   const handleCalendarDayClick = (dateStr) => {
       setSelectedCalendarDate(dateStr); setCalendarSearchTerm(''); 
       const existing = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
@@ -1110,51 +700,28 @@ export default function App() {
 
   const handleCalendarSave = async () => {
       if (!selectedCalendarDate) return;
-      let updatedEvents = [...calendarEvents];
-      const existingIdx = updatedEvents.findIndex(e => e.id === selectedCalendarDate || e.date === selectedCalendarDate);
+      let updatedEvents = [...calendarEvents]; const existingIdx = updatedEvents.findIndex(e => e.id === selectedCalendarDate || e.date === selectedCalendarDate);
       const eventData = { date: selectedCalendarDate, watches: selectedCalendarWatches };
       if (selectedCalendarWatches.length === 0) { if (existingIdx >= 0) updatedEvents.splice(existingIdx, 1); } 
       else { if (existingIdx >= 0) updatedEvents[existingIdx] = { ...updatedEvents[existingIdx], ...eventData }; else updatedEvents.push({ id: selectedCalendarDate, ...eventData }); }
       setCalendarEvents(updatedEvents); setSelectedCalendarDate(null);
-      if (!useLocalStorage) {
-          try {
-              const docRef = doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar', selectedCalendarDate);
-              if (selectedCalendarWatches.length === 0) await deleteDoc(docRef); else await setDoc(docRef, eventData);
-          } catch(e) {}
-      }
+      if (!useLocalStorage) { try { const docRef = doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar', selectedCalendarDate); if (selectedCalendarWatches.length === 0) await deleteDoc(docRef); else await setDoc(docRef, eventData); } catch(e) {} }
   };
 
   const handleGoogleLogin = async () => {
     if (!firebaseReady) { setShowConfigModal(true); return; }
     setUseLocalStorage(false); setIsAuthLoading(true);
     const provider = new GoogleAuthProvider();
-    try { 
-        await signInWithPopup(auth, provider); 
-    } catch (error) { 
-        if (error.code === 'auth/unauthorized-domain') {
-            setError("Domaine non autorisé : " + window.location.hostname);
-        } else {
-            setError("Erreur : " + error.message);
-        }
-    } finally { 
-        setIsAuthLoading(false); 
-    }
+    try { await signInWithPopup(auth, provider); } catch (error) { if (error.code === 'auth/unauthorized-domain') { setError("Domaine non autorisé : " + window.location.hostname); } else { setError("Erreur : " + error.message); } } finally { setIsAuthLoading(false); }
   };
 
-  const handleLogout = async () => {
-    if (!firebaseReady) { setShowProfileMenu(false); return; }
-    setIsAuthLoading(true);
-    try { await signOut(auth); setShowProfileMenu(false); } finally { setIsAuthLoading(false); }
-  };
+  const handleLogout = async () => { if (!firebaseReady) { setShowProfileMenu(false); return; } setIsAuthLoading(true); try { await signOut(auth); setShowProfileMenu(false); } finally { setIsAuthLoading(false); } };
 
   useEffect(() => {
     if (useLocalStorage && !isAuthLoading) { setLoading(false); return; }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) { setUser(currentUser); setError(null); setLoading(false); if (useLocalStorage) setUseLocalStorage(false); } 
-      else {
-          const timer = setTimeout(() => { if (!isAuthLoading) { signInAnonymously(auth).catch(() => { setUseLocalStorage(true); setUser({ uid: 'local-user' }); }).finally(() => setLoading(false)); } }, 1000);
-          return () => clearTimeout(timer);
-      }
+      else { const timer = setTimeout(() => { if (!isAuthLoading) { signInAnonymously(auth).catch(() => { setUseLocalStorage(true); setUser({ uid: 'local-user' }); }).finally(() => setLoading(false)); } }, 1000); return () => clearTimeout(timer); }
     });
     return () => unsubscribe();
   }, [useLocalStorage, isAuthLoading]);
@@ -1162,11 +729,7 @@ export default function App() {
   useEffect(() => {
     if (!user && !useLocalStorage) return;
     if (useLocalStorage) {
-      try {
-        const lw = localStorage.getItem(LOCAL_STORAGE_KEY); if (lw) setWatches(JSON.parse(lw));
-        const lb = localStorage.getItem(LOCAL_STORAGE_BRACELETS_KEY); if (lb) setBracelets(JSON.parse(lb));
-        const lc = localStorage.getItem(LOCAL_STORAGE_CALENDAR_KEY); if (lc) setCalendarEvents(JSON.parse(lc));
-      } catch(e){}
+      try { const lw = localStorage.getItem(LOCAL_STORAGE_KEY); if (lw) setWatches(JSON.parse(lw)); const lb = localStorage.getItem(LOCAL_STORAGE_BRACELETS_KEY); if (lb) setBracelets(JSON.parse(lb)); const lc = localStorage.getItem(LOCAL_STORAGE_CALENDAR_KEY); if (lc) setCalendarEvents(JSON.parse(lc)); } catch(e){}
       setLoading(false);
     } else {
       if (!user?.uid) return;
@@ -1180,117 +743,39 @@ export default function App() {
   }, [user, useLocalStorage]);
 
   useEffect(() => {
-    if (useLocalStorage) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(watches));
-      localStorage.setItem(LOCAL_STORAGE_BRACELETS_KEY, JSON.stringify(bracelets));
-      localStorage.setItem(LOCAL_STORAGE_CALENDAR_KEY, JSON.stringify(calendarEvents));
-    }
+    if (useLocalStorage) { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(watches)); localStorage.setItem(LOCAL_STORAGE_BRACELETS_KEY, JSON.stringify(bracelets)); localStorage.setItem(LOCAL_STORAGE_CALENDAR_KEY, JSON.stringify(calendarEvents)); }
   }, [watches, bracelets, calendarEvents, useLocalStorage]);
 
   const handleImageUpload = async (e, type) => {
-    const files = Array.from(e.target.files);
-    if (!files || files.length === 0) return;
+    const files = Array.from(e.target.files); if (!files || files.length === 0) return;
     try { 
       if (type === 'watch') {
           const base64Images = await Promise.all(files.map(file => compressImage(file)));
-          setWatchForm(prev => {
-              const currentImages = prev.images || (prev.image ? [prev.image] : []);
-              const combined = [...currentImages, ...base64Images];
-              if (combined.length > 3) { 
-                  alert("Max 3 photos"); 
-                  combined.splice(3);
-              }
-              return { ...prev, images: combined, image: combined[0] || null };
-          });
-      } else if (type === 'invoice') {
-          const base64 = await compressImage(files[0]);
-          setWatchForm(prev => ({...prev, invoice: base64}));
-      } else { 
-          const base64 = await compressImage(files[0]);
-          setBraceletForm(prev => ({ ...prev, image: base64 })); 
-      }
+          setWatchForm(prev => { const currentImages = prev.images || (prev.image ? [prev.image] : []); const combined = [...currentImages, ...base64Images]; if (combined.length > 3) { alert("Max 3 photos"); combined.splice(3); } return { ...prev, images: combined, image: combined[0] || null }; });
+      } else if (type === 'invoice') { const base64 = await compressImage(files[0]); setWatchForm(prev => ({...prev, invoice: base64})); } else { const base64 = await compressImage(files[0]); setBraceletForm(prev => ({ ...prev, image: base64 })); }
     } catch (err) {}
   };
 
-  const removeImage = (index) => {
-      setWatchForm(prev => {
-          const currentImages = [...(prev.images || [])];
-          currentImages.splice(index, 1);
-          return { ...prev, images: currentImages, image: currentImages[0] || null };
-      });
-  };
+  const removeImage = (index) => { setWatchForm(prev => { const currentImages = [...(prev.images || [])]; currentImages.splice(index, 1); return { ...prev, images: currentImages, image: currentImages[0] || null }; }); };
+  const setAsMainImage = (index) => { setWatchForm(prev => { const currentImages = [...(prev.images || [])]; if (index >= currentImages.length) return prev; const temp = currentImages[0]; currentImages[0] = currentImages[index]; currentImages[index] = temp; return { ...prev, images: currentImages, image: currentImages[0] }; }); };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const id = editingId || Date.now().toString();
-    const isWatch = editingType === 'watch';
-    
-    let data;
-    if (isWatch) {
-        const images = watchForm.images && watchForm.images.length > 0 ? watchForm.images : (watchForm.image ? [watchForm.image] : []);
-        data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice), sellingPrice: Number(watchForm.sellingPrice), minPrice: Number(watchForm.minPrice), dateAdded: new Date().toISOString(), images: images, image: images[0] || null };
-    } else { data = { ...braceletForm, id, dateAdded: new Date().toISOString() }; }
-
-    if (useLocalStorage) {
-      if (isWatch) setWatches(prev => editingId ? prev.map(w => w.id === id ? data : w) : [data, ...prev]);
-      else setBracelets(prev => editingId ? prev.map(b => b.id === id ? data : b) : [data, ...prev]);
-      closeForm(data);
-    } else {
-      try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, isWatch ? 'watches' : 'bracelets', id), data); closeForm(data); } catch(e) {}
-    }
+    e.preventDefault(); const id = editingId || Date.now().toString(); const isWatch = editingType === 'watch'; let data;
+    if (isWatch) { const images = watchForm.images && watchForm.images.length > 0 ? watchForm.images : (watchForm.image ? [watchForm.image] : []); data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice), sellingPrice: Number(watchForm.sellingPrice), minPrice: Number(watchForm.minPrice), dateAdded: new Date().toISOString(), images: images, image: images[0] || null }; } else { data = { ...braceletForm, id, dateAdded: new Date().toISOString() }; }
+    if (useLocalStorage) { if (isWatch) setWatches(prev => editingId ? prev.map(w => w.id === id ? data : w) : [data, ...prev]); else setBracelets(prev => editingId ? prev.map(b => b.id === id ? data : b) : [data, ...prev]); closeForm(data); } else { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, isWatch ? 'watches' : 'bracelets', id), data); closeForm(data); } catch(e) {} }
   };
 
   const exportCSV = () => {
-    const sep = ";"; let csvContent = "\uFEFF"; csvContent += "sep=;\n"; 
-    const headers = [ "Statut", "Marque", "Modele", "Prix Achat", "Prix Vente/Estim", "Prix Min", "Plus-Value", "Diametre", "Annee", "Reference", "Mouvement", "Notes" ];
-    csvContent += headers.join(sep) + "\n";
-    watches.forEach(w => {
-      const row = [ w.status, w.brand, w.model, w.purchasePrice, w.sellingPrice, w.minPrice, (w.sellingPrice||0)-w.purchasePrice, w.diameter, w.year, w.reference, w.movement, (w.conditionNotes||"").replace(/(\r\n|\n|\r|;)/gm, " ") ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`); 
-      csvContent += row.join(sep) + "\n";
-    });
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "collection.csv");
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    const sep = ";"; let csvContent = "\uFEFF"; csvContent += "sep=;\n"; const headers = [ "Statut", "Marque", "Modele", "Prix Achat", "Prix Vente/Estim", "Prix Min", "Plus-Value", "Diametre", "Annee", "Reference", "Mouvement", "Notes" ]; csvContent += headers.join(sep) + "\n";
+    watches.forEach(w => { const row = [ w.status, w.brand, w.model, w.purchasePrice, w.sellingPrice, w.minPrice, (w.sellingPrice||0)-w.purchasePrice, w.diameter, w.year, w.reference, w.movement, (w.conditionNotes||"").replace(/(\r\n|\n|\r|;)/gm, " ") ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`); csvContent += row.join(sep) + "\n"; });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "collection.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
 
-  const closeForm = (data) => { 
-    if (editingType === 'watch') {
-        if(selectedWatch) { setSelectedWatch(data); setViewedImageIndex(0); }
-        setView(data.status === 'wishlist' ? 'wishlist' : 'list');
-    } else { setView('list'); }
-    setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); 
-  };
-
-  const openAdd = () => {
-      setEditingId(null);
-      setSelectedWatch(null);
-      setWatchForm({ ...DEFAULT_WATCH_STATE, status: view === 'wishlist' ? 'wishlist' : 'collection' });
-      setBraceletForm(DEFAULT_BRACELET_STATE);
-      setEditingType((filter === 'bracelets' && view !== 'wishlist') ? 'bracelet' : 'watch');
-      setView('add');
-  };
-
-  const handleEdit = (item, type) => { 
-      if (type === 'watch') { const safeImages = item.images || (item.image ? [item.image] : []); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages }); } 
-      else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item });
-      setEditingType(type); setEditingId(item.id); setView('add'); 
-  };
-  
-  const handleCancelForm = () => {
-      setEditingId(null);
-      setWatchForm(DEFAULT_WATCH_STATE);
-      setBraceletForm(DEFAULT_BRACELET_STATE);
-      if (selectedWatch) { setView('detail'); } else { setView('list'); }
-  };
-
-  const handleDelete = async (id, type) => {
-    if(!confirm(t('delete') + " ?")) return;
-    if(useLocalStorage) { 
-        if (type === 'watch') setWatches(prev => prev.filter(w => w.id !== id)); else setBracelets(prev => prev.filter(b => b.id !== id));
-        setView('list'); 
-    } else { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, type === 'watch' ? 'watches' : 'bracelets', id)); setView('list'); }
-  };
+  const closeForm = (data) => { if (editingType === 'watch') { if(selectedWatch) { setSelectedWatch(data); setViewedImageIndex(0); } setView(data.status === 'wishlist' ? 'wishlist' : 'list'); } else { setView('list'); } setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); };
+  const openAdd = () => { setEditingId(null); setSelectedWatch(null); setWatchForm({ ...DEFAULT_WATCH_STATE, status: view === 'wishlist' ? 'wishlist' : 'collection' }); setBraceletForm(DEFAULT_BRACELET_STATE); setEditingType((filter === 'bracelets' && view !== 'wishlist') ? 'bracelet' : 'watch'); setView('add'); };
+  const handleEdit = (item, type) => { if (type === 'watch') { const safeImages = item.images || (item.image ? [item.image] : []); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages }); } else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item }); setEditingType(type); setEditingId(item.id); setView('add'); };
+  const handleCancelForm = () => { setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); if (selectedWatch) { setView('detail'); } else { setView('list'); } };
+  const handleDelete = async (id, type) => { if(!confirm(t('delete') + " ?")) return; if(useLocalStorage) { if (type === 'watch') setWatches(prev => prev.filter(w => w.id !== id)); else setBracelets(prev => prev.filter(b => b.id !== id)); setView('list'); } else { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, type === 'watch' ? 'watches' : 'bracelets', id)); setView('list'); } };
 
   const activeWatchesCount = watches.filter(w => w.status === 'collection').length;
 
@@ -1298,42 +783,15 @@ export default function App() {
     let filtered = watches;
     if (searchTerm) { 
       const lower = searchTerm.toLowerCase(); 
-      filtered = filtered.filter(w => {
-          const fullSearchString = `${w.brand || ''} ${w.model || ''}`.toLowerCase();
-          return fullSearchString.includes(lower);
-      }); 
+      filtered = filtered.filter(w => { const fullSearchString = `${w.brand || ''} ${w.model || ''}`.toLowerCase(); return fullSearchString.includes(lower); }); 
     }
     let sorted = [...filtered];
-
-    const getTime = (w) => {
-        if (w.purchaseDate) {
-            const time = new Date(w.purchaseDate).getTime();
-            return isNaN(time) ? null : time;
-        }
-        return null;
-    };
-
+    const getTime = (w) => { if (w.purchaseDate) { const time = new Date(w.purchaseDate).getTime(); return isNaN(time) ? null : time; } return null; };
     if (sortOrder === 'priceAsc') sorted.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
     else if (sortOrder === 'priceDesc') sorted.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
     else if (sortOrder === 'alpha') sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
-    else if (sortOrder === 'dateAsc') {
-        sorted.sort((a, b) => {
-            const ta = getTime(a), tb = getTime(b);
-            if (ta === null && tb !== null) return 1;
-            if (tb === null && ta !== null) return -1;
-            if (ta === null && tb === null) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime();
-            return ta - tb;
-        });
-    } else {
-        // dateDesc (default)
-        sorted.sort((a, b) => {
-            const ta = getTime(a), tb = getTime(b);
-            if (ta === null && tb !== null) return 1;
-            if (tb === null && ta !== null) return -1;
-            if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
-            return tb - ta;
-        });
-    }
+    else if (sortOrder === 'dateAsc') { sorted.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime(); return ta - tb; }); }
+    else { sorted.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime(); return tb - ta; }); }
     return sorted;
   }, [watches, searchTerm, sortOrder]);
 
@@ -1342,27 +800,11 @@ export default function App() {
       return (
         <div className={`flex flex-col items-center justify-start h-full min-h-[80vh] px-8 relative overflow-hidden pt-28 ${theme.text}`}>
           <GraphicBackground isDark={isDark} />
-          <div className="absolute top-4 left-4 z-20">
-            <button onClick={() => setView('friends')} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}>
-                <Users size={18} />
-                {friendRequests.length > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}
-            </button>
-          </div>
-
+          <div className="absolute top-4 left-4 z-20"><button onClick={() => setView('friends')} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}><Users size={18} />{friendRequests.length > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}</button></div>
           <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-3">
-            {(!user || user?.isAnonymous) ? (
-              <button onClick={handleGoogleLogin} className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border text-xs font-medium transition-all ${theme.bgSecondary} ${theme.text} ${theme.border}`}>
-                {isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : <LogIn size={14} />} {t('login_google')}
-              </button>
-            ) : (
-              <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">
-                 {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" alt="Profile" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
-              </button>
-            )}
-            
+            {(!user || user?.isAnonymous) ? (<button onClick={handleGoogleLogin} className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm rounded-full shadow-sm border text-xs font-medium transition-all ${theme.bgSecondary} ${theme.text} ${theme.border}`}>{isAuthLoading ? <Loader2 size={14} className="animate-spin" /> : <LogIn size={14} />} {t('login_google')}</button>) : (<button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">{user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" alt="Profile" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}</button>)}
             <button onClick={() => setShowSettingsModal(true)} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors z-20`}><Settings size={18} /></button>
           </div>
-          
           {showProfileMenu && (
               <div className={`absolute top-16 right-16 w-64 ${theme.card} rounded-xl shadow-xl border ${theme.border} py-1 z-30`}>
                   <div className={`px-4 py-3 border-b ${theme.border}`}><p className={`text-sm font-medium ${theme.text}`}>{user.email}</p></div>
@@ -1370,21 +812,11 @@ export default function App() {
                   <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><LogOut size={16} /> {t('logout')}</button>
               </div>
           )}
-
-          <div className="z-10 mt-12 mb-1 text-center">
-              <h1 className={`font-serif text-3xl sm:text-4xl ${theme.text} tracking-[0.3em] uppercase font-light`}>{t('myWatches')}</h1>
-              <div className={`w-16 h-0.5 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} mx-auto mt-2 opacity-20`}></div>
-          </div>
+          <div className="z-10 mt-12 mb-1 text-center"><h1 className={`font-serif text-3xl sm:text-4xl ${theme.text} tracking-[0.3em] uppercase font-light`}>{t('myWatches')}</h1><div className={`w-16 h-0.5 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} mx-auto mt-2 opacity-20`}></div></div>
           <div className="mb-8 text-center z-10 scale-90 opacity-90"><LiveClock isDark={isDark} settings={settings} /></div>
           <div className="z-10 mb-4"><AnalogClock isDark={isDark} settings={settings} /></div>
-          
-          <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10 -mt-12">
-            <WatchBoxLogo isOpen={isBoxOpening} isDark={isDark} settings={settings} />
-          </div>
-          <div className="-mt-6 flex flex-col items-center z-10 pb-20">
-            <p className={`${theme.text} font-mono font-bold text-sm mb-2 tracking-widest shadow-sm uppercase opacity-70`}>{activeWatchesCount} {activeWatchesCount > 1 ? t('pieces') : t('piece')}</p>
-            {error ? <div className="mt-3 bg-red-50 text-red-600 px-4 py-2 rounded-lg text-xs">{String(error)}</div> : null}
-          </div>
+          <div onClick={handleBoxClick} className="flex items-center justify-center w-72 h-64 cursor-pointer transform transition-transform active:scale-95 hover:scale-105 duration-300 z-10 -mt-12"><WatchBoxLogo isOpen={isBoxOpening} isDark={isDark} settings={settings} /></div>
+          <div className="-mt-6 flex flex-col items-center z-10 pb-20"><p className={`${theme.text} font-mono font-bold text-sm mb-2 tracking-widest shadow-sm uppercase opacity-70`}>{activeWatchesCount} {activeWatchesCount > 1 ? t('pieces') : t('piece')}</p>{error ? <div className="mt-3 bg-red-50 text-red-600 px-4 py-2 rounded-lg text-xs">{String(error)}</div> : null}</div>
         </div>
       );
   }
@@ -1397,20 +829,8 @@ export default function App() {
             <div className="flex items-center gap-2">
                 {(title === t('collection') || title === t('wishlist') || title === t('bracelets') || title === t('inventory')) && (
                     <div className="relative">
-                        <select 
-                            value={sortOrder} 
-                            onChange={(e) => setSortOrder(e.target.value)}
-                            className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
-                        >
-                            <option value="dateDesc">{t('sort_date_desc')}</option>
-                            <option value="dateAsc">{t('sort_date_asc')}</option>
-                            <option value="alpha">{t('sort_alpha')}</option>
-                            <option value="priceAsc">{t('sort_price_asc')}</option>
-                            <option value="priceDesc">{t('sort_price_desc')}</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                            <ArrowUpDown size={10} />
-                        </div>
+                        <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}><option value="dateDesc">{t('sort_date_desc')}</option><option value="dateAsc">{t('sort_date_asc')}</option><option value="alpha">{t('sort_alpha')}</option><option value="priceAsc">{t('sort_price_asc')}</option><option value="priceDesc">{t('sort_price_desc')}</option></select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500"><ArrowUpDown size={10} /></div>
                     </div>
                 )}
                 <button onClick={() => { setIsSearchOpen(!isSearchOpen); if(isSearchOpen) setSearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
@@ -1419,11 +839,7 @@ export default function App() {
           {isSearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
           {withFilters && !isSearchOpen && (
             <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
-                {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (
-                    <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>
-                        {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.filter(w => w.status !== 'wishlist').length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : watches.filter(w=>w.status==='sold').length)})`}
-                    </button>
-                ))}
+                {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (<button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>{t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.filter(w => w.status !== 'wishlist').length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : watches.filter(w=>w.status==='sold').length)})`}</button>))}
             </div>
           )}
         </div>
@@ -1439,14 +855,8 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-3 px-3 mt-3">
                     {bracelets.map(b => (
                         <Card key={b.id} onClick={() => handleEdit(b, 'bracelet')} theme={theme}>
-                            <div className={`aspect-square ${theme.bg} relative flex items-center justify-center`}>
-                                {b.image ? <img src={b.image} className="w-full h-full object-cover" alt="Bracelet" /> : <Activity className={theme.textSub}/>}
-                                <div className="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm">{b.width}mm</div>
-                            </div>
-                            <div className="p-3">
-                                {b.brand && <div className="text-[10px] uppercase font-bold text-indigo-600 truncate">{b.brand}</div>}
-                                <div className={`font-bold text-sm truncate ${theme.text}`}>{b.type}</div>
-                            </div>
+                            <div className={`aspect-square ${theme.bg} relative flex items-center justify-center`}>{b.image ? <img src={b.image} className="w-full h-full object-cover" alt="Bracelet" /> : <Activity className={theme.textSub}/>}<div className="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm">{b.width}mm</div></div>
+                            <div className="p-3">{b.brand && <div className="text-[10px] uppercase font-bold text-indigo-600 truncate">{b.brand}</div>}<div className={`font-bold text-sm truncate ${theme.text}`}>{b.type}</div></div>
                         </Card>
                     ))}
                 </div>
@@ -1465,16 +875,7 @@ export default function App() {
               <div className={`aspect-square ${theme.bg} relative`}>
                 {displayImage ? <img src={displayImage} className="w-full h-full object-cover" alt="Montre" /> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
                 {(w.purchasePrice) && (<div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{formatPrice(w.purchasePrice)}</div>)}
-                <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">
-                  {w.status === 'sold' ? (
-                    <>
-                      <span className="text-emerald-600 font-extrabold uppercase">{t('sold')}</span>
-                      <span className="text-emerald-500 font-bold text-[9px]">{formatPrice(w.sellingPrice)}</span>
-                    </>
-                  ) : (
-                    formatPrice(w.sellingPrice || w.purchasePrice)
-                  )}
-                </div>
+                <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">{w.status === 'sold' ? (<><span className="text-emerald-600 font-extrabold uppercase">{t('sold')}</span><span className="text-emerald-500 font-bold text-[9px]">{formatPrice(w.sellingPrice)}</span></>) : (formatPrice(w.sellingPrice || w.purchasePrice))}</div>
                 <div className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer z-10" onClick={(e) => { e.stopPropagation(); toggleVisibility(w); }}>{w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}</div>
               </div>
               <div className="p-3"><div className={`font-bold font-serif text-sm truncate ${theme.text}`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div>
@@ -1522,25 +923,12 @@ export default function App() {
     ];
 
     const getWatchStats = (watchId) => {
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        let monthCount = 0;
-        let yearCount = 0;
-        let lastYearCount = 0;
-
+        const now = new Date(); const currentMonth = now.getMonth(); const currentYear = now.getFullYear();
+        let monthCount = 0; let yearCount = 0; let lastYearCount = 0;
         calendarEvents.forEach(evt => {
             if (evt.watches && evt.watches.includes(watchId)) {
-                const d = new Date(evt.date);
-                const dy = d.getFullYear();
-                const dm = d.getMonth();
-                
-                if (dy === currentYear) {
-                    yearCount++;
-                    if (dm === currentMonth) monthCount++;
-                } else if (dy === currentYear - 1) {
-                    lastYearCount++;
-                }
+                const d = new Date(evt.date); const dy = d.getFullYear(); const dm = d.getMonth();
+                if (dy === currentYear) { yearCount++; if (dm === currentMonth) monthCount++; } else if (dy === currentYear - 1) { lastYearCount++; }
             }
         });
         return { monthCount, yearCount, lastYearCount };
@@ -1595,35 +983,18 @@ export default function App() {
 
           {w.status === 'wishlist' && (
               <>
-                  {w.link && (
-                      <a href={w.link} target="_blank" rel="noreferrer" className="w-full py-4 bg-indigo-50 text-indigo-700 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-indigo-100 transition-colors mb-4 border border-indigo-100">
-                          <LinkIcon size={20} /> {t('visit_site')}
-                      </a>
-                  )}
-                  <button onClick={() => handleMoveToCollection(w)} className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-transform active:scale-95 mb-4">
-                      <Gift size={20} /> {t('move_collection')}
-                  </button>
+                  {w.link && (<a href={w.link} target="_blank" rel="noreferrer" className="w-full py-4 bg-indigo-50 text-indigo-700 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-indigo-100 transition-colors mb-4 border border-indigo-100"><LinkIcon size={20} /> {t('visit_site')}</a>)}
+                  <button onClick={() => handleMoveToCollection(w)} className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-transform active:scale-95 mb-4"><Gift size={20} /> {t('move_collection')}</button>
               </>
           )}
 
           {w.status === 'collection' && (
               <div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}>
-                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider flex items-center gap-2`}>
-                      <BarChart2 size={14}/> {t('stats_usage')}
-                  </h3>
+                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider flex items-center gap-2`}><BarChart2 size={14}/> {t('stats_usage')}</h3>
                   <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className={`p-2 rounded-lg ${theme.bg}`}>
-                          <div className={`text-lg font-bold ${theme.text}`}>{stats.monthCount}</div>
-                          <div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_this_month')}</div>
-                      </div>
-                      <div className={`p-2 rounded-lg ${theme.bg}`}>
-                          <div className={`text-lg font-bold ${theme.text}`}>{stats.yearCount}</div>
-                          <div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_this_year')}</div>
-                      </div>
-                      <div className={`p-2 rounded-lg ${theme.bg}`}>
-                          <div className={`text-lg font-bold ${theme.text}`}>{stats.lastYearCount}</div>
-                          <div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_last_year')}</div>
-                      </div>
+                      <div className={`p-2 rounded-lg ${theme.bg}`}><div className={`text-lg font-bold ${theme.text}`}>{stats.monthCount}</div><div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_this_month')}</div></div>
+                      <div className={`p-2 rounded-lg ${theme.bg}`}><div className={`text-lg font-bold ${theme.text}`}>{stats.yearCount}</div><div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_this_year')}</div></div>
+                      <div className={`p-2 rounded-lg ${theme.bg}`}><div className={`text-lg font-bold ${theme.text}`}>{stats.lastYearCount}</div><div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_last_year')}</div></div>
                   </div>
               </div>
           )}
@@ -1665,17 +1036,8 @@ export default function App() {
           {(w.conditionRating || w.conditionComment) && (
               <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
                   <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>
-                  {w.conditionRating && (
-                      <div className="flex items-center gap-2 mb-2">
-                          <div className={`text-lg font-bold ${theme.text} bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg`}>{w.conditionRating}/10</div>
-                          <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                              <div className="h-full bg-emerald-500" style={{ width: `${w.conditionRating * 10}%` }}></div>
-                          </div>
-                      </div>
-                  )}
-                  {w.conditionComment && (
-                      <p className={`text-sm ${theme.text} italic`}>"{w.conditionComment}"</p>
-                  )}
+                  {w.conditionRating && (<div className="flex items-center gap-2 mb-2"><div className={`text-lg font-bold ${theme.text} bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg`}>{w.conditionRating}/10</div><div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${w.conditionRating * 10}%` }}></div></div></div>)}
+                  {w.conditionComment && (<p className={`text-sm ${theme.text} italic`}>"{w.conditionComment}"</p>)}
               </div>
           )}
 
@@ -1684,15 +1046,9 @@ export default function App() {
               {w.invoice ? (
                   <div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer`} onClick={() => setFullScreenImage(w.invoice)}>
                       <img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="Facture" />
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
-                              <Receipt size={14}/> {t('view_invoice')}
-                          </div>
-                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2"><Receipt size={14}/> {t('view_invoice')}</div></div>
                   </div>
-              ) : (
-                  <div className={`p-4 text-center text-sm ${theme.textSub} italic border border-dashed ${theme.border} rounded-xl`}>Aucune facture enregistrée</div>
-              )}
+              ) : (<div className={`p-4 text-center text-sm ${theme.textSub} italic border border-dashed ${theme.border} rounded-xl`}>Aucune facture enregistrée</div>)}
           </div>
 
           <div>
@@ -1732,37 +1088,13 @@ export default function App() {
         return false; 
     });
 
-    const getTime = (w) => {
-        if (w.purchaseDate) {
-            const t = new Date(w.purchaseDate).getTime();
-            return isNaN(t) ? null : t;
-        }
-        return null;
-    };
+    const getTime = (w) => { if (w.purchaseDate) { const t = new Date(w.purchaseDate).getTime(); return isNaN(t) ? null : t; } return null; };
 
-    if (sortOrder === 'priceAsc') {
-        displayWatches.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
-    } else if (sortOrder === 'priceDesc') {
-        displayWatches.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
-    } else if (sortOrder === 'alpha') {
-        displayWatches.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
-    } else if (sortOrder === 'dateAsc') {
-        displayWatches.sort((a, b) => {
-            const ta = getTime(a), tb = getTime(b);
-            if (ta === null && tb !== null) return 1;
-            if (tb === null && ta !== null) return -1;
-            if (ta === null && tb === null) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime();
-            return ta - tb;
-        });
-    } else {
-        displayWatches.sort((a, b) => {
-            const ta = getTime(a), tb = getTime(b);
-            if (ta === null && tb !== null) return 1;
-            if (tb === null && ta !== null) return -1;
-            if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
-            return tb - ta;
-        });
-    }
+    if (sortOrder === 'priceAsc') { displayWatches.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0)); } 
+    else if (sortOrder === 'priceDesc') { displayWatches.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0)); } 
+    else if (sortOrder === 'alpha') { displayWatches.sort((a, b) => (a.brand || '').localeCompare(b.brand || '')); } 
+    else if (sortOrder === 'dateAsc') { displayWatches.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime(); return ta - tb; }); } 
+    else { displayWatches.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime(); return tb - ta; }); }
 
     return (
         <div className="pb-24 px-2">
@@ -1771,29 +1103,13 @@ export default function App() {
                 <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide`}>{t('gallery')}</h1>
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        <select 
-                            value={sortOrder} 
-                            onChange={(e) => setSortOrder(e.target.value)}
-                            className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}
-                        >
-                            <option value="dateDesc">{t('sort_date_desc')}</option>
-                            <option value="dateAsc">{t('sort_date_asc')}</option>
-                            <option value="alpha">{t('sort_alpha')}</option>
-                            <option value="priceAsc">{t('sort_price_asc')}</option>
-                            <option value="priceDesc">{t('sort_price_desc')}</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                            <ArrowUpDown size={10} />
-                        </div>
+                        <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}><option value="dateDesc">{t('sort_date_desc')}</option><option value="dateAsc">{t('sort_date_asc')}</option><option value="alpha">{t('sort_alpha')}</option><option value="priceAsc">{t('sort_price_asc')}</option><option value="priceDesc">{t('sort_price_desc')}</option></select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500"><ArrowUpDown size={10} /></div>
                     </div>
                     <button onClick={() => { setIsGallerySearchOpen(!isGallerySearchOpen); if(isGallerySearchOpen) setGallerySearchTerm(''); }} className={`p-2 rounded-full transition-colors ${isGallerySearchOpen ? 'bg-slate-900 text-white' : `${theme.textSub} hover:opacity-80`}`}><Search size={18} /></button>
                 </div>
              </div>
-             {isGallerySearchOpen && (
-                 <div className="px-2 mb-3">
-                     <input autoFocus type="text" placeholder={t('search')} value={gallerySearchTerm} onChange={(e) => setGallerySearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/>
-                 </div>
-             )}
+             {isGallerySearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={gallerySearchTerm} onChange={(e) => setGallerySearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
              <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1">
                    <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button>
                    <button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button>
@@ -1802,14 +1118,8 @@ export default function App() {
              </div>
           </div>
           <div className="grid grid-cols-3 gap-1 mt-2 px-1">
-              {displayWatches.map(w => (
-                  <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
-                      <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Galerie" />
-                  </div>
-              ))}
-              {displayWatches.length === 0 && (
-                  <div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible.</div>
-              )}
+              {displayWatches.map(w => (<div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Galerie" /></div>))}
+              {displayWatches.length === 0 && (<div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible.</div>)}
           </div>
         </div>
     );
@@ -1819,8 +1129,7 @@ export default function App() {
       const getTopWatches = () => {
         const periodCounts = {};
         calendarEvents.forEach(evt => {
-            const evtDate = new Date(evt.date);
-            let inPeriod = false;
+            const evtDate = new Date(evt.date); let inPeriod = false;
             if (statsTimeframe === 'all') inPeriod = true;
             else if (statsTimeframe === 'year') inPeriod = evtDate.getFullYear() === currentMonth.getFullYear();
             else inPeriod = evtDate.getMonth() === currentMonth.getMonth() && evtDate.getFullYear() === currentMonth.getFullYear();
@@ -1840,65 +1149,32 @@ export default function App() {
             const event = calendarEvents.find(e => e.id === dateStr || e.date === dateStr);
             const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
 
-            const firstWatchId = event?.watches?.[0];
-            const firstWatch = firstWatchId ? watches.find(wa => wa.id === firstWatchId) : null;
+            const firstWatchId = event?.watches?.[0]; const firstWatch = firstWatchId ? watches.find(wa => wa.id === firstWatchId) : null;
             const watchImg = firstWatch ? (firstWatch.images?.[0] || firstWatch.image) : null;
 
-            let bubbleBg = 'bg-transparent';
-            let bubbleText = theme.textSub;
-            
-            if (isToday) {
-                bubbleBg = 'bg-emerald-500 shadow-sm';
-                bubbleText = 'text-white';
-            } else if (watchImg) {
-                bubbleBg = 'bg-white shadow-sm';
-                bubbleText = 'text-black';
-            }
+            let bubbleBg = 'bg-transparent'; let bubbleText = theme.textSub;
+            if (isToday) { bubbleBg = 'bg-emerald-500 shadow-sm'; bubbleText = 'text-white'; } else if (watchImg) { bubbleBg = 'bg-white shadow-sm'; bubbleText = 'text-black'; }
 
             days.push(
                 <div key={d} onClick={() => handleCalendarDayClick(dateStr)} className={`aspect-square border rounded-lg relative overflow-hidden cursor-pointer ${theme.border} ${isToday && !watchImg ? 'border-emerald-500 bg-emerald-500/10' : theme.bg}`}>
-                    {watchImg ? (
-                        <>
-                            <img src={watchImg} className="absolute inset-0 w-full h-full object-cover opacity-90" alt="Montre portée" />
-                        </>
-                    ) : null}
-                    
-                    <div className={`absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold z-10 ${bubbleBg} ${bubbleText}`}>
-                        {d}
-                    </div>
-
-                    {event?.watches?.length > 1 && (
-                        <div className="absolute bottom-1 right-1 px-1.5 h-4 bg-black/70 text-white rounded-full flex items-center justify-center text-[9px] font-bold z-10 backdrop-blur-sm">
-                            +{event.watches.length - 1}
-                        </div>
-                    )}
+                    {watchImg ? (<><img src={watchImg} className="absolute inset-0 w-full h-full object-cover opacity-90" alt="Montre portée" /></>) : null}
+                    <div className={`absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold z-10 ${bubbleBg} ${bubbleText}`}>{d}</div>
+                    {event?.watches?.length > 1 && (<div className="absolute bottom-1 right-1 px-1.5 h-4 bg-black/70 text-white rounded-full flex items-center justify-center text-[9px] font-bold z-10 backdrop-blur-sm">+{event.watches.length - 1}</div>)}
                 </div>
             );
         }
         return days;
       };
 
-      const getTopBrands = () => {
-          const brands = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.brand) acc[w.brand] = (acc[w.brand] || 0) + 1; return acc; }, {});
-          return Object.entries(brands).sort((a,b) => b[1] - a[1]).slice(0, 5);
-      };
-      
-      const getTopDials = () => {
-          const dials = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.dialColor) acc[w.dialColor] = (acc[w.dialColor] || 0) + 1; return acc; }, {});
-          return Object.entries(dials).sort((a,b) => b[1] - a[1]).slice(0, 5);
-      };
+      const getTopBrands = () => { const brands = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.brand) acc[w.brand] = (acc[w.brand] || 0) + 1; return acc; }, {}); return Object.entries(brands).sort((a,b) => b[1] - a[1]).slice(0, 5); };
+      const getTopDials = () => { const dials = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.dialColor) acc[w.dialColor] = (acc[w.dialColor] || 0) + 1; return acc; }, {}); return Object.entries(dials).sort((a,b) => b[1] - a[1]).slice(0, 5); };
 
-      const topBrands = getTopBrands();
-      const topDials = getTopDials();
-      
-      const allTopWatches = getTopWatches();
-      const displayedTopWatches = isTopWornExpanded ? allTopWatches : allTopWatches.slice(0, 5);
+      const topBrands = getTopBrands(); const topDials = getTopDials();
+      const allTopWatches = getTopWatches(); const displayedTopWatches = isTopWornExpanded ? allTopWatches : allTopWatches.slice(0, 5);
 
       return (
         <div className="pb-24 px-3">
-            <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-3 border-b ${theme.border} mb-4 flex justify-between items-center`}>
-                <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('stats')}</h1>
-            </div>
+            <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-3 border-b ${theme.border} mb-4 flex justify-between items-center`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('stats')}</h1></div>
             <div className="space-y-6">
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <div className="flex justify-between items-center mb-4">
@@ -1911,55 +1187,20 @@ export default function App() {
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2`}><TrendingUp className="text-emerald-500" size={16} /> {t('top_worn')}</h3>
-                        <div className={`flex ${theme.bg} rounded-lg p-0.5`}>
-                            {[{id: 'month', label: t('month')}, {id: 'year', label: t('year')}, {id: 'all', label: t('all_time')}].map(tObj => (<button key={tObj.id} onClick={() => setStatsTimeframe(tObj.id)} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${statsTimeframe === tObj.id ? `${theme.bgSecondary} shadow ${theme.text}` : theme.textSub}`}>{tObj.label}</button>))}
-                        </div>
+                        <div className={`flex ${theme.bg} rounded-lg p-0.5`}>{[{id: 'month', label: t('month')}, {id: 'year', label: t('year')}, {id: 'all', label: t('all_time')}].map(tObj => (<button key={tObj.id} onClick={() => setStatsTimeframe(tObj.id)} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${statsTimeframe === tObj.id ? `${theme.bgSecondary} shadow ${theme.text}` : theme.textSub}`}>{tObj.label}</button>))}</div>
                     </div>
-                    <div className="space-y-3">
-                        {displayedTopWatches.map((w, i) => (<div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}><div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div><div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /></div><div className="flex-1 min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div><div className="font-bold text-indigo-600 text-sm">{w.count}</div></div>))}
-                    </div>
-                    {allTopWatches.length > 5 && (
-                        <button 
-                            onClick={() => setIsTopWornExpanded(!isTopWornExpanded)}
-                            className={`w-full mt-3 py-2 text-xs font-bold rounded-lg border border-dashed transition-colors ${theme.textSub} ${theme.border} hover:bg-slate-50 dark:hover:bg-slate-800`}
-                        >
-                            {isTopWornExpanded ? t('show_less') : `${t('show_all')} (${allTopWatches.length})`}
-                        </button>
-                    )}
+                    <div className="space-y-3">{displayedTopWatches.map((w, i) => (<div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}><div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div><div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /></div><div className="flex-1 min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div><div className="font-bold text-indigo-600 text-sm">{w.count}</div></div>))}</div>
+                    {allTopWatches.length > 5 && (<button onClick={() => setIsTopWornExpanded(!isTopWornExpanded)} className={`w-full mt-3 py-2 text-xs font-bold rounded-lg border border-dashed transition-colors ${theme.textSub} ${theme.border} hover:bg-slate-50 dark:hover:bg-slate-800`}>{isTopWornExpanded ? t('show_less') : `${t('show_all')} (${allTopWatches.length})`}</button>)}
                 </div>
 
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><PieChart className="text-blue-500" size={16} /> {t('fav_brands')}</h3>
-                    <div className="space-y-3">
-                        {topBrands.map(([brand, count], i) => (
-                            <div key={brand} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 w-full">
-                                    <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
-                                    <div className="flex-1">
-                                        <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / (topBrands[0]?.[1] || 1)) * 100}%`}}></div></div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <div className="space-y-3">{topBrands.map(([brand, count], i) => (<div key={brand} className="flex items-center justify-between"><div className="flex items-center gap-2 w-full"><span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span><div className="flex-1"><div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div><div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / (topBrands[0]?.[1] || 1)) * 100}%`}}></div></div></div></div></div>))}</div>
                 </div>
 
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><Palette className="text-purple-500" size={16} /> {t('fav_dials')}</h3>
-                    <div className="space-y-3">
-                        {topDials.map(([color, count], i) => (
-                            <div key={color} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 w-full">
-                                    <span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span>
-                                    <div className="flex-1">
-                                        <div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div>
-                                        <div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${(count / (topDials[0]?.[1] || 1)) * 100}%`}}></div></div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <div className="space-y-3">{topDials.map(([color, count], i) => (<div key={color} className="flex items-center justify-between"><div className="flex items-center gap-2 w-full"><span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span><div className="flex-1"><div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div><div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${(count / (topDials[0]?.[1] || 1)) * 100}%`}}></div></div></div></div></div>))}</div>
                 </div>
             </div>
             
@@ -1972,20 +1213,13 @@ export default function App() {
                             <input autoFocus type="text" placeholder={t('search')} className={`w-full p-2 ${theme.input} rounded-lg text-sm`} value={calendarSearchTerm} onChange={(e) => setCalendarSearchTerm(e.target.value)}/>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                            {watches.filter(w => w.status === 'collection')
-                             .filter(w => !calendarSearchTerm || `${w.brand || ''} ${w.model || ''}`.toLowerCase().includes(calendarSearchTerm.toLowerCase()))
-                             .map(w => {
+                            {watches.filter(w => w.status === 'collection').filter(w => !calendarSearchTerm || `${w.brand || ''} ${w.model || ''}`.toLowerCase().includes(calendarSearchTerm.toLowerCase())).map(w => {
                                 const isSelected = selectedCalendarWatches.includes(w.id);
                                 return (
                                 <div key={w.id} onClick={() => setSelectedCalendarWatches(prev => isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id])} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/10' : `${theme.border} hover:${theme.bg}`}`}>
                                     <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-600 border-indigo-600' : `${theme.bgSecondary} ${theme.border}`}`}>{isSelected && <Check size={12} className="text-white" />}</div>
-                                    <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-200 shrink-0">
-                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Miniature" /> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div>
-                                        <div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div>
-                                    </div>
+                                    <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-200 shrink-0">{w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Miniature" /> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}</div>
+                                    <div className="flex flex-col min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div>
                                 </div>
                                 );
                             })}
@@ -2005,46 +1239,17 @@ export default function App() {
     const sTotal = { buy: sCol.buy+sSale.buy+sSold.buy, val: sCol.val+sSale.val+sSold.val, profit: sCol.profit+sSale.profit+sSold.profit };
 
     const timelineMap = watches.reduce((acc, w) => {
-        if (w.purchaseDate && w.purchasePrice) {
-            const d = new Date(w.purchaseDate);
-            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
-            acc[key].spent += Number(w.purchasePrice);
-            acc[key].count += 1; 
-            acc[key].boughtWatches.push(w);
-        }
-        if (w.status === 'sold' && w.soldDate && w.sellingPrice) {
-            const d = new Date(w.soldDate);
-            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] };
-            acc[key].gained += Number(w.sellingPrice);
-            acc[key].soldWatches.push(w);
-        }
+        if (w.purchaseDate && w.purchasePrice) { const d = new Date(w.purchaseDate); const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] }; acc[key].spent += Number(w.purchasePrice); acc[key].count += 1; acc[key].boughtWatches.push(w); }
+        if (w.status === 'sold' && w.soldDate && w.sellingPrice) { const d = new Date(w.soldDate); const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] }; acc[key].gained += Number(w.sellingPrice); acc[key].soldWatches.push(w); }
         return acc;
     }, {});
     
     const sortedTimeline = Object.values(timelineMap).sort((a,b) => b.date.localeCompare(a.date));
-    
-    const timelineByYear = sortedTimeline.reduce((acc, curr) => {
-        if (!acc[curr.year]) acc[curr.year] = { year: curr.year, months: [], spent: 0, gained: 0 };
-        acc[curr.year].months.push(curr);
-        acc[curr.year].spent += curr.spent;
-        acc[curr.year].gained += curr.gained;
-        return acc;
-    }, {});
-    
+    const timelineByYear = sortedTimeline.reduce((acc, curr) => { if (!acc[curr.year]) acc[curr.year] = { year: curr.year, months: [], spent: 0, gained: 0 }; acc[curr.year].months.push(curr); acc[curr.year].spent += curr.spent; acc[curr.year].gained += curr.gained; return acc; }, {});
     const sortedYears = Object.values(timelineByYear).sort((a,b) => b.year - a.year);
+    const formatMonthName = (dateStr) => { const [y, m] = dateStr.split('-'); const d = new Date(y, parseInt(m)-1, 1); return d.toLocaleString(settings.lang, { month: 'long' }); };
 
-    const formatMonthName = (dateStr) => {
-        const [y, m] = dateStr.split('-');
-        const d = new Date(y, parseInt(m)-1, 1);
-        return d.toLocaleString(settings.lang, { month: 'long' });
-    };
-
-    const now = new Date();
-    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+    const now = new Date(); const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
 
     return (
       <div className="pb-24 px-3 space-y-2">
@@ -2069,14 +1274,8 @@ export default function App() {
 
             {sortedYears.map(yearData => {
                 if (timelineFilter === 'default' && yearData.year !== now.getFullYear()) return null;
-
-                const monthsToDisplay = timelineFilter === 'default' 
-                    ? yearData.months.filter(m => m.date === currentMonthKey || m.date === prevMonthKey)
-                    : yearData.months;
-
-                if (timelineFilter === 'default' && monthsToDisplay.length === 0) {
-                     return <div key={yearData.year} className={`text-center text-xs ${theme.textSub} py-4 italic`}>Aucune activité récente.</div>;
-                }
+                const monthsToDisplay = timelineFilter === 'default' ? yearData.months.filter(m => m.date === currentMonthKey || m.date === prevMonthKey) : yearData.months;
+                if (timelineFilter === 'default' && monthsToDisplay.length === 0) { return <div key={yearData.year} className={`text-center text-xs ${theme.textSub} py-4 italic`}>Aucune activité récente.</div>; }
 
                 return (
                     <div key={yearData.year} className="mb-6">
@@ -2091,30 +1290,16 @@ export default function App() {
                         <div className="space-y-3">
                             {monthsToDisplay.map((tItem) => (
                                 <div key={tItem.date} className={`${theme.card} rounded-xl border ${theme.border} overflow-hidden mb-3`}>
-                                    <div 
-                                        onClick={() => setExpandedMonth(expandedMonth === tItem.date ? null : tItem.date)}
-                                        className={`p-3 flex items-center justify-between cursor-pointer hover:${theme.bgSecondary} transition-colors`}
-                                    >
+                                    <div onClick={() => setExpandedMonth(expandedMonth === tItem.date ? null : tItem.date)} className={`p-3 flex items-center justify-between cursor-pointer hover:${theme.bgSecondary} transition-colors`}>
                                         <div className="flex items-center gap-3">
-                                            <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>
-                                                {formatMonthName(tItem.date)}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span>
-                                                <span className={`font-bold text-sm ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>
-                                                    {formatPrice(tItem.gained - tItem.spent)}
-                                                </span>
-                                            </div>
+                                            <div className={`px-2 py-1 rounded-lg ${theme.bgSecondary} text-xs font-bold ${theme.textSub} capitalize w-16 text-center border ${theme.border}`}>{formatMonthName(tItem.date)}</div>
+                                            <div className="flex flex-col"><span className={`text-xs ${theme.textSub}`}>{tItem.count} {t('pieces')}</span><span className={`font-bold text-sm ${tItem.gained - tItem.spent > 0 ? 'text-emerald-500' : (tItem.gained - tItem.spent < 0 ? 'text-red-500' : 'text-slate-500')}`}>{formatPrice(tItem.gained - tItem.spent)}</span></div>
                                         </div>
                                         <div className="text-right text-xs flex items-center gap-2">
-                                            <div>
-                                                {tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}
-                                                {tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}
-                                            </div>
+                                            <div>{tItem.spent > 0 && <div className="text-red-500 font-medium">- {formatPrice(tItem.spent)}</div>}{tItem.gained > 0 && <div className="text-emerald-500 font-medium">+ {formatPrice(tItem.gained)}</div>}</div>
                                             <ChevronLeft size={16} className={`text-slate-400 transition-transform ${expandedMonth === tItem.date ? '-rotate-90' : 'rotate-180'}`} />
                                         </div>
                                     </div>
-                                    
                                     {expandedMonth === tItem.date && (
                                         <div className={`border-t ${theme.border} bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-3`}>
                                             {tItem.boughtWatches.length > 0 && (
@@ -2123,13 +1308,8 @@ export default function App() {
                                                     <div className="space-y-2">
                                                         {tItem.boughtWatches.map((w) => (
                                                             <div key={`buy-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
-                                                                    <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
-                                                                </div>
+                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">{w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}</div>
+                                                                <div className="flex-1 min-w-0"><div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div><div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div></div>
                                                                 <div className="text-xs font-bold text-red-500">- {formatPrice(w.purchasePrice)}</div>
                                                             </div>
                                                         ))}
@@ -2142,13 +1322,8 @@ export default function App() {
                                                     <div className="space-y-2">
                                                         {tItem.soldWatches.map((w) => (
                                                             <div key={`sell-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
-                                                                    <div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div>
-                                                                </div>
+                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">{w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}</div>
+                                                                <div className="flex-1 min-w-0"><div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div><div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div></div>
                                                                 <div className="text-xs font-bold text-emerald-500">+ {formatPrice(w.sellingPrice)}</div>
                                                             </div>
                                                         ))}
@@ -2173,10 +1348,7 @@ export default function App() {
       const currentImages = isWatch ? (watchForm.images || (watchForm.image ? [watchForm.image] : [])) : [];
       return (
         <div className={`pb-24 p-4 ${theme.bgSecondary} min-h-screen`}>
-          <div className="flex justify-between items-center mb-6 mt-2">
-              <h1 className={`text-2xl font-bold font-serif ${theme.text}`}>{editingId ? t('edit') : t('add_new')}</h1>
-              <button onClick={() => handleCancelForm()} className={theme.text}><X/></button>
-          </div>
+          <div className="flex justify-between items-center mb-6 mt-2"><h1 className={`text-2xl font-bold font-serif ${theme.text}`}>{editingId ? t('edit') : t('add_new')}</h1><button onClick={() => handleCancelForm()} className={theme.text}><X/></button></div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-3 gap-3">
                 {currentImages.map((img, idx) => (
@@ -2251,20 +1423,11 @@ export default function App() {
                  </div>
                  
                  <div className="grid grid-cols-2 gap-3">
-                     <div>
-                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_release')}</label>
-                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.releaseDate || ''} onChange={e => setWatchForm({...watchForm, releaseDate: e.target.value})} />
-                     </div>
-                     <div>
-                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_purchase')}</label>
-                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.purchaseDate || ''} onChange={e => setWatchForm({...watchForm, purchaseDate: e.target.value})} />
-                     </div>
+                     <div><label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_release')}</label><input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.releaseDate || ''} onChange={e => setWatchForm({...watchForm, releaseDate: e.target.value})} /></div>
+                     <div><label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_purchase')}</label><input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.purchaseDate || ''} onChange={e => setWatchForm({...watchForm, purchaseDate: e.target.value})} /></div>
                  </div>
                  {watchForm.status === 'sold' && (
-                     <div>
-                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label>
-                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={e => setWatchForm({...watchForm, soldDate: e.target.value})} />
-                     </div>
+                     <div><label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label><input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={e => setWatchForm({...watchForm, soldDate: e.target.value})} /></div>
                  )}
                  
                  <div className="grid grid-cols-2 gap-3">
@@ -2276,15 +1439,9 @@ export default function App() {
             <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
                 <div className={`flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider ${theme.textSub}`}><Receipt size={14}/> {t('invoice')}</div>
                 {watchForm.invoice ? (
-                     <div className="flex items-center gap-2">
-                         <div className="text-xs text-emerald-600 font-bold flex items-center gap-1"><Check size={12}/> Facture ajoutée</div>
-                         <button type="button" onClick={() => setWatchForm({...watchForm, invoice: null})} className="text-xs text-red-500 underline">Supprimer</button>
-                     </div>
+                     <div className="flex items-center gap-2"><div className="text-xs text-emerald-600 font-bold flex items-center gap-1"><Check size={12}/> Facture ajoutée</div><button type="button" onClick={() => setWatchForm({...watchForm, invoice: null})} className="text-xs text-red-500 underline">Supprimer</button></div>
                 ) : (
-                    <label className={`flex items-center gap-2 cursor-pointer text-xs font-bold ${theme.text}`}>
-                        <Plus size={14}/> {t('add_invoice')}
-                        <input type="file" onChange={(e) => handleImageUpload(e, 'invoice')} className="hidden" accept="image/*"/>
-                    </label>
+                    <label className={`flex items-center gap-2 cursor-pointer text-xs font-bold ${theme.text}`}><Plus size={14}/> {t('add_invoice')}<input type="file" onChange={(e) => handleImageUpload(e, 'invoice')} className="hidden" accept="image/*"/></label>
                 )}
             </div>
 
@@ -2292,15 +1449,7 @@ export default function App() {
                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>État & Condition</h3>
                  <div>
                      <label className={`block text-xs ${theme.textSub} mb-1`}>{t('condition_rating')}: <span className="font-bold text-lg">{watchForm.conditionRating || '-'}</span>/10</label>
-                     <input 
-                        type="range" 
-                        min="1" 
-                        max="10" 
-                        step="1" 
-                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-                        value={watchForm.conditionRating || 0}
-                        onChange={e => setWatchForm({...watchForm, conditionRating: parseInt(e.target.value)})}
-                     />
+                     <input type="range" min="1" max="10" step="1" className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer" value={watchForm.conditionRating || 0} onChange={e => setWatchForm({...watchForm, conditionRating: parseInt(e.target.value)})} />
                  </div>
                  <textarea className={`w-full p-3 rounded-lg min-h-[60px] ${theme.input}`} placeholder={t('condition_comment')} value={watchForm.conditionComment || ''} onChange={e => setWatchForm({...watchForm, conditionComment: e.target.value})} />
             </div>
@@ -2331,10 +1480,7 @@ export default function App() {
 
                 <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            {watchForm.publicVisible ? <Eye className="text-indigo-600 mr-2" size={20}/> : <EyeOff className="text-slate-400 mr-2" size={20}/>}
-                            <span className={`text-sm font-bold ${theme.text}`}>{t('visibility_friends')}</span>
-                        </div>
+                        <div className="flex items-center">{watchForm.publicVisible ? <Eye className="text-indigo-600 mr-2" size={20}/> : <EyeOff className="text-slate-400 mr-2" size={20}/>}<span className={`text-sm font-bold ${theme.text}`}>{t('visibility_friends')}</span></div>
                         <input type="checkbox" checked={watchForm.publicVisible !== false} onChange={e => setWatchForm({...watchForm, publicVisible: e.target.checked})} className="w-5 h-5 text-indigo-600 rounded" />
                     </div>
                     <p className={`text-[10px] ${theme.textSub} mt-1 pl-8`}>{t('private_note')}</p>
@@ -2354,7 +1500,6 @@ export default function App() {
       );
   }
 
-  // NOUVELLE PAGE: AMIS (Re-créée pour remplacer la fonction manquante)
   const renderFriends = () => (
       <div className="pb-24 px-4">
           {renderHeader(t('friends'))}
@@ -2373,10 +1518,7 @@ export default function App() {
                       {friendRequests.map(req => (
                           <div key={req.id} className={`flex justify-between items-center p-2 border-b ${theme.border} last:border-0`}>
                               <span className={`text-sm ${theme.text}`}>{req.fromEmail}</span>
-                              <div className="flex gap-2">
-                                  <button onClick={() => acceptRequest(req)} className="p-1.5 bg-emerald-100 text-emerald-600 rounded"><Check size={16}/></button>
-                                  <button onClick={() => rejectRequest(req.id)} className="p-1.5 bg-rose-100 text-rose-600 rounded"><X size={16}/></button>
-                              </div>
+                              <div className="flex gap-2"><button onClick={() => acceptRequest(req)} className="p-1.5 bg-emerald-100 text-emerald-600 rounded"><Check size={16}/></button><button onClick={() => rejectRequest(req.id)} className="p-1.5 bg-rose-100 text-rose-600 rounded"><X size={16}/></button></div>
                           </div>
                       ))}
                   </div>
@@ -2393,9 +1535,7 @@ export default function App() {
                   ))}
               </div>
 
-              <button onClick={handlePreviewOwnProfile} className={`w-full py-3 rounded-xl border ${theme.border} ${theme.bg} ${theme.text} font-bold text-sm`}>
-                  Voir mon profil public (Test)
-              </button>
+              <button onClick={handlePreviewOwnProfile} className={`w-full py-3 rounded-xl border ${theme.border} ${theme.bg} ${theme.text} font-bold text-sm`}>Voir mon profil public (Test)</button>
               
               {isFriendsLoading && <div className="flex justify-center p-4"><Loader2 className="animate-spin text-indigo-500" /></div>}
               
@@ -2403,9 +1543,7 @@ export default function App() {
                   <div className="mt-6 animate-in slide-in-from-bottom-4">
                       <h3 className={`font-bold text-lg mb-4 ${theme.text}`}>Collection de {viewingFriend.name}</h3>
                       <div className="grid grid-cols-2 gap-3">
-                          {friendWatches.length === 0 ? (
-                              <div className={`col-span-2 text-center text-sm py-4 ${theme.textSub}`}>Aucune montre publique.</div>
-                          ) : (
+                          {friendWatches.length === 0 ? (<div className={`col-span-2 text-center text-sm py-4 ${theme.textSub}`}>Aucune montre publique.</div>) : (
                               friendWatches.map(w => (
                                   <div key={w.id} className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} p-2 shadow-sm`}>
                                       <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-2">
@@ -2423,19 +1561,14 @@ export default function App() {
       </div>
   );
 
-  // NOUVELLE PAGE: INVENTAIRE (Re-créée pour remplacer la fonction manquante)
   const renderSummary = () => (
       <div className="pb-24 px-4">
           {renderHeader(t('inventory'))}
           <div className={`mt-6 p-6 rounded-2xl border ${theme.border} ${theme.bgSecondary} text-center space-y-4`}>
-              <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                  <Download size={32} />
-              </div>
+              <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto shadow-inner"><Download size={32} /></div>
               <h2 className={`text-xl font-bold ${theme.text}`}>Exporter les données</h2>
               <p className={`text-sm ${theme.textSub}`}>Téléchargez l'intégralité de votre collection au format CSV pour l'ouvrir dans Excel ou Google Sheets.</p>
-              <button onClick={exportCSV} className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors">
-                  <FileText size={18} /> {t('export_csv')}
-              </button>
+              <button onClick={exportCSV} className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"><FileText size={18} /> {t('export_csv')}</button>
           </div>
       </div>
   );
@@ -2458,9 +1591,7 @@ export default function App() {
             {view === 'add' && renderForm()}
         </div>
         {exportType && selectedWatch && <ExportView watch={selectedWatch} type={exportType} onClose={() => setExportType(null)} theme={theme} t={t} />}
-        
         {fullScreenImage && <FullScreenImageViewer src={fullScreenImage} onClose={() => setFullScreenImage(null)} />}
-
         {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} settings={settings} setSettings={setSettings} t={t} theme={theme} />}
         {showConfigModal && <ConfigModal onClose={() => setShowConfigModal(false)} currentError={globalInitError} t={t} />}
         {showRulesHelp && <RulesHelpModal onClose={() => setShowRulesHelp(false)} theme={theme} />}
@@ -2480,4 +1611,3 @@ export default function App() {
     </div>
   );
 }
-```eof
