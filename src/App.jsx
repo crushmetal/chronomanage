@@ -2,9 +2,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
-  Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
-  Search, AlertCircle,
-  Package, DollarSign, FileText, Box, Loader2,
+  Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, AlertCircle, Package, DollarSign, FileText, Box, Loader2,
   ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag
 } from 'lucide-react';
 
@@ -12,82 +10,13 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc, updateDoc } from 'firebase/firestore';
 
-// ==========================================================================
-// CONFIGURATION & DICTIONNAIRE
-// ==========================================================================
-
 const TRANSLATIONS = {
-  fr: {
-    box: "Coffre", list: "Liste", wishlist: "Souhaits", finance: "Finance", stats: "Stats",
-    gallery: "Galerie", myWatches: "Mes Montres", pieces: "pièces", piece: "pièce", search: "Rechercher...",
-    collection: "Ma Collection", forsale: "En Vente", sold: "Vendues", bracelets: "Bracelets",
-    settings: "Paramètres", language: "Langue", theme: "Thème", light: "Clair", dark: "Sombre",
-    total_value: "Valeur Totale", profit: "Plus-value", brand: "Marque", model: "Modèle", reference: "Référence",
-    year: "Année", model_year: "Année du modèle", price: "Prix", add_new: "Ajouter", edit: "Modifier",
-    delete: "Supprimer", save: "Sauvegarder", cancel: "Annuler", notes: "Notes", history: "Histoire",
-    history_brand: "Histoire Marque", history_model: "Histoire Modèle", specs: "Caractéristiques",
-    unknown: "Inconnu", total_displayed: "montres affichées", login_google: "Connexion Google", logout: "Déconnexion",
-    config_cloud: "Config Cloud", export_csv: "Exporter CSV", filter_all: "Tout", all: "Tout", inventory: "Inventaire",
-    friends: "Amis", requests: "Demandes", limited_edition: "EDITION LIMITÉE", movement: "Mouvement",
-    movement_model: "Calibre/Modèle", manual: "Manuel", automatic: "Automatique", quartz: "Quartz",
-    diameter: "Diamètre", thickness: "Épaisseur", lug_width: "Entre-corne", water_res: "Étanchéité",
-    glass: "Verre", dial: "Cadran", country: "Pays", box_included: "Boîte", warranty: "Garantie", revision: "Révision",
-    battery: "Pile", weight: "Poids", visibility_friends: "Visible par les amis", private_note: "Si décoché, cette montre restera privée.",
-    move_collection: "J'ai obtenu cette montre !", set_main_image: "Définir principale", add_photo: "Ajouter",
-    link_web: "Lien Web", visit_site: "Visiter le site marchand", purchase_price: "Prix Achat", selling_price: "Prix Vente/Estim",
-    min_price: "Prix Min (Privé)", clock_style: "Style Horloge", box_style: "Style Coffre", color_digital: "Heure Digitale",
-    color_h_hand: "Aig. Heures", color_m_hand: "Aig. Minutes", color_s_hand: "Aig. Secondes", color_index_main: "Gros Index",
-    color_index_small: "Petits Index", color_leather: "Cuir Extérieur", color_interior: "Intérieur", color_cushion: "Cushions",
-    top_worn: "Top Portées", calendar: "Calendrier", month: "Mois", all_time: "Tout", fav_brands: "Marques Favorites",
-    fav_dials: "Couleurs Cadran", finance_timeline: "Chronologie Financière", spent: "Dépenses", gained: "Gains", balance: "Bilan",
-    identity: "Identité", origin_maintenance: "Origine & Entretien", technical: "Technique", financial_status: "Finances & Status",
-    date_release: "Date de Sortie", date_purchase: "Date d'Achat", date_sold: "Date de Vente", market_value: "Estimation du Marché",
-    find_used: "Trouver d'Occasion", export_sheet: "Fiches & Documents", sheet_insurance: "Fiche Assurance", sheet_sale: "Fiche de Vente",
-    print: "Imprimer", condition_rating: "État (1-10)", condition_comment: "Commentaire sur l'état", show_history: "Voir tout l'historique",
-    show_less: "Réduire", year_summary: "Bilan Année", stats_usage: "Statistiques d'Usage", worn_this_month: "Ce mois",
-    worn_this_year: "Cette année", worn_last_year: "Année dernière", invoice: "Facture", add_invoice: "Ajouter Facture",
-    view_invoice: "Voir Facture", sort_date_desc: "Date d'achat (Récents)", sort_date_asc: "Date d'achat (Anciens)",
-    sort_alpha: "A-Z", sort_price_asc: "Prix (Croissant)", sort_price_desc: "Prix (Décroissant)", purchases: "Achats", sales: "Ventes", show_all: "Voir tout"
-  },
-  en: {
-    box: "Box", list: "List", wishlist: "Wishlist", finance: "Finances", stats: "Statistics", gallery: "Gallery", myWatches: "My Watches",
-    pieces: "pieces", piece: "piece", search: "Search...", collection: "Collection", forsale: "For Sale", sold: "Sold", bracelets: "Straps",
-    settings: "Settings", language: "Language", theme: "Theme", light: "Light", dark: "Dark", total_value: "Total Value", profit: "Profit",
-    brand: "Brand", model: "Model", reference: "Reference", year: "Year", model_year: "Model Year", price: "Price", add_new: "Add New", edit: "Edit",
-    delete: "Delete", save: "Save", cancel: "Cancel", notes: "Notes", history: "History", history_brand: "Brand History", history_model: "Model History",
-    specs: "Specifications", unknown: "Unknown", total_displayed: "watches displayed", login_google: "Google Login", logout: "Logout",
-    config_cloud: "Cloud Config", export_csv: "Export CSV", filter_all: "All", all: "All", inventory: "Inventory", friends: "Friends",
-    requests: "Requests", limited_edition: "LIMITED EDITION", movement: "Movement", movement_model: "Caliber/Model", manual: "Manual",
-    automatic: "Automatic", quartz: "Quartz", diameter: "Diameter", thickness: "Thickness", lug_width: "Lug Width", water_res: "Water Res.",
-    glass: "Glass", dial: "Dial", country: "Country", box_included: "Box", warranty: "Warranty", revision: "Service", battery: "Battery",
-    weight: "Weight", visibility_friends: "Visible to friends", private_note: "If unchecked, stays private.", move_collection: "I got this watch!",
-    set_main_image: "Set as main", add_photo: "Add", link_web: "Web Link", visit_site: "Visit Website", purchase_price: "Purchase Price",
-    selling_price: "Selling/Estim Price", min_price: "Min Price (Private)", clock_style: "Clock Style", box_style: "Box Style",
-    color_digital: "Digital Time", color_h_hand: "Hour Hand", color_m_hand: "Minute Hand", color_s_hand: "Second Hand", color_index_main: "Large Indexes",
-    color_index_small: "Small Indexes", color_leather: "Outer Leather", color_interior: "Interior", color_cushion: "Cushions", top_worn: "Top Worn",
-    calendar: "Calendar", month: "Month", all_time: "All Time", fav_brands: "Favorite Brands", fav_dials: "Dial Colors", finance_timeline: "Financial Timeline",
-    spent: "Spent", gained: "Gained", balance: "Balance", identity: "Identity", origin_maintenance: "Origin & Maintenance", technical: "Technical",
-    financial_status: "Finances & Status", date_release: "Release Date", date_purchase: "Purchase Date", date_sold: "Sold Date", market_value: "Market Estimation",
-    find_used: "Find Used", export_sheet: "Sheets & Docs", sheet_insurance: "Insurance Sheet", sheet_sale: "Sale Sheet", print: "Print",
-    condition_rating: "Condition (1-10)", condition_comment: "Condition Details", show_history: "Show Full History", show_less: "Show Less",
-    year_summary: "Year Summary", stats_usage: "Usage Statistics", worn_this_month: "This Month", worn_this_year: "This Year", worn_last_year: "Last Year",
-    invoice: "Invoice", add_invoice: "Add Invoice", view_invoice: "View Invoice", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)",
-    sort_alpha: "A-Z", sort_price_asc: "Price (Asc)", sort_price_desc: "Price (Desc)", purchases: "Purchases", sales: "Sales", show_all: "Show All"
-  }
+  fr: { box: "Coffre", list: "Liste", wishlist: "Souhaits", finance: "Finance", stats: "Stats", gallery: "Galerie", myWatches: "Mes Montres", pieces: "pièces", piece: "pièce", search: "Rechercher...", collection: "Ma Collection", forsale: "En Vente", sold: "Vendues", bracelets: "Bracelets", settings: "Paramètres", language: "Langue", theme: "Thème", light: "Clair", dark: "Sombre", total_value: "Valeur Totale", profit: "Plus-value", brand: "Marque", model: "Modèle", reference: "Référence", year: "Année", model_year: "Année du modèle", price: "Prix", add_new: "Ajouter", edit: "Modifier", delete: "Supprimer", save: "Sauvegarder", cancel: "Annuler", notes: "Notes", history: "Histoire", history_brand: "Histoire Marque", history_model: "Histoire Modèle", specs: "Caractéristiques", unknown: "Inconnu", total_displayed: "montres affichées", login_google: "Connexion Google", logout: "Déconnexion", config_cloud: "Config Cloud", export_csv: "Exporter CSV", filter_all: "Tout", all: "Tout", inventory: "Inventaire", friends: "Amis", requests: "Demandes", limited_edition: "EDITION LIMITÉE", movement: "Mouvement", movement_model: "Calibre/Modèle", manual: "Manuel", automatic: "Automatique", quartz: "Quartz", diameter: "Diamètre", thickness: "Épaisseur", lug_width: "Entre-corne", water_res: "Étanchéité", glass: "Verre", dial: "Cadran", country: "Pays", box_included: "Boîte", warranty: "Garantie", revision: "Révision", battery: "Pile", weight: "Poids", visibility_friends: "Visible par les amis", private_note: "Si décoché, cette montre restera privée.", move_collection: "J'ai obtenu cette montre !", set_main_image: "Définir principale", add_photo: "Ajouter", link_web: "Lien Web", visit_site: "Visiter le site marchand", purchase_price: "Prix Achat", selling_price: "Prix Vente/Estim", min_price: "Prix Min (Privé)", clock_style: "Style Horloge", box_style: "Style Coffre", color_digital: "Heure Digitale", color_h_hand: "Aig. Heures", color_m_hand: "Aig. Minutes", color_s_hand: "Aig. Secondes", color_index_main: "Gros Index", color_index_small: "Petits Index", color_leather: "Cuir Extérieur", color_interior: "Intérieur", color_cushion: "Cushions", top_worn: "Top Portées", calendar: "Calendrier", month: "Mois", all_time: "Tout", fav_brands: "Marques Favorites", fav_dials: "Couleurs Cadran", finance_timeline: "Chronologie Financière", spent: "Dépenses", gained: "Gains", balance: "Bilan", identity: "Identité", origin_maintenance: "Origine & Entretien", technical: "Technique", financial_status: "Finances & Status", date_release: "Date de Sortie", date_purchase: "Date d'Achat", date_sold: "Date de Vente", market_value: "Estimation du Marché", find_used: "Trouver d'Occasion", export_sheet: "Fiches & Documents", sheet_insurance: "Fiche Assurance", sheet_sale: "Fiche de Vente", print: "Imprimer", condition_rating: "État (1-10)", condition_comment: "Commentaire sur l'état", show_history: "Voir tout l'historique", show_less: "Réduire", year_summary: "Bilan Année", stats_usage: "Statistiques d'Usage", worn_this_month: "Ce mois", worn_this_year: "Cette année", worn_last_year: "Année dernière", invoice: "Facture", add_invoice: "Ajouter Facture", view_invoice: "Voir Facture", sort_date_desc: "Date d'achat (Récents)", sort_date_asc: "Date d'achat (Anciens)", sort_alpha: "A-Z", sort_price_asc: "Prix (Croissant)", sort_price_desc: "Prix (Décroissant)", purchases: "Achats", sales: "Ventes", show_all: "Voir tout" },
+  en: { box: "Box", list: "List", wishlist: "Wishlist", finance: "Finances", stats: "Statistics", gallery: "Gallery", myWatches: "My Watches", pieces: "pieces", piece: "piece", search: "Search...", collection: "Collection", forsale: "For Sale", sold: "Sold", bracelets: "Straps", settings: "Settings", language: "Language", theme: "Theme", light: "Light", dark: "Dark", total_value: "Total Value", profit: "Profit", brand: "Brand", model: "Model", reference: "Reference", year: "Year", model_year: "Model Year", price: "Price", add_new: "Add New", edit: "Edit", delete: "Delete", save: "Save", cancel: "Cancel", notes: "Notes", history: "History", history_brand: "Brand History", history_model: "Model History", specs: "Specifications", unknown: "Unknown", total_displayed: "watches displayed", login_google: "Google Login", logout: "Logout", config_cloud: "Cloud Config", export_csv: "Export CSV", filter_all: "All", all: "All", inventory: "Inventory", friends: "Friends", requests: "Requests", limited_edition: "LIMITED EDITION", movement: "Movement", movement_model: "Caliber/Model", manual: "Manual", automatic: "Automatic", quartz: "Quartz", diameter: "Diameter", thickness: "Thickness", lug_width: "Lug Width", water_res: "Water Res.", glass: "Glass", dial: "Dial", country: "Country", box_included: "Box", warranty: "Warranty", revision: "Service", battery: "Battery", weight: "Weight", visibility_friends: "Visible to friends", private_note: "If unchecked, stays private.", move_collection: "I got this watch!", set_main_image: "Set as main", add_photo: "Add", link_web: "Web Link", visit_site: "Visit Website", purchase_price: "Purchase Price", selling_price: "Selling/Estim Price", min_price: "Min Price (Private)", clock_style: "Clock Style", box_style: "Box Style", color_digital: "Digital Time", color_h_hand: "Hour Hand", color_m_hand: "Minute Hand", color_s_hand: "Second Hand", color_index_main: "Large Indexes", color_index_small: "Small Indexes", color_leather: "Outer Leather", color_interior: "Interior", color_cushion: "Cushions", top_worn: "Top Worn", calendar: "Calendar", month: "Month", all_time: "All Time", fav_brands: "Favorite Brands", fav_dials: "Dial Colors", finance_timeline: "Financial Timeline", spent: "Spent", gained: "Gained", balance: "Balance", identity: "Identity", origin_maintenance: "Origin & Maintenance", technical: "Technical", financial_status: "Finances & Status", date_release: "Release Date", date_purchase: "Purchase Date", date_sold: "Sold Date", market_value: "Market Estimation", find_used: "Find Used", export_sheet: "Sheets & Docs", sheet_insurance: "Insurance Sheet", sheet_sale: "Sale Sheet", print: "Print", condition_rating: "Condition (1-10)", condition_comment: "Condition Details", show_history: "Show Full History", show_less: "Show Less", year_summary: "Year Summary", stats_usage: "Usage Statistics", worn_this_month: "This Month", worn_this_year: "This Year", worn_last_year: "Last Year", invoice: "Invoice", add_invoice: "Add Invoice", view_invoice: "View Invoice", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Price (Asc)", sort_price_desc: "Price (Desc)", purchases: "Purchases", sales: "Sales", show_all: "Show All" }
 };
 
-const productionConfig = {
-  apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o",
-  authDomain: "chronomanagerfinal.firebaseapp.com",
-  projectId: "chronomanagerfinal",
-  storageBucket: "chronomanagerfinal.firebasestorage.app",
-  messagingSenderId: "913764049964",
-  appId: "1:913764049964:web:542604509381001b801d89"
-};
+const productionConfig = { apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o", authDomain: "chronomanagerfinal.firebaseapp.com", projectId: "chronomanagerfinal", storageBucket: "chronomanagerfinal.firebasestorage.app", messagingSenderId: "913764049964", appId: "1:913764049964:web:542604509381001b801d89" };
 
-// ==========================================================================
-// GESTIONNAIRE FIREBASE
-// ==========================================================================
 let app, auth, db;
 let firebaseReady = false;
 let globalInitError = null; 
@@ -99,15 +28,7 @@ const LOCAL_CONFIG_KEY = 'chrono_firebase_config';
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
 
-const DEFAULT_WATCH_STATE = {
-    brand: '', model: '', reference: '', diameter: '', year: '', movement: '', movementModel: '', 
-    country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', dialColor: '', 
-    batteryModel: '', isLimitedEdition: false, limitedNumber: '', limitedTotal: '', publicVisible: true, 
-    box: '', warrantyDate: '', revision: '', purchasePrice: '', sellingPrice: '', minPrice: '', 
-    purchaseDate: '', soldDate: '', status: 'collection', conditionNotes: '', link: '', 
-    historyBrand: '', historyModel: '', conditionRating: '', conditionComment: '', image: null, images: [], invoice: null 
-};
-
+const DEFAULT_WATCH_STATE = { brand: '', model: '', reference: '', diameter: '', year: '', movement: '', movementModel: '', country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', dialColor: '', batteryModel: '', isLimitedEdition: false, limitedNumber: '', limitedTotal: '', publicVisible: true, box: '', warrantyDate: '', revision: '', purchasePrice: '', sellingPrice: '', minPrice: '', purchaseDate: '', soldDate: '', status: 'collection', conditionNotes: '', link: '', historyBrand: '', historyModel: '', conditionRating: '', conditionComment: '', image: null, images: [], invoice: null };
 const DEFAULT_BRACELET_STATE = { width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' };
 
 const tryInitFirebase = (config) => {
@@ -124,7 +45,6 @@ if (typeof __firebase_config !== 'undefined') { try { tryInitFirebase(JSON.parse
 if (!firebaseReady) tryInitFirebase(productionConfig);
 if (!firebaseReady) { try { const savedConfig = localStorage.getItem(LOCAL_CONFIG_KEY); if (savedConfig) tryInitFirebase(JSON.parse(savedConfig)); } catch(e) {} }
 
-// --- UTILS UI ---
 const formatPrice = (price) => {
   if (price === undefined || price === null || price === '') return '0 €';
   const numPrice = Number(price);
@@ -155,7 +75,6 @@ const MovementIcon = ({ size = 24, className = "" }) => (
   </svg>
 );
 
-// --- ANIMATION COFFRE ---
 const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
   const leatherColor = settings.boxLeather || (isDark ? "#3E2723" : "#5D4037");
   const interiorColor = settings.boxInterior || (isDark ? "#424242" : "#f5f5f0");
@@ -220,7 +139,6 @@ const GraphicBackground = ({ isDark }) => (
     </div>
 );
 
-// --- COMPOSANTS EXTERNALISÉS ---
 const Card = ({ children, className = "", onClick, theme }) => (
   <div onClick={onClick} className={`${theme.card} rounded-xl shadow-sm border ${theme.border} overflow-hidden ${className} ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}>{children}</div>
 );
@@ -259,7 +177,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                 <div className="flex items-center justify-between border-b-2 border-black pb-4"><div><h1 className="text-4xl font-serif font-bold uppercase tracking-widest">{watch.brand}</h1><h2 className="text-xl text-slate-600 font-medium">{watch.model}</h2>{watch.reference && <p className="font-mono text-sm mt-1">REF: {watch.reference}</p>}</div><div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center"><Watch size={32} /></div></div>
                 <div className="grid grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
                     <div>
-                        {watch.images && watch.images[0] && (<div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4"><img src={watch.images[0]} className="w-full h-full object-cover" alt="Montre" /></div>)}
+                        {watch.images && watch.images[0] && (<div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4"><img src={watch.images[0]} className="w-full h-full object-cover" alt="Montre"/></div>)}
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white"><div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{isSale ? t('selling_price') : t('purchase_price')}</div><div className="text-3xl font-bold font-serif">{formatPrice(isSale ? (watch.sellingPrice || watch.purchasePrice) : watch.purchasePrice)}</div>{isSale && <div className="mt-2 text-xs text-slate-500 italic">*Prix non contractuel, sujet à négociation</div>}</div>
                     </div>
                     <div className="space-y-4">
@@ -290,7 +208,7 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
              {sortedItems.map(w => {
                const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image; const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
-               return (<div key={w.id} onClick={() => { onClose(); onSelectWatch && onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}><div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover" alt="Miniature" />}</div><div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div><div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div></div><div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div><div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div></div>)
+               return (<div key={w.id} onClick={() => { onClose(); onSelectWatch && onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}><div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover" alt="Thumb"/>}</div><div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div><div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div></div><div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div><div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div></div>)
              })}
              {sortedItems.length === 0 && <div className={`text-center ${theme.textSub} py-10 text-sm`}>Aucune montre.</div>}
           </div>
@@ -319,7 +237,7 @@ const ConfigModal = ({ onClose, currentError, t }) => {
 
 const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-        <div className={`${theme.card} rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border ${theme.border} max-h-[90vh] flex flex-col`}><div className={`p-4 border-b ${theme.border} ${theme.bgSecondary} flex justify-between items-center flex-shrink-0`}><h3 className={`font-bold ${theme.text} flex items-center gap-2`}><Settings size={18}/> {t('settings')}</h3><button onClick={onClose}><X size={20} className={theme.textSub}/></button></div><div className="p-6 space-y-6 overflow-y-auto"><div><label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('language')}</label><div className="grid grid-cols-2 gap-2"><button onClick={() => setSettings(s => ({...s, lang: 'fr'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'fr' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇫🇷</span> Français</button><button onClick={() => setSettings(s => ({...s, lang: 'en'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'en' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇬🇧</span> English</button></div></div><div><label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('theme')}</label><div className="grid grid-cols-2 gap-2"><button onClick={() => setSettings(s => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button><button onClick={() => setSettings(s => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button></div></div><div><label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Clock size={14}/> {t('clock_style')}</label><div className="space-y-3"><div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_digital')}</span><div className="flex items-center gap-2"><input type="color" value={settings.digitalColor || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, digitalColor: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, digitalColor: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div><div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_h_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handHour || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, handHour: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handHour: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div><div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_m_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handMinute || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, handMinute: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handMinute: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div><div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_s_hand')}</span><div className="flex items-center gap-2"><input type="color" value={settings.handSecond || '#ef4444'} onChange={(e) => setSettings(s => ({...s, handSecond: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, handSecond: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div><div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index_main')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColorMain || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, indexColorMain: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, indexColorMain: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div><div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_index_small')}</span><div className="flex items-center gap-2"><input type="color" value={settings.indexColorSmall || '#3b82f6'} onChange={(e) => setSettings(s => ({...s, indexColorSmall: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, indexColorSmall: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div></div></div><div><label className={`block text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub} flex items-center gap-2`}><Box size={14}/> {t('box_style')}</label><div className="space-y-3"><div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_leather')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxLeather || '#5D4037'} onChange={(e) => setSettings(s => ({...s, boxLeather: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, boxLeather: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div><div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_interior')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxInterior || '#f5f5f0'} onChange={(e) => setSettings(s => ({...s, boxInterior: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, boxInterior: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div><div className="flex items-center justify-between"><span className={`text-sm ${theme.text}`}>{t('color_cushion')}</span><div className="flex items-center gap-2"><input type="color" value={settings.boxCushion || '#fdfbf7'} onChange={(e) => setSettings(s => ({...s, boxCushion: e.target.value}))} className="w-8 h-8 rounded-full overflow-hidden border-none p-0 cursor-pointer"/><button onClick={() => setSettings(s => ({...s, boxCushion: null}))} className={`text-[10px] ${theme.textSub} underline`}>Reset</button></div></div></div></div></div></div>
+        <div className={`${theme.card} rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border ${theme.border} max-h-[90vh] flex flex-col`}><div className={`p-4 border-b ${theme.border} ${theme.bgSecondary} flex justify-between items-center flex-shrink-0`}><h3 className={`font-bold ${theme.text} flex items-center gap-2`}><Settings size={18}/> {t('settings')}</h3><button onClick={onClose}><X size={20} className={theme.textSub}/></button></div><div className="p-6 space-y-6 overflow-y-auto"><div><label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('language')}</label><div className="grid grid-cols-2 gap-2"><button onClick={() => setSettings(s => ({...s, lang: 'fr'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'fr' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇫🇷</span> Français</button><button onClick={() => setSettings(s => ({...s, lang: 'en'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'en' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇬🇧</span> English</button></div></div><div><label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('theme')}</label><div className="grid grid-cols-2 gap-2"><button onClick={() => setSettings(s => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button><button onClick={() => setSettings(s => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button></div></div></div></div>
     </div>
 );
 
@@ -327,7 +245,6 @@ const RulesHelpModal = ({ onClose, theme }) => (
     <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4"><div className={`${theme.card} rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden`}><div className={`${theme.bgSecondary} p-4 border-b ${theme.border} flex justify-between items-center`}><h3 className={`font-bold ${theme.text} flex items-center gap-2`}><ShieldCheck className="text-emerald-600"/> Permissions Cloud</h3><button onClick={onClose}><X size={20} className={theme.textSub}/></button></div><div className="p-6 space-y-4"><p className={`text-sm ${theme.text}`}>Le système de partage requiert des permissions spécifiques pour que vos amis puissent voir votre collection.</p><button onClick={onClose} className={`w-full py-3 ${theme.bg} border ${theme.border} ${theme.text} rounded-xl font-bold`}>J'ai compris</button></div></div></div>
 );
 
-// --- APPLICATION ---
 export default function App() {
   const [useLocalStorage, setUseLocalStorage] = useState(!firebaseReady);
   const [user, setUser] = useState(useLocalStorage ? { uid: 'local-user' } : null);
@@ -349,6 +266,9 @@ export default function App() {
   const [friendWatches, setFriendWatches] = useState([]); 
   const [addFriendId, setAddFriendId] = useState(''); 
   const [isFriendsLoading, setIsFriendsLoading] = useState(false);
+  const [friendFilter, setFriendFilter] = useState('collection');
+  const [selectedFriendWatch, setSelectedFriendWatch] = useState(null);
+
   const [showGalleryCollection, setShowGalleryCollection] = useState(true);
   const [showGalleryForsale, setShowGalleryForsale] = useState(true);
   const [showGallerySold, setShowGallerySold] = useState(false);
@@ -409,10 +329,10 @@ export default function App() {
   const rejectRequest = async (reqId) => { try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', reqId)); } catch (e) {} };
   const removeFriend = (friendId) => { const updatedFriends = friends.filter(f => f.id !== friendId); setFriends(updatedFriends); localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends)); };
   
-  const handlePreviewOwnProfile = () => { setFriendWatches(watches.filter(w => w.publicVisible !== false)); setViewingFriend({ id: user.uid, name: 'Mon Profil Public' }); if(scrollRef.current) scrollRef.current.scrollTop = 0; };
+  const handlePreviewOwnProfile = () => { setFriendWatches(watches.filter(w => w.publicVisible !== false)); setViewingFriend({ id: user.uid, name: 'Mon Profil Public' }); setFriendFilter('collection'); setSelectedFriendWatch(null); if(scrollRef.current) scrollRef.current.scrollTop = 0; };
   
   const loadFriendCollection = async (friend) => {
-      if (!firebaseReady) return; setIsFriendsLoading(true); setViewingFriend(friend);
+      if (!firebaseReady) return; setIsFriendsLoading(true); setViewingFriend(friend); setFriendFilter('collection'); setSelectedFriendWatch(null);
       try { const q = query(collection(db, 'artifacts', APP_ID_STABLE, 'users', friend.id, 'watches')); const snap = await getDocs(q); setFriendWatches(snap.docs.map(d => ({id: d.id, ...d.data()})).filter(w => w.publicVisible !== false)); } catch (err) { setViewingFriend(null); } finally { setIsFriendsLoading(false); }
   };
 
@@ -466,7 +386,7 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); const id = editingId || Date.now().toString(); const isWatch = editingType === 'watch'; let data;
-    if (isWatch) { const images = watchForm.images && watchForm.images.length > 0 ? watchForm.images : (watchForm.image ? [watchForm.image] : []); data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice), sellingPrice: Number(watchForm.sellingPrice), minPrice: Number(watchForm.minPrice), dateAdded: new Date().toISOString(), images: images, image: images[0] || null }; } else { data = { ...braceletForm, id, dateAdded: new Date().toISOString() }; }
+    if (isWatch) { const images = watchForm.images && watchForm.images.length > 0 ? watchForm.images : (watchForm.image ? [watchForm.image] : []); data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice || 0), sellingPrice: Number(watchForm.sellingPrice || 0), minPrice: Number(watchForm.minPrice || 0), dateAdded: watchForm.dateAdded || new Date().toISOString(), images: images, image: images[0] || null }; } else { data = { ...braceletForm, id, dateAdded: braceletForm.dateAdded || new Date().toISOString() }; }
     if (useLocalStorage) { if (isWatch) setWatches(prev => editingId ? prev.map(w => w.id === id ? data : w) : [data, ...prev]); else setBracelets(prev => editingId ? prev.map(b => b.id === id ? data : b) : [data, ...prev]); closeForm(data); } 
     else { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, isWatch ? 'watches' : 'bracelets', id), data); closeForm(data); } catch(e) {} }
   };
@@ -519,7 +439,7 @@ export default function App() {
               </button>
             ) : (
               <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">
-                 {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
+                 {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" alt="Avatar"/> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
               </button>
             )}
             <button onClick={() => setShowSettingsModal(true)} className={`w-10 h-10 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center border ${theme.border} shadow-sm hover:opacity-80 transition-colors z-20`}><Settings size={18} /></button>
@@ -591,7 +511,7 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-3 px-3 mt-3">
                     {bracelets.map(b => (
                         <Card key={b.id} onClick={() => handleEdit(b, 'bracelet')} theme={theme}>
-                            <div className={`aspect-square ${theme.bg} relative flex items-center justify-center`}>{b.image ? <img src={b.image} className="w-full h-full object-cover"/> : <Activity className={theme.textSub}/>}<div className="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm">{b.width}mm</div></div>
+                            <div className={`aspect-square ${theme.bg} relative flex items-center justify-center`}>{b.image ? <img src={b.image} className="w-full h-full object-cover" alt="bracelet"/> : <Activity className={theme.textSub}/>}<div className="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm">{b.width}mm</div></div>
                             <div className="p-3">{b.brand && <div className="text-[10px] uppercase font-bold text-indigo-600 truncate">{b.brand}</div>}<div className={`font-bold text-sm truncate ${theme.text}`}>{b.type}</div></div>
                         </Card>
                     ))}
@@ -609,7 +529,7 @@ export default function App() {
             return (
             <Card key={w.id} onClick={() => { setSelectedWatch(w); setViewedImageIndex(0); setView('detail'); }} theme={theme}>
               <div className={`aspect-square ${theme.bg} relative`}>
-                {displayImage ? <img src={displayImage} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
+                {displayImage ? <img src={displayImage} className="w-full h-full object-cover" alt="montre"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
                 {(w.purchasePrice) && (<div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{formatPrice(w.purchasePrice)}</div>)}
                 <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">{w.status === 'sold' ? (<><span className="text-emerald-600 font-extrabold uppercase">{t('sold')}</span><span className="text-emerald-500 font-bold text-[9px]">{formatPrice(w.sellingPrice)}</span></>) : (formatPrice(w.sellingPrice || w.purchasePrice))}</div>
                 <div className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer z-10" onClick={(e) => { e.stopPropagation(); toggleVisibility(w); }}>{w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}</div>
@@ -633,7 +553,7 @@ export default function App() {
             const displayImage = w.images?.[0] || w.image;
             return (
             <Card key={w.id} className="flex p-3 gap-3 relative" onClick={() => { setSelectedWatch(w); setView('detail'); }} theme={theme}>
-                <div className={`w-20 h-20 ${theme.bg} rounded-lg flex-shrink-0 overflow-hidden`}>{displayImage ? <img src={displayImage} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}</div>
+                <div className={`w-20 h-20 ${theme.bg} rounded-lg flex-shrink-0 overflow-hidden`}>{displayImage ? <img src={displayImage} className="w-full h-full object-cover" alt="montre"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}</div>
                 <div className="flex-1 flex flex-col justify-between py-1">
                     <div><h3 className={`font-bold font-serif ${theme.text} tracking-wide`}>{w.brand}</h3><p className={`text-xs ${theme.textSub}`}>{w.model}</p></div>
                     <div className="flex justify-between items-end"><div className="font-semibold text-emerald-600">{formatPrice(w.purchasePrice)}</div>{w.link && (<a href={w.link} target="_blank" rel="noreferrer" className="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 z-10" onClick={(e) => { e.stopPropagation(); }}><ExternalLink size={14} /></a>)}</div>
@@ -650,12 +570,7 @@ export default function App() {
     const w = selectedWatch;
     const displayImages = w.images && w.images.length > 0 ? w.images : (w.image ? [w.image] : []);
     const searchQuery = `${w.brand} ${w.model}`.replace(/\s+/g, '+');
-    const marketLinks = [
-        { name: "Chrono24", url: `https://www.chrono24.fr/search/index.htm?query=${searchQuery}`, icon: Clock },
-        { name: "eBay", url: `https://www.ebay.fr/sch/i.html?_nkw=${searchQuery}`, icon: ShoppingCart },
-        { name: "Vinted", url: `https://www.vinted.fr/vetements?search_text=${searchQuery}`, icon: Gem }, 
-        { name: "LeBonCoin", url: `https://www.leboncoin.fr/recherche?text=${searchQuery}`, icon: MapPin },
-    ];
+    const marketLinks = [{ name: "Chrono24", url: `https://www.chrono24.fr/search/index.htm?query=${searchQuery}`, icon: Clock }, { name: "eBay", url: `https://www.ebay.fr/sch/i.html?_nkw=${searchQuery}`, icon: ShoppingCart }, { name: "Vinted", url: `https://www.vinted.fr/vetements?search_text=${searchQuery}`, icon: Gem }, { name: "LeBonCoin", url: `https://www.leboncoin.fr/recherche?text=${searchQuery}`, icon: MapPin }];
     const getWatchStats = (watchId) => { const now = new Date(); const currentMonth = now.getMonth(); const currentYear = now.getFullYear(); let monthCount = 0; let yearCount = 0; let lastYearCount = 0; calendarEvents.forEach(evt => { if (evt.watches && evt.watches.includes(watchId)) { const d = new Date(evt.date); const dy = d.getFullYear(); const dm = d.getMonth(); if (dy === currentYear) { yearCount++; if (dm === currentMonth) monthCount++; } else if (dy === currentYear - 1) { lastYearCount++; } } }); return { monthCount, yearCount, lastYearCount }; };
     const stats = getWatchStats(w.id);
 
@@ -665,10 +580,10 @@ export default function App() {
         <div className="p-4 space-y-6">
           <div className="space-y-4">
               <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative group`} onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}>
-                {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
+                {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover" alt="montre"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
                 {displayImages.length > 1 && (<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">{displayImages.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === viewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>)}</div>)}
               </div>
-              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img, i) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} className="w-full h-full object-cover" /></div>))}</div>)}
+              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img, i) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} className="w-full h-full object-cover" alt="thumb" /></div>))}</div>)}
               <div>
                 <h1 className={`text-3xl font-serif font-bold ${theme.text} leading-tight`}>{w.brand}</h1><p className={`text-xl ${theme.textSub} font-medium font-serif`}>{w.model}</p>
                 {w.reference && <span className={`text-xs ${theme.bg} px-2 py-1 rounded mt-2 inline-block border ${theme.border} font-mono ${theme.textSub}`}>REF: {w.reference}</span>}
@@ -686,7 +601,7 @@ export default function App() {
           <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3><div className="grid grid-cols-2 gap-3"><DetailItem icon={MovementIcon} label={t('movement')} value={w.movement} theme={theme} /><DetailItem icon={Settings} label={t('movement_model')} value={w.movementModel} theme={theme} />{w.batteryModel && <DetailItem icon={Battery} label={t('battery')} value={w.batteryModel} theme={theme} />}<DetailItem icon={Palette} label={t('dial')} value={w.dialColor} theme={theme} /><DetailItem icon={Search} label={t('glass')} value={w.glass} theme={theme} /></div></div>
           <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('origin_maintenance')}</h3><div className="grid grid-cols-2 gap-3"><DetailItem icon={MapPin} label={t('country')} value={w.country} theme={theme} /><DetailItem icon={Calendar} label={t('date_release')} value={w.releaseDate} theme={theme} /><DetailItem icon={Calendar} label={t('year')} value={w.year} theme={theme} /><DetailItem icon={Package} label={t('box_included')} value={w.box} theme={theme} /><DetailItem icon={ShieldCheck} label={t('warranty')} value={w.warrantyDate} theme={theme} /><DetailItem icon={Wrench} label={t('revision')} value={w.revision} theme={theme} /></div></div>
           {(w.conditionRating || w.conditionComment) && (<div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>{w.conditionRating && (<div className="flex items-center gap-2 mb-2"><div className={`text-lg font-bold ${theme.text} bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg`}>{w.conditionRating}/10</div><div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${w.conditionRating * 10}%` }}></div></div></div>)}{w.conditionComment && (<p className={`text-sm ${theme.text} italic`}>"{w.conditionComment}"</p>)}</div>)}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800"><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>{w.invoice ? (<div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer`} onClick={() => setFullScreenImage(w.invoice)}><img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" /><div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2"><Receipt size={14}/> {t('view_invoice')}</div></div></div>) : (<div className={`p-4 text-center text-sm ${theme.textSub} italic border border-dashed ${theme.border} rounded-xl`}>Aucune facture enregistrée</div>)}</div>
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800"><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>{w.invoice ? (<div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer`} onClick={() => setFullScreenImage(w.invoice)}><img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="facture" /><div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2"><Receipt size={14}/> {t('view_invoice')}</div></div></div>) : (<div className={`p-4 text-center text-sm ${theme.textSub} italic border border-dashed ${theme.border} rounded-xl`}>Aucune facture enregistrée</div>)}</div>
           <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} & Dates</h3><div className="grid grid-cols-2 gap-3 mb-3">{w.purchaseDate && <DetailItem icon={Calendar} label={t('date_purchase')} value={w.purchaseDate} theme={theme} />}{w.soldDate && w.status === 'sold' && <DetailItem icon={Calendar} label={t('date_sold')} value={w.soldDate} theme={theme} />}</div><div className={`grid grid-cols-2 gap-4 pt-4 border-t ${theme.border}`}><div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('purchase_price')}</div><div className={`text-lg font-bold ${theme.text}`}>{formatPrice(w.purchasePrice)}</div></div>{w.status !== 'wishlist' && (<div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('selling_price')}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice || w.purchasePrice)}</div></div>)}</div></div>
           {w.conditionNotes && (<div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100 mt-4"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> {t('notes')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.conditionNotes}</div></div>)}
           {w.historyBrand && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_brand')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyBrand}</div></div>)}
@@ -769,19 +684,9 @@ export default function App() {
 
             days.push(
                 <div key={d} onClick={() => handleCalendarDayClick(dateStr)} className={`aspect-square border rounded-lg relative overflow-hidden cursor-pointer ${theme.border} ${isToday && !watchImg ? 'border-emerald-500 bg-emerald-500/10' : theme.bg}`}>
-                    {watchImg ? (
-                        <img src={watchImg} className="absolute inset-0 w-full h-full object-cover opacity-95" alt="Montre portée" />
-                    ) : null}
-                    
-                    <div className={`absolute top-1 left-1 px-1.5 py-0.5 flex items-center justify-center rounded text-[10px] z-10 ${bubbleBg} ${bubbleText}`}>
-                        {d}
-                    </div>
-
-                    {event?.watches?.length > 1 && (
-                        <div className="absolute bottom-1 right-1 px-1.5 h-4 bg-black/60 text-white rounded-full flex items-center justify-center text-[9px] font-bold z-10 backdrop-blur-sm">
-                            +{event.watches.length - 1}
-                        </div>
-                    )}
+                    {watchImg ? (<img src={watchImg} className="absolute inset-0 w-full h-full object-cover opacity-95" alt="Montre portée" />) : null}
+                    <div className={`absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full text-[10px] z-10 ${bubbleBg} ${bubbleText}`}>{d}</div>
+                    {event?.watches?.length > 1 && (<div className="absolute bottom-1 right-1 px-1.5 h-4 bg-black/60 text-white rounded-full flex items-center justify-center text-[9px] font-bold z-10 backdrop-blur-sm">+{event.watches.length - 1}</div>)}
                 </div>
             );
         }
@@ -908,149 +813,353 @@ export default function App() {
     );
   }
 
-  // NOUVELLE PAGE: AMIS
+  function renderForm() {
+      const isWatch = editingType === 'watch'; const currentImages = isWatch ? (watchForm.images || (watchForm.image ? [watchForm.image] : [])) : [];
+      return (
+        <div className={`pb-24 p-4 ${theme.bgSecondary} min-h-screen`}>
+          <div className="flex justify-between items-center mb-6 mt-2">
+              <h1 className={`text-2xl font-bold font-serif ${theme.text}`}>{editingId ? t('edit') : t('add_new')}</h1>
+              <button onClick={() => handleCancelForm()} className={theme.text}><X/></button>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-3 gap-3">
+                {currentImages.map((img, idx) => (
+                    <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
+                        <img src={img} className="w-full h-full object-cover" alt="Preview" />
+                        <div className="absolute top-1 left-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10">{idx + 1}/{Math.max(3, currentImages.length)}</div>
+                        <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 z-10"><X size={12}/></button>
+                        {idx === 0 ? <div className="absolute bottom-0 w-full bg-emerald-500 text-white text-[8px] text-center font-bold py-0.5 z-10">PRINCIPALE</div> : <button type="button" onClick={() => setAsMainImage(idx)} className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-white text-black text-[8px] px-2 py-0.5 rounded font-bold shadow z-10">Set Main</button>}
+                    </div>
+                ))}
+                {currentImages.length < 3 && (
+                    <label className={`aspect-square ${theme.bg} rounded-xl flex flex-col items-center justify-center border-2 border-dashed ${theme.border} cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors`}>
+                        <Camera className={theme.textSub} size={24}/>
+                        <span className={`text-[10px] font-bold mt-2 ${theme.textSub}`}>{3 - currentImages.length} place(s)</span>
+                        <input type="file" multiple onChange={(e) => handleImageUpload(e, 'watch')} className="hidden" accept="image/*"/>
+                    </label>
+                )}
+            </div>
+            
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('identity')}</h3>
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('brand')} value={watchForm.brand} onChange={e => setWatchForm({...watchForm, brand: e.target.value})} required />
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('model')} value={watchForm.model} onChange={e => setWatchForm({...watchForm, model: e.target.value})} required />
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('reference')} value={watchForm.reference} onChange={e => setWatchForm({...watchForm, reference: e.target.value})} />
+                 <div className="relative">
+                     <input className={`w-full p-3 pl-10 rounded-lg ${theme.input}`} placeholder={t('dial')} value={watchForm.dialColor || ''} onChange={e => setWatchForm({...watchForm, dialColor: e.target.value})} />
+                     <Palette className={`absolute left-3 top-3.5 ${theme.textSub}`} size={18} />
+                 </div>
+                 <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
+                     <div className="flex items-center mb-2">
+                        <input type="checkbox" id="isLimited" checked={watchForm.isLimitedEdition} onChange={e => setWatchForm({...watchForm, isLimitedEdition: e.target.checked})} className="w-4 h-4 text-indigo-600 rounded mr-2" />
+                        <label htmlFor="isLimited" className={`text-sm font-bold ${theme.text}`}>{t('limited_edition')}</label>
+                     </div>
+                     {watchForm.isLimitedEdition && (
+                        <div className="flex gap-2 pl-6 animate-in slide-in-from-top-1">
+                            <input className={`w-full p-2 border rounded text-sm ${theme.input}`} placeholder="N°" value={watchForm.limitedNumber} onChange={e => setWatchForm({...watchForm, limitedNumber: e.target.value})} />
+                            <span className={`py-2 ${theme.textSub}`}>/</span>
+                            <input className={`w-full p-2 border rounded text-sm ${theme.input}`} placeholder="Total" value={watchForm.limitedTotal} onChange={e => setWatchForm({...watchForm, limitedTotal: e.target.value})} />
+                        </div>
+                     )}
+                 </div>
+            </div>
+
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('technical')}</h3>
+                 <div className="grid grid-cols-2 gap-3">
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('diameter')} (mm)`} value={watchForm.diameter} onChange={e => setWatchForm({...watchForm, diameter: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('thickness')} (mm)`} value={watchForm.thickness} onChange={e => setWatchForm({...watchForm, thickness: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('lug_width')} (mm)`} value={watchForm.strapWidth} onChange={e => setWatchForm({...watchForm, strapWidth: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('water_res')} (ATM)`} value={watchForm.waterResistance} onChange={e => setWatchForm({...watchForm, waterResistance: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={`${t('weight')} (g)`} value={watchForm.weight || ''} onChange={e => setWatchForm({...watchForm, weight: e.target.value})} />
+                 </div>
+                 <div className="grid grid-cols-2 gap-3">
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('movement')} value={watchForm.movement} onChange={e => setWatchForm({...watchForm, movement: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('movement_model')} value={watchForm.movementModel || ''} onChange={e => setWatchForm({...watchForm, movementModel: e.target.value})} />
+                 </div>
+                 {['quartz', 'pile', 'battery'].some(k => (watchForm.movement || '').toLowerCase().includes(k)) && (
+                     <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
+                        <div className={`flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider ${theme.textSub}`}><Battery size={14}/> {t('battery')}</div>
+                        <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder="Ref Pile (ex: 377)" value={watchForm.batteryModel || ''} onChange={e => setWatchForm({...watchForm, batteryModel: e.target.value})} />
+                     </div>
+                 )}
+                 <input className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('glass')} value={watchForm.glass} onChange={e => setWatchForm({...watchForm, glass: e.target.value})} />
+            </div>
+
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('origin_maintenance')}</h3>
+                 <div className="grid grid-cols-3 gap-3">
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('country')} value={watchForm.country} onChange={e => setWatchForm({...watchForm, country: e.target.value})} />
+                    <input type="number" className={`p-3 rounded-lg ${theme.input}`} placeholder={t('model_year')} value={watchForm.year} onChange={e => setWatchForm({...watchForm, year: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('box_included')} value={watchForm.box} onChange={e => setWatchForm({...watchForm, box: e.target.value})} />
+                 </div>
+                 
+                 <div className="grid grid-cols-2 gap-3">
+                     <div>
+                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_release')}</label>
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.releaseDate || ''} onChange={e => setWatchForm({...watchForm, releaseDate: e.target.value})} />
+                     </div>
+                     <div>
+                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_purchase')}</label>
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.purchaseDate || ''} onChange={e => setWatchForm({...watchForm, purchaseDate: e.target.value})} />
+                     </div>
+                 </div>
+                 {watchForm.status === 'sold' && (
+                     <div>
+                         <label className={`text-[10px] uppercase font-bold ${theme.textSub} mb-1 block`}>{t('date_sold')}</label>
+                         <input type="date" className={`w-full p-3 rounded-lg ${theme.input}`} value={watchForm.soldDate || ''} onChange={e => setWatchForm({...watchForm, soldDate: e.target.value})} />
+                     </div>
+                 )}
+                 
+                 <div className="grid grid-cols-2 gap-3">
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('warranty')} value={watchForm.warrantyDate} onChange={e => setWatchForm({...watchForm, warrantyDate: e.target.value})} />
+                    <input className={`p-3 rounded-lg ${theme.input}`} placeholder={t('revision')} value={watchForm.revision} onChange={e => setWatchForm({...watchForm, revision: e.target.value})} />
+                 </div>
+            </div>
+            
+            <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
+                <div className={`flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider ${theme.textSub}`}><Receipt size={14}/> {t('invoice')}</div>
+                {watchForm.invoice ? (
+                     <div className="flex items-center gap-2">
+                         <div className="text-xs text-emerald-600 font-bold flex items-center gap-1"><Check size={12}/> Facture ajoutée</div>
+                         <button type="button" onClick={() => setWatchForm({...watchForm, invoice: null})} className="text-xs text-red-500 underline">Supprimer</button>
+                     </div>
+                ) : (
+                    <label className={`flex items-center gap-2 cursor-pointer text-xs font-bold ${theme.text}`}>
+                        <Plus size={14}/> {t('add_invoice')}
+                        <input type="file" onChange={(e) => handleImageUpload(e, 'invoice')} className="hidden" accept="image/*"/>
+                    </label>
+                )}
+            </div>
+
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>État & Condition</h3>
+                 <div>
+                     <label className={`block text-xs ${theme.textSub} mb-1`}>{t('condition_rating')}: <span className="font-bold text-lg">{watchForm.conditionRating || '-'}</span>/10</label>
+                     <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        step="1" 
+                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                        value={watchForm.conditionRating || 0}
+                        onChange={e => setWatchForm({...watchForm, conditionRating: parseInt(e.target.value)})}
+                     />
+                 </div>
+                 <textarea className={`w-full p-3 rounded-lg min-h-[60px] ${theme.input}`} placeholder={t('condition_comment')} value={watchForm.conditionComment || ''} onChange={e => setWatchForm({...watchForm, conditionComment: e.target.value})} />
+            </div>
+
+            <div className="space-y-3">
+                <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('financial_status')}</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('purchase_price')} value={watchForm.purchasePrice} onChange={e => setWatchForm({...watchForm, purchasePrice: e.target.value})} />
+                    <input type="number" className={`w-full p-3 rounded-lg ${theme.input}`} placeholder={t('selling_price')} value={watchForm.sellingPrice} onChange={e => setWatchForm({...watchForm, sellingPrice: e.target.value})} />
+                </div>
+                {watchForm.status !== 'wishlist' && (
+                    <div className={`p-2 rounded-lg border ${theme.border} ${theme.bg} flex items-center gap-2`}>
+                        <Lock size={16} className="text-amber-600" />
+                        <input type="number" className={`w-full p-2 bg-transparent border-none focus:ring-0 text-sm ${theme.text}`} placeholder={t('min_price')} value={watchForm.minPrice || ''} onChange={e => setWatchForm({...watchForm, minPrice: e.target.value})} />
+                    </div>
+                )}
+                
+                <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
+                    {[{id: 'collection', label: t('collection')}, {id: 'forsale', label: t('forsale')}, {id: 'sold', label: t('sold')}, {id: 'wishlist', label: t('wishlist')}].map(s => (
+                        <button key={s.id} type="button" onClick={() => setWatchForm({...watchForm, status: s.id})} className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold border whitespace-nowrap ${watchForm.status === s.id ? 'bg-slate-800 text-white' : `${theme.bg} ${theme.border} ${theme.text}`}`}>{s.label}</button>
+                    ))}
+                </div>
+
+                <div className={`relative ${watchForm.status === 'wishlist' ? 'animate-pulse-slow' : ''}`}>
+                    <LinkIcon className={`absolute left-3 top-3.5 ${theme.textSub}`} size={18}/>
+                    <input className={`w-full p-3 pl-10 rounded-lg ${theme.input} ${watchForm.status === 'wishlist' ? 'border-indigo-300 ring-1 ring-indigo-100' : ''}`} placeholder={t('link_web')} value={watchForm.link || ''} onChange={e => setWatchForm({...watchForm, link: e.target.value})} />
+                </div>
+
+                <div className={`p-3 rounded-lg border ${theme.border} ${theme.bg}`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            {watchForm.publicVisible ? <Eye className="text-indigo-600 mr-2" size={20}/> : <EyeOff className="text-slate-400 mr-2" size={20}/>}
+                            <span className={`text-sm font-bold ${theme.text}`}>{t('visibility_friends')}</span>
+                        </div>
+                        <input type="checkbox" checked={watchForm.publicVisible !== false} onChange={e => setWatchForm({...watchForm, publicVisible: e.target.checked})} className="w-5 h-5 text-indigo-600 rounded" />
+                    </div>
+                    <p className={`text-[10px] ${theme.textSub} mt-1 pl-8`}>{t('private_note')}</p>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('notes')} & {t('history')}</h3>
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('notes')} value={watchForm.conditionNotes} onChange={e => setWatchForm({...watchForm, conditionNotes: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_brand')} value={watchForm.historyBrand || ''} onChange={e => setWatchForm({...watchForm, historyBrand: e.target.value})} />
+                 <textarea className={`w-full p-3 rounded-lg min-h-[80px] ${theme.input}`} placeholder={t('history_model')} value={watchForm.historyModel || ''} onChange={e => setWatchForm({...watchForm, historyModel: e.target.value})} />
+            </div>
+
+            <button className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold shadow-lg">{t('save')}</button>
+          </form>
+        </div>
+      );
+  }
+
   const renderFriends = () => {
-      const fCollection = friendWatches.filter(w => w.status === 'collection');
-      const fForsale = friendWatches.filter(w => w.status === 'forsale');
-      const fSold = friendWatches.filter(w => w.status === 'sold');
-      const fWishlist = friendWatches.filter(w => w.status === 'wishlist');
+      const displayFriendWatches = friendWatches.filter(w => w.status === friendFilter);
 
       return (
           <div className="pb-24 px-4">
               {renderHeader(t('friends'))}
               <div className="space-y-4 mt-4">
-                  <div className={`p-4 rounded-xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-800`}>
-                      <h3 className={`font-bold text-sm mb-2 text-indigo-900 dark:text-indigo-300 flex items-center gap-2`}><Share2 size={16} /> Mon Code Ami</h3>
-                      <p className="text-xs text-indigo-700/70 dark:text-indigo-400/70 mb-3">Partagez ce code pour que vos amis puissent vous ajouter.</p>
-                      <div className="flex gap-2">
-                          <code className="flex-1 p-2 bg-white dark:bg-slate-900 rounded-lg text-[10px] font-mono font-bold text-center border border-indigo-100 dark:border-indigo-800 flex items-center justify-center overflow-hidden text-ellipsis">{user?.uid || 'Non connecté'}</code>
-                          <button onClick={() => { navigator.clipboard.writeText(user?.uid || ''); alert('Code copié !'); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-colors"><ClipboardList size={14}/> Copier</button>
-                      </div>
-                  </div>
-
-                  <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
-                      <h3 className={`font-bold text-sm mb-2 ${theme.text}`}>Ajouter un ami</h3>
-                      <div className="flex gap-2">
-                          <input value={addFriendId} onChange={e => setAddFriendId(e.target.value)} placeholder="Code secret de l'ami" className={`flex-1 p-2 rounded-lg ${theme.input}`} />
-                          <button onClick={sendFriendRequest} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold">Ajouter</button>
-                      </div>
-                  </div>
-                  
-                  {friendRequests.length > 0 && (
-                      <div className={`p-4 rounded-xl border ${theme.border} ${theme.bgSecondary}`}>
-                          <h3 className={`font-bold text-sm mb-2 text-rose-500`}>{t('requests')}</h3>
-                          {friendRequests.map(req => (
-                              <div key={req.id} className={`flex justify-between items-center p-2 border-b ${theme.border} last:border-0`}>
-                                  <span className={`text-sm ${theme.text}`}>{req.fromEmail}</span>
-                                  <div className="flex gap-2">
-                                      <button onClick={() => acceptRequest(req)} className="p-1.5 bg-emerald-100 text-emerald-600 rounded"><Check size={16}/></button>
-                                      <button onClick={() => rejectRequest(req.id)} className="p-1.5 bg-rose-100 text-rose-600 rounded"><X size={16}/></button>
-                                  </div>
+                  {!viewingFriend && (
+                      <>
+                          <div className={`p-4 rounded-xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-800`}>
+                              <h3 className={`font-bold text-sm mb-2 text-indigo-900 dark:text-indigo-300 flex items-center gap-2`}><Share2 size={16} /> Mon Code Ami</h3>
+                              <p className="text-xs text-indigo-700/70 dark:text-indigo-400/70 mb-3">Partagez ce code pour que vos amis puissent vous ajouter.</p>
+                              <div className="flex gap-2">
+                                  <code className="flex-1 p-2 bg-white dark:bg-slate-900 rounded-lg text-[10px] font-mono font-bold text-center border border-indigo-100 dark:border-indigo-800 flex items-center justify-center overflow-hidden text-ellipsis">{user?.uid || 'Non connecté'}</code>
+                                  <button onClick={() => { navigator.clipboard.writeText(user?.uid || ''); alert('Code copié !'); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-colors"><ClipboardList size={14}/> Copier</button>
                               </div>
-                          ))}
-                      </div>
-                  )}
-                  
-                  <div className={`p-4 rounded-xl border ${theme.border} ${theme.bgSecondary}`}>
-                      <h3 className={`font-bold text-sm mb-2 ${theme.text}`}>{t('friends')}</h3>
-                      {friends.length === 0 && <p className={`text-xs ${theme.textSub}`}>Aucun ami pour le moment.</p>}
-                      {friends.map(f => (
-                          <div key={f.id} className={`flex justify-between items-center p-3 border rounded-lg mb-2 cursor-pointer hover:border-indigo-300 ${theme.border} ${theme.bg}`} onClick={() => loadFriendCollection(f)}>
-                              <span className={`font-medium ${theme.text}`}>{f.name}</span>
-                              <button onClick={(e) => { e.stopPropagation(); removeFriend(f.id); }} className="text-red-500 p-1"><Trash2 size={16}/></button>
                           </div>
-                      ))}
-                  </div>
+                          
+                          <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
+                              <h3 className={`font-bold text-sm mb-2 ${theme.text}`}>Ajouter un ami</h3>
+                              <div className="flex gap-2">
+                                  <input value={addFriendId} onChange={e => setAddFriendId(e.target.value)} placeholder="Code secret de l'ami" className={`flex-1 p-2 rounded-lg ${theme.input}`} />
+                                  <button onClick={sendFriendRequest} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold">Ajouter</button>
+                              </div>
+                          </div>
+                          
+                          {friendRequests.length > 0 && (
+                              <div className={`p-4 rounded-xl border ${theme.border} ${theme.bgSecondary}`}>
+                                  <h3 className={`font-bold text-sm mb-2 text-rose-500`}>{t('requests')}</h3>
+                                  {friendRequests.map(req => (
+                                      <div key={req.id} className={`flex justify-between items-center p-2 border-b ${theme.border} last:border-0`}>
+                                          <span className={`text-sm ${theme.text}`}>{req.fromEmail}</span>
+                                          <div className="flex gap-2">
+                                              <button onClick={() => acceptRequest(req)} className="p-1.5 bg-emerald-100 text-emerald-600 rounded"><Check size={16}/></button>
+                                              <button onClick={() => rejectRequest(req.id)} className="p-1.5 bg-rose-100 text-rose-600 rounded"><X size={16}/></button>
+                                          </div>
+                                      </div>
+                                  ))}
+                              </div>
+                          )}
+                          
+                          <div className={`p-4 rounded-xl border ${theme.border} ${theme.bgSecondary}`}>
+                              <h3 className={`font-bold text-sm mb-2 ${theme.text}`}>{t('friends')}</h3>
+                              {friends.length === 0 && <p className={`text-xs ${theme.textSub}`}>Aucun ami pour le moment.</p>}
+                              {friends.map(f => (
+                                  <div key={f.id} className={`flex justify-between items-center p-3 border rounded-lg mb-2 cursor-pointer hover:border-indigo-300 ${theme.border} ${theme.bg}`} onClick={() => loadFriendCollection(f)}>
+                                      <span className={`font-medium ${theme.text}`}>{f.name}</span>
+                                      <button onClick={(e) => { e.stopPropagation(); removeFriend(f.id); }} className="text-red-500 p-1"><Trash2 size={16}/></button>
+                                  </div>
+                              ))}
+                          </div>
 
-                  <button onClick={handlePreviewOwnProfile} className={`w-full py-3 rounded-xl border ${theme.border} ${theme.bg} ${theme.text} font-bold text-sm`}>
-                      Voir mon profil public (Test)
-                  </button>
+                          <button onClick={handlePreviewOwnProfile} className={`w-full py-3 rounded-xl border ${theme.border} ${theme.bg} ${theme.text} font-bold text-sm`}>
+                              Voir mon profil public (Test)
+                          </button>
+                      </>
+                  )}
                   
                   {isFriendsLoading && <div className="flex justify-center p-4"><Loader2 className="animate-spin text-indigo-500" /></div>}
                   
                   {viewingFriend && !isFriendsLoading && (
-                      <div className="mt-6 animate-in slide-in-from-bottom-4">
-                          <div className="flex justify-between items-center mb-4">
-                              <h3 className={`font-bold text-lg ${theme.text}`}>Profil de {viewingFriend.name}</h3>
-                              <button onClick={() => setViewingFriend(null)} className={`text-xs ${theme.textSub} underline`}>Fermer</button>
-                          </div>
-                          
-                          {fCollection.length > 0 && (
-                              <div className="mb-6">
-                                  <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub}`}>{t('collection')} ({fCollection.length})</h4>
-                                  <div className="grid grid-cols-2 gap-3">
-                                      {fCollection.map(w => (
-                                          <div key={w.id} className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} p-2 shadow-sm`}>
-                                              <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-2 relative">
-                                                  {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={24} className="m-auto mt-8 text-slate-400"/>}
-                                              </div>
-                                              <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div>
-                                              <div className={`text-xs truncate ${theme.textSub}`}>{w.model}</div>
-                                          </div>
-                                      ))}
+                      <div className="mt-2 animate-in slide-in-from-bottom-4">
+                          {selectedFriendWatch ? (
+                              <div className="space-y-6">
+                                  <div className="flex items-center gap-3 mb-2">
+                                      <button onClick={() => setSelectedFriendWatch(null)} className={`p-2 rounded-full ${theme.bgSecondary} border ${theme.border} shadow-sm`}><ChevronLeft size={20}/></button>
+                                      <h3 className={`font-bold text-lg ${theme.text}`}>Retour</h3>
                                   </div>
-                              </div>
-                          )}
+                                  
+                                  <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative`}>
+                                      {selectedFriendWatch.images?.[0] || selectedFriendWatch.image ? (
+                                          <img src={selectedFriendWatch.images?.[0] || selectedFriendWatch.image} className="w-full h-full object-cover" alt="Montre"/>
+                                      ) : (
+                                          <Watch size={48} className="m-auto mt-24 text-slate-400"/>
+                                      )}
+                                  </div>
+                                  
+                                  <div>
+                                      <h1 className={`text-3xl font-serif font-bold ${theme.text} leading-tight`}>{selectedFriendWatch.brand}</h1>
+                                      <p className={`text-xl ${theme.textSub} font-medium font-serif`}>{selectedFriendWatch.model}</p>
+                                      {selectedFriendWatch.reference && <span className={`text-xs ${theme.bg} px-2 py-1 rounded mt-2 inline-block border ${theme.border} font-mono ${theme.textSub}`}>REF: {selectedFriendWatch.reference}</span>}
+                                  </div>
 
-                          {fForsale.length > 0 && (
-                              <div className="mb-6">
-                                  <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub}`}>{t('forsale')} ({fForsale.length})</h4>
+                                  {selectedFriendWatch.status === 'forsale' && selectedFriendWatch.sellingPrice && (
+                                      <div className={`p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 flex items-center justify-between`}>
+                                          <div className="text-amber-800 dark:text-amber-400 font-bold uppercase text-xs">Prix demandé</div>
+                                          <div className="text-2xl font-bold text-amber-600">{formatPrice(selectedFriendWatch.sellingPrice)}</div>
+                                      </div>
+                                  )}
+
+                                  <div>
+                                      <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('specs')}</h3>
+                                      <div className="grid grid-cols-2 gap-3">
+                                          <DetailItem icon={Ruler} label={t('diameter')} value={selectedFriendWatch.diameter ? selectedFriendWatch.diameter + ' mm' : ''} theme={theme} />
+                                          <DetailItem icon={Layers} label={t('thickness')} value={selectedFriendWatch.thickness ? selectedFriendWatch.thickness + ' mm' : ''} theme={theme} />
+                                          <DetailItem icon={Activity} label={t('lug_width')} value={selectedFriendWatch.strapWidth ? selectedFriendWatch.strapWidth + ' mm' : ''} theme={theme} />
+                                          <DetailItem icon={Droplets} label={t('water_res')} value={selectedFriendWatch.waterResistance ? selectedFriendWatch.waterResistance + ' ATM' : ''} theme={theme} />
+                                      </div>
+                                  </div>
+
+                                  <div>
+                                      <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3>
+                                      <div className="grid grid-cols-2 gap-3">
+                                          <DetailItem icon={MovementIcon} label={t('movement')} value={selectedFriendWatch.movement} theme={theme} />
+                                          <DetailItem icon={Settings} label={t('movement_model')} value={selectedFriendWatch.movementModel} theme={theme} />
+                                          <DetailItem icon={Palette} label={t('dial')} value={selectedFriendWatch.dialColor} theme={theme} />
+                                          <DetailItem icon={Search} label={t('glass')} value={selectedFriendWatch.glass} theme={theme} />
+                                      </div>
+                                  </div>
+
+                                  {(selectedFriendWatch.historyBrand || selectedFriendWatch.historyModel) && (
+                                      <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                          <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider`}>{t('history')}</h3>
+                                          {selectedFriendWatch.historyBrand && (<div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-sm text-slate-800 dark:text-slate-200 border border-indigo-100 dark:border-indigo-800"><div className="flex items-center font-bold text-indigo-800 dark:text-indigo-400 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_brand')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{selectedFriendWatch.historyBrand}</div></div>)}
+                                          {selectedFriendWatch.historyModel && (<div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-sm text-slate-800 dark:text-slate-200 border border-indigo-100 dark:border-indigo-800"><div className="flex items-center font-bold text-indigo-800 dark:text-indigo-400 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_model')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{selectedFriendWatch.historyModel}</div></div>)}
+                                      </div>
+                                  )}
+                              </div>
+                          ) : (
+                              <>
+                                  <div className="flex justify-between items-center mb-4">
+                                      <h3 className={`font-bold text-lg ${theme.text}`}>Profil de {viewingFriend.name}</h3>
+                                      <button onClick={() => setViewingFriend(null)} className={`text-xs ${theme.textSub} underline`}>Fermer</button>
+                                  </div>
+
+                                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
+                                      {['collection', 'forsale', 'sold', 'wishlist'].map(f => {
+                                          const count = friendWatches.filter(w => w.status === f).length;
+                                          return (
+                                              <button key={f} onClick={() => setFriendFilter(f)} className={`px-4 py-2 rounded-full text-xs font-bold border transition-colors flex-shrink-0 whitespace-nowrap ${friendFilter === f ? 'bg-slate-800 text-white border-slate-800' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>
+                                                  {t(f)} ({count})
+                                              </button>
+                                          )
+                                      })}
+                                  </div>
+
                                   <div className="grid grid-cols-2 gap-3">
-                                      {fForsale.map(w => (
-                                          <div key={w.id} className={`${theme.card} rounded-xl overflow-hidden border border-amber-200 dark:border-amber-900 p-2 shadow-sm`}>
-                                              <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-2 relative">
-                                                  {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Tag size={24} className="m-auto mt-8 text-amber-400"/>}
-                                                  <div className="absolute top-1 right-1 bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">
-                                                      {formatPrice(w.sellingPrice || w.purchasePrice)}
+                                      {displayFriendWatches.length === 0 ? (
+                                          <div className={`col-span-2 text-center text-sm py-8 ${theme.textSub}`}>Aucune montre dans cette catégorie.</div>
+                                      ) : (
+                                          displayFriendWatches.map(w => (
+                                              <div key={w.id} onClick={() => setSelectedFriendWatch(w)} className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} p-2 shadow-sm cursor-pointer hover:border-indigo-400 transition-colors ${w.status === 'sold' ? 'opacity-70' : ''}`}>
+                                                  <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-2 relative">
+                                                      {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={24} className="m-auto mt-8 text-slate-400"/>}
+                                                      {w.status === 'forsale' && (
+                                                          <div className="absolute top-1 right-1 bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">
+                                                              {formatPrice(w.sellingPrice || w.purchasePrice)}
+                                                          </div>
+                                                      )}
+                                                      {w.status === 'sold' && (
+                                                          <div className="absolute top-1 right-1 bg-slate-800 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">
+                                                              VENDUE
+                                                          </div>
+                                                      )}
                                                   </div>
+                                                  <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div>
+                                                  <div className={`text-xs truncate ${theme.textSub}`}>{w.model}</div>
                                               </div>
-                                              <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div>
-                                              <div className={`text-xs truncate ${theme.textSub}`}>{w.model}</div>
-                                          </div>
-                                      ))}
+                                          ))
+                                      )}
                                   </div>
-                              </div>
-                          )}
-
-                          {fSold.length > 0 && (
-                              <div className="mb-6">
-                                  <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub}`}>{t('sold')} ({fSold.length})</h4>
-                                  <div className="grid grid-cols-2 gap-3">
-                                      {fSold.map(w => (
-                                          <div key={w.id} className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} p-2 shadow-sm opacity-70`}>
-                                              <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-2 relative">
-                                                  {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={24} className="m-auto mt-8 text-slate-400"/>}
-                                                  <div className="absolute top-1 right-1 bg-slate-800 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">
-                                                      VENDUE
-                                                  </div>
-                                              </div>
-                                              <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div>
-                                              <div className={`text-xs truncate ${theme.textSub}`}>{w.model}</div>
-                                          </div>
-                                      ))}
-                                  </div>
-                              </div>
-                          )}
-
-                          {fWishlist.length > 0 && (
-                              <div className="mb-6">
-                                  <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSub}`}>{t('wishlist')} ({fWishlist.length})</h4>
-                                  <div className="grid grid-cols-2 gap-3">
-                                      {fWishlist.map(w => (
-                                          <div key={w.id} className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} p-2 shadow-sm`}>
-                                              <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-2 relative">
-                                                  {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Heart size={24} className="m-auto mt-8 text-rose-300"/>}
-                                              </div>
-                                              <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div>
-                                              <div className={`text-xs truncate ${theme.textSub}`}>{w.model}</div>
-                                          </div>
-                                      ))}
-                                  </div>
-                              </div>
-                          )}
-                          
-                          {friendWatches.length === 0 && (
-                              <div className={`text-center text-sm py-4 ${theme.textSub}`}>Aucune montre publique.</div>
+                              </>
                           )}
                       </div>
                   )}
@@ -1059,18 +1168,19 @@ export default function App() {
       );
   };
 
-  // NOUVELLE PAGE: INVENTAIRE (Re-créée pour remplacer la fonction manquante)
-  const renderSummary = () => (
-      <div className="pb-24 px-4">
-          {renderHeader(t('inventory'))}
-          <div className={`mt-6 p-6 rounded-2xl border ${theme.border} ${theme.bgSecondary} text-center space-y-4`}>
-              <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto shadow-inner"><Download size={32} /></div>
-              <h2 className={`text-xl font-bold ${theme.text}`}>Exporter les données</h2>
-              <p className={`text-sm ${theme.textSub}`}>Téléchargez l'intégralité de votre collection au format CSV pour l'ouvrir dans Excel ou Google Sheets.</p>
-              <button onClick={exportCSV} className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"><FileText size={18} /> {t('export_csv')}</button>
+  function renderSummary() {
+      return (
+          <div className="pb-24 px-4">
+              {renderHeader(t('inventory'))}
+              <div className={`mt-6 p-6 rounded-2xl border ${theme.border} ${theme.bgSecondary} text-center space-y-4`}>
+                  <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto shadow-inner"><Download size={32} /></div>
+                  <h2 className={`text-xl font-bold ${theme.text}`}>Exporter les données</h2>
+                  <p className={`text-sm ${theme.textSub}`}>Téléchargez l'intégralité de votre collection au format CSV pour l'ouvrir dans Excel ou Google Sheets.</p>
+                  <button onClick={exportCSV} className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"><FileText size={18} /> {t('export_csv')}</button>
+              </div>
           </div>
-      </div>
-  );
+      );
+  }
 
   if (loading) return <div className={`flex h-screen items-center justify-center ${theme.bgSecondary}`}><Loader2 className={`animate-spin ${theme.text}`}/></div>;
 
