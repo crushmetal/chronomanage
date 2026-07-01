@@ -3,14 +3,18 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X,
-  Search, AlertCircle,
-  Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag
+  Search, Package, DollarSign, FileText, Box, Loader2,
+  ChevronLeft, ClipboardList, Ruler, Calendar, LogIn, LogOut,
+  MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart,
+  ExternalLink, Settings, Grid, ArrowUpDown, Save, Palette,
+  Users, Eye, EyeOff, Check, Gem, Battery, ShoppingCart, BookOpen,
+  Gift, Scale, Lock, ChevronRight, BarChart2, Moon, Sun, Clock,
+  PieChart, Briefcase, Printer, Link as LinkIcon, Receipt, Tag, Download
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc, updateDoc } from 'firebase/firestore';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc } from 'firebase/firestore';
 
 // ==========================================================================
 // CONFIGURATION & DICTIONNAIRE
@@ -305,7 +309,6 @@ const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
-const APP_VERSION = "v54.2";
 
 const DEFAULT_WATCH_STATE = {
     brand: '', model: '', reference: '', 
@@ -410,7 +413,6 @@ const MovementIcon = ({ size = 24, className = "" }) => (
 );
 
 // --- ANIMATION COFFRE ---
-/* STREAMING_CHUNK:Rendering box animation component... */
 const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
   const leatherColor = settings.boxLeather || (isDark ? "#3E2723" : "#5D4037");
   const interiorColor = settings.boxInterior || (isDark ? "#424242" : "#f5f5f0");
@@ -514,7 +516,6 @@ const GraphicBackground = ({ isDark }) => (
 );
 
 // --- COMPOSANTS EXTERNALISÉS ---
-/* STREAMING_CHUNK:Defining UI helper components... */
 const Card = ({ children, className = "", onClick, theme }) => (
   <div onClick={onClick} className={`${theme.card} rounded-xl shadow-sm border ${theme.border} overflow-hidden ${className} ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}>{children}</div>
 );
@@ -637,7 +638,7 @@ const FullScreenImageViewer = ({ src, onClose }) => {
                         transition: isDragging || pinchDist ? 'none' : 'transform 0.2s ease-out',
                         cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in'
                     }}
-                    alt="Fullscreen View"
+                    alt="Vue agrandie"
                 />
             </div>
         </div>
@@ -676,7 +677,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                     <div>
                         {watch.images && watch.images[0] && (
                             <div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4">
-                                <img src={watch.images[0]} className="w-full h-full object-cover"/>
+                                <img src={watch.images[0]} className="w-full h-full object-cover" alt="Montre" />
                             </div>
                         )}
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white">
@@ -744,7 +745,6 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
     );
 };
 
-/* STREAMING_CHUNK:Rendering finance detail component... */
 const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
     const [localSort, setLocalSort] = useState('alpha'); 
     const sortedItems = useMemo(() => {
@@ -787,7 +787,9 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
                const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
                return (
                  <div key={w.id} onClick={() => { onClose(); onSelectWatch && onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                     <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover"/>}</div>
+                     <div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>
+                         {thumb && <img src={thumb} className="w-full h-full object-cover" alt="Miniature" />}
+                     </div>
                      <div className="flex-1 min-w-0">
                         <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div>
                         <div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div>
@@ -864,7 +866,6 @@ const ConfigModal = ({ onClose, currentError, t }) => {
     );
 };
 
-/* STREAMING_CHUNK:Settings & App main setup... */
 const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className={`${theme.card} rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border ${theme.border} max-h-[90vh] flex flex-col`}>
@@ -996,7 +997,6 @@ export default function App() {
   const [isBoxOpening, setIsBoxOpening] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false); 
   const [showSettingsModal, setShowSettingsModal] = useState(false); 
-  const [authDomainError, setAuthDomainError] = useState(null); 
   const [showRulesHelp, setShowRulesHelp] = useState(false); 
   const [isAuthLoading, setIsAuthLoading] = useState(false); 
   const [exportType, setExportType] = useState(null); 
@@ -1018,7 +1018,6 @@ export default function App() {
       }
   }, []);
 
-/* STREAMING_CHUNK:Firebase synchronization effect... */
   useEffect(() => {
      if (useLocalStorage || !user?.uid) return;
      const savedFriends = localStorage.getItem(`friends_${user.uid}`);
@@ -1042,6 +1041,7 @@ export default function App() {
           alert("Demande envoyée !"); setAddFriendId('');
       } catch (e) { if (e.code === 'permission-denied') setShowRulesHelp(true); else alert("Erreur: " + e.message); }
   };
+  
   const acceptRequest = async (req) => {
       const newFriend = { id: req.fromUser, name: req.fromEmail || 'Ami' };
       const updatedFriends = [...friends, newFriend];
@@ -1049,17 +1049,21 @@ export default function App() {
       localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
       try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', req.id)); } catch (e) {}
   };
+  
   const rejectRequest = async (reqId) => { try { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'public', 'data', 'requests', reqId)); } catch (e) {} };
+  
   const removeFriend = (friendId) => {
       const updatedFriends = friends.filter(f => f.id !== friendId);
       setFriends(updatedFriends);
       localStorage.setItem(`friends_${user.uid}`, JSON.stringify(updatedFriends));
   };
+  
   const handlePreviewOwnProfile = () => {
       setFriendWatches(watches.filter(w => w.publicVisible !== false));
       setViewingFriend({ id: user.uid, name: 'Mon Profil Public' });
       if(scrollRef.current) scrollRef.current.scrollTop = 0;
   };
+  
   const loadFriendCollection = async (friend) => {
       if (!firebaseReady) return;
       setIsFriendsLoading(true); setViewingFriend(friend);
@@ -1124,7 +1128,17 @@ export default function App() {
     if (!firebaseReady) { setShowConfigModal(true); return; }
     setUseLocalStorage(false); setIsAuthLoading(true);
     const provider = new GoogleAuthProvider();
-    try { await signInWithPopup(auth, provider); } catch (error) { if (error.code === 'auth/unauthorized-domain') setAuthDomainError(window.location.hostname); } finally { setIsAuthLoading(false); }
+    try { 
+        await signInWithPopup(auth, provider); 
+    } catch (error) { 
+        if (error.code === 'auth/unauthorized-domain') {
+            setError("Domaine non autorisé : " + window.location.hostname);
+        } else {
+            setError("Erreur : " + error.message);
+        }
+    } finally { 
+        setIsAuthLoading(false); 
+    }
   };
 
   const handleLogout = async () => {
@@ -1133,13 +1147,12 @@ export default function App() {
     try { await signOut(auth); setShowProfileMenu(false); } finally { setIsAuthLoading(false); }
   };
 
-/* STREAMING_CHUNK:App initial effects & Form logic... */
   useEffect(() => {
     if (useLocalStorage && !isAuthLoading) { setLoading(false); return; }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) { setUser(currentUser); setError(null); setLoading(false); if (useLocalStorage) setUseLocalStorage(false); } 
       else {
-          const timer = setTimeout(() => { if (!isAuthLoading) { signInAnonymously(auth).catch((err) => { setUseLocalStorage(true); setUser({ uid: 'local-user' }); }).finally(() => setLoading(false)); } }, 1000);
+          const timer = setTimeout(() => { if (!isAuthLoading) { signInAnonymously(auth).catch(() => { setUseLocalStorage(true); setUser({ uid: 'local-user' }); }).finally(() => setLoading(false)); } }, 1000);
           return () => clearTimeout(timer);
       }
     });
@@ -1279,10 +1292,8 @@ export default function App() {
     } else { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, type === 'watch' ? 'watches' : 'bracelets', id)); setView('list'); }
   };
 
-/* STREAMING_CHUNK:Filtering and sorting logic... */
   const activeWatchesCount = watches.filter(w => w.status === 'collection').length;
 
-  // NEW: Search by BOTH brand and model
   const filteredWatches = useMemo(() => {
     let filtered = watches;
     if (searchTerm) { 
@@ -1326,11 +1337,6 @@ export default function App() {
     return sorted;
   }, [watches, searchTerm, sortOrder]);
 
-  // Fallback stubs just in case they were expected to be in the code
-  const renderFriends = () => <div className="p-4 text-center">Section Amis</div>;
-  const renderSummary = () => <div className="p-4 text-center">Section Inventaire</div>;
-
-/* STREAMING_CHUNK:Rendering main views... */
   function renderBox() {
       const handleBoxClick = () => { setIsBoxOpening(true); setTimeout(() => { setFilter('collection'); setView('list'); setIsBoxOpening(false); }, 800); };
       return (
@@ -1350,7 +1356,7 @@ export default function App() {
               </button>
             ) : (
               <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md">
-                 {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
+                 {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" alt="Profile" /> : <div className="w-full h-full bg-indigo-800 flex items-center justify-center text-white"><span className="text-xs font-bold">{user.email ? user.email[0].toUpperCase() : 'U'}</span></div>}
               </button>
             )}
             
@@ -1434,7 +1440,7 @@ export default function App() {
                     {bracelets.map(b => (
                         <Card key={b.id} onClick={() => handleEdit(b, 'bracelet')} theme={theme}>
                             <div className={`aspect-square ${theme.bg} relative flex items-center justify-center`}>
-                                {b.image ? <img src={b.image} className="w-full h-full object-cover"/> : <Activity className={theme.textSub}/>}
+                                {b.image ? <img src={b.image} className="w-full h-full object-cover" alt="Bracelet" /> : <Activity className={theme.textSub}/>}
                                 <div className="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm">{b.width}mm</div>
                             </div>
                             <div className="p-3">
@@ -1457,7 +1463,7 @@ export default function App() {
             return (
             <Card key={w.id} onClick={() => { setSelectedWatch(w); setViewedImageIndex(0); setView('detail'); }} theme={theme}>
               <div className={`aspect-square ${theme.bg} relative`}>
-                {displayImage ? <img src={displayImage} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
+                {displayImage ? <img src={displayImage} className="w-full h-full object-cover" alt="Montre" /> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
                 {(w.purchasePrice) && (<div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{formatPrice(w.purchasePrice)}</div>)}
                 <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">
                   {w.status === 'sold' ? (
@@ -1490,7 +1496,7 @@ export default function App() {
             const displayImage = w.images?.[0] || w.image;
             return (
             <Card key={w.id} className="flex p-3 gap-3 relative" onClick={() => { setSelectedWatch(w); setView('detail'); }} theme={theme}>
-                <div className={`w-20 h-20 ${theme.bg} rounded-lg flex-shrink-0 overflow-hidden`}>{displayImage ? <img src={displayImage} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}</div>
+                <div className={`w-20 h-20 ${theme.bg} rounded-lg flex-shrink-0 overflow-hidden`}>{displayImage ? <img src={displayImage} className="w-full h-full object-cover" alt="Montre" /> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}</div>
                 <div className="flex-1 flex flex-col justify-between py-1">
                     <div><h3 className={`font-bold font-serif ${theme.text} tracking-wide`}>{w.brand}</h3><p className={`text-xs ${theme.textSub}`}>{w.model}</p></div>
                     <div className="flex justify-between items-end"><div className="font-semibold text-emerald-600">{formatPrice(w.purchasePrice)}</div>{w.link && (<a href={w.link} target="_blank" rel="noreferrer" className="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 z-10" onClick={(e) => { e.stopPropagation(); }}><ExternalLink size={14} /></a>)}</div>
@@ -1502,7 +1508,6 @@ export default function App() {
     );
   }
 
-/* STREAMING_CHUNK:Rendering watch details... */
   function renderDetail() {
     if(!selectedWatch) return null;
     const w = selectedWatch;
@@ -1556,10 +1561,10 @@ export default function App() {
         <div className="p-4 space-y-6">
           <div className="space-y-4">
               <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative group`} onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}>
-                {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
+                {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover" alt="Vue de la montre" /> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
                 {displayImages.length > 1 && (<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">{displayImages.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === viewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>)}</div>)}
               </div>
-              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img, i) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} className="w-full h-full object-cover" /></div>))}</div>)}
+              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img, i) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} className="w-full h-full object-cover" alt="Miniature" /></div>))}</div>)}
               <div>
                 <h1 className={`text-3xl font-serif font-bold ${theme.text} leading-tight`}>{w.brand}</h1>
                 <p className={`text-xl ${theme.textSub} font-medium font-serif`}>{w.model}</p>
@@ -1678,7 +1683,7 @@ export default function App() {
               <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>
               {w.invoice ? (
                   <div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer`} onClick={() => setFullScreenImage(w.invoice)}>
-                      <img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="Facture" />
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
                               <Receipt size={14}/> {t('view_invoice')}
@@ -1710,8 +1715,6 @@ export default function App() {
     );
   }
 
-/* STREAMING_CHUNK:Rendering profile gallery & Stats... */
-  // NEW: Search by BOTH brand and model in Profile/Gallery
   function renderProfile() {
     const displayWatches = watches.filter(w => { 
         if (!w.image && (!w.images || w.images.length === 0)) return false; 
@@ -1801,7 +1804,7 @@ export default function App() {
           <div className="grid grid-cols-3 gap-1 mt-2 px-1">
               {displayWatches.map(w => (
                   <div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { setSelectedWatch(w); setView('detail'); }}>
-                      <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" />
+                      <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Galerie" />
                   </div>
               ))}
               {displayWatches.length === 0 && (
@@ -1826,7 +1829,6 @@ export default function App() {
         return Object.entries(periodCounts).sort(([,a], [,b]) => b - a).map(([wId, count]) => { const w = watches.find(watch => watch.id === wId); return w ? { ...w, count } : null; }).filter(Boolean);
       };
       
-      // NEW: Calendar grid with full image and styled bubbles
       const renderCalendarGrid = () => {
         const year = currentMonth.getFullYear(); const month = currentMonth.getMonth();
         const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0);
@@ -1857,7 +1859,7 @@ export default function App() {
                 <div key={d} onClick={() => handleCalendarDayClick(dateStr)} className={`aspect-square border rounded-lg relative overflow-hidden cursor-pointer ${theme.border} ${isToday && !watchImg ? 'border-emerald-500 bg-emerald-500/10' : theme.bg}`}>
                     {watchImg ? (
                         <>
-                            <img src={watchImg} className="absolute inset-0 w-full h-full object-cover opacity-90" alt="" />
+                            <img src={watchImg} className="absolute inset-0 w-full h-full object-cover opacity-90" alt="Montre portée" />
                         </>
                     ) : null}
                     
@@ -1898,7 +1900,6 @@ export default function App() {
                 <h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('stats')}</h1>
             </div>
             <div className="space-y-6">
-                {/* CALENDAR */}
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2`}><Calendar className="text-indigo-600" size={16} /> {t('calendar')}</h3>
@@ -1907,7 +1908,6 @@ export default function App() {
                     <div className="grid grid-cols-7 gap-1">{renderCalendarGrid()}</div>
                 </div>
 
-                {/* TOP WORN */}
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2`}><TrendingUp className="text-emerald-500" size={16} /> {t('top_worn')}</h3>
@@ -1916,7 +1916,7 @@ export default function App() {
                         </div>
                     </div>
                     <div className="space-y-3">
-                        {displayedTopWatches.map((w, i) => (<div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}><div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div><div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" /></div><div className="flex-1 min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div><div className="font-bold text-indigo-600 text-sm">{w.count}</div></div>))}
+                        {displayedTopWatches.map((w, i) => (<div key={w.id} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border}`}><div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div><div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /></div><div className="flex-1 min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div><div className="font-bold text-indigo-600 text-sm">{w.count}</div></div>))}
                     </div>
                     {allTopWatches.length > 5 && (
                         <button 
@@ -1980,7 +1980,7 @@ export default function App() {
                                 <div key={w.id} onClick={() => setSelectedCalendarWatches(prev => isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id])} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/10' : `${theme.border} hover:${theme.bg}`}`}>
                                     <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-600 border-indigo-600' : `${theme.bgSecondary} ${theme.border}`}`}>{isSelected && <Check size={12} className="text-white" />}</div>
                                     <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-200 shrink-0">
-                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
+                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Miniature" /> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div>
@@ -1998,7 +1998,6 @@ export default function App() {
       );
   }
 
-/* STREAMING_CHUNK:Rendering finance view... */
   function renderFinance() {
     const sCol = { buy: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
     const sSale = { buy: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
@@ -2125,7 +2124,7 @@ export default function App() {
                                                         {tItem.boughtWatches.map((w) => (
                                                             <div key={`buy-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
                                                                 <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
@@ -2144,7 +2143,7 @@ export default function App() {
                                                         {tItem.soldWatches.map((w) => (
                                                             <div key={`sell-${w.id}`} onClick={() => { setSelectedWatch(w); setView('detail'); }} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
                                                                 <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">
-                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover"/> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
+                                                                    {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div>
@@ -2169,7 +2168,6 @@ export default function App() {
     );
   }
 
-/* STREAMING_CHUNK:Rendering Add/Edit form... */
   function renderForm() {
       const isWatch = editingType === 'watch';
       const currentImages = isWatch ? (watchForm.images || (watchForm.image ? [watchForm.image] : [])) : [];
@@ -2183,7 +2181,7 @@ export default function App() {
             <div className="grid grid-cols-3 gap-3">
                 {currentImages.map((img, idx) => (
                     <div key={idx} className={`aspect-square rounded-xl overflow-hidden relative border ${theme.border}`}>
-                        <img src={img} className="w-full h-full object-cover" />
+                        <img src={img} className="w-full h-full object-cover" alt="Photo" />
                         <div className="absolute top-1 left-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10">{idx + 1}/{Math.max(3, currentImages.length)}</div>
                         <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 z-10"><X size={12}/></button>
                         {idx === 0 ? <div className="absolute bottom-0 w-full bg-emerald-500 text-white text-[8px] text-center font-bold py-0.5 z-10">PRINCIPALE</div> : <button type="button" onClick={() => setAsMainImage(idx)} className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-white text-black text-[8px] px-2 py-0.5 rounded font-bold shadow z-10">Set Main</button>}
@@ -2356,9 +2354,94 @@ export default function App() {
       );
   }
 
+  // NOUVELLE PAGE: AMIS (Re-créée pour remplacer la fonction manquante)
+  const renderFriends = () => (
+      <div className="pb-24 px-4">
+          {renderHeader(t('friends'))}
+          <div className="space-y-4 mt-4">
+              <div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}>
+                  <h3 className={`font-bold text-sm mb-2 ${theme.text}`}>Ajouter un ami</h3>
+                  <div className="flex gap-2">
+                      <input value={addFriendId} onChange={e => setAddFriendId(e.target.value)} placeholder="Code secret de l'ami" className={`flex-1 p-2 rounded-lg ${theme.input}`} />
+                      <button onClick={sendFriendRequest} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold">Ajouter</button>
+                  </div>
+              </div>
+              
+              {friendRequests.length > 0 && (
+                  <div className={`p-4 rounded-xl border ${theme.border} ${theme.bgSecondary}`}>
+                      <h3 className={`font-bold text-sm mb-2 text-rose-500`}>{t('requests')}</h3>
+                      {friendRequests.map(req => (
+                          <div key={req.id} className={`flex justify-between items-center p-2 border-b ${theme.border} last:border-0`}>
+                              <span className={`text-sm ${theme.text}`}>{req.fromEmail}</span>
+                              <div className="flex gap-2">
+                                  <button onClick={() => acceptRequest(req)} className="p-1.5 bg-emerald-100 text-emerald-600 rounded"><Check size={16}/></button>
+                                  <button onClick={() => rejectRequest(req.id)} className="p-1.5 bg-rose-100 text-rose-600 rounded"><X size={16}/></button>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              )}
+              
+              <div className={`p-4 rounded-xl border ${theme.border} ${theme.bgSecondary}`}>
+                  <h3 className={`font-bold text-sm mb-2 ${theme.text}`}>{t('friends')}</h3>
+                  {friends.length === 0 && <p className={`text-xs ${theme.textSub}`}>Aucun ami pour le moment.</p>}
+                  {friends.map(f => (
+                      <div key={f.id} className={`flex justify-between items-center p-3 border rounded-lg mb-2 cursor-pointer hover:border-indigo-300 ${theme.border} ${theme.bg}`} onClick={() => loadFriendCollection(f)}>
+                          <span className={`font-medium ${theme.text}`}>{f.name}</span>
+                          <button onClick={(e) => { e.stopPropagation(); removeFriend(f.id); }} className="text-red-500 p-1"><Trash2 size={16}/></button>
+                      </div>
+                  ))}
+              </div>
+
+              <button onClick={handlePreviewOwnProfile} className={`w-full py-3 rounded-xl border ${theme.border} ${theme.bg} ${theme.text} font-bold text-sm`}>
+                  Voir mon profil public (Test)
+              </button>
+              
+              {isFriendsLoading && <div className="flex justify-center p-4"><Loader2 className="animate-spin text-indigo-500" /></div>}
+              
+              {viewingFriend && !isFriendsLoading && (
+                  <div className="mt-6 animate-in slide-in-from-bottom-4">
+                      <h3 className={`font-bold text-lg mb-4 ${theme.text}`}>Collection de {viewingFriend.name}</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                          {friendWatches.length === 0 ? (
+                              <div className={`col-span-2 text-center text-sm py-4 ${theme.textSub}`}>Aucune montre publique.</div>
+                          ) : (
+                              friendWatches.map(w => (
+                                  <div key={w.id} className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} p-2 shadow-sm`}>
+                                      <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-2">
+                                          {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={24} className="m-auto mt-8 text-slate-400"/>}
+                                      </div>
+                                      <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div>
+                                      <div className={`text-xs truncate ${theme.textSub}`}>{w.model}</div>
+                                  </div>
+                              ))
+                          )}
+                      </div>
+                  </div>
+              )}
+          </div>
+      </div>
+  );
+
+  // NOUVELLE PAGE: INVENTAIRE (Re-créée pour remplacer la fonction manquante)
+  const renderSummary = () => (
+      <div className="pb-24 px-4">
+          {renderHeader(t('inventory'))}
+          <div className={`mt-6 p-6 rounded-2xl border ${theme.border} ${theme.bgSecondary} text-center space-y-4`}>
+              <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                  <Download size={32} />
+              </div>
+              <h2 className={`text-xl font-bold ${theme.text}`}>Exporter les données</h2>
+              <p className={`text-sm ${theme.textSub}`}>Téléchargez l'intégralité de votre collection au format CSV pour l'ouvrir dans Excel ou Google Sheets.</p>
+              <button onClick={exportCSV} className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors">
+                  <FileText size={18} /> {t('export_csv')}
+              </button>
+          </div>
+      </div>
+  );
+
   if (loading) return <div className={`flex h-screen items-center justify-center ${theme.bgSecondary}`}><Loader2 className={`animate-spin ${theme.text}`}/></div>;
 
-/* STREAMING_CHUNK:Main application layout... */
   return (
     <div className={`${theme.bg} min-h-screen font-sans ${theme.text}`}>
       <div className={`max-w-md mx-auto ${theme.bgSecondary} min-h-screen shadow-2xl relative`}>
