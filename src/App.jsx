@@ -307,6 +307,11 @@ export default function App() {
   const [statsTimeframe, setStatsTimeframe] = useState('month'); 
   const [isTopWornExpanded, setIsTopWornExpanded] = useState(false);
   const [showOtherStats, setShowOtherStats] = useState(false);
+  
+  // Nouveaux états pour le tri des marques les plus vendues
+  const [showMostSoldBrands, setShowMostSoldBrands] = useState(false);
+  const [mostSoldSortBy, setMostSoldSortBy] = useState('count'); // 'count' ou 'profit'
+
   const [calendarSearchTerm, setCalendarSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('dateDesc');
   const [error, setError] = useState(null); 
@@ -1077,9 +1082,13 @@ export default function App() {
             if (p >= 0) brandStats[brand].profit += p;
             else brandStats[brand].loss += Math.abs(p);
         });
-        return Object.entries(brandStats)
-                     .map(([brand, stats]) => ({ brand, ...stats, total: stats.profit - stats.loss }))
-                     .sort((a, b) => b.count - a.count);
+        const result = Object.entries(brandStats)
+                     .map(([brand, stats]) => ({ brand, ...stats, total: stats.profit - stats.loss }));
+        
+        if (mostSoldSortBy === 'profit') {
+            return result.sort((a, b) => b.total - a.total);
+        }
+        return result.sort((a, b) => b.count - a.count);
     };
     const mostSoldBrands = getMostSoldBrands();
 
@@ -1093,28 +1102,40 @@ export default function App() {
         <div className="mt-4 pt-2"><FinanceCardFull title={t('total_value')} icon={Activity} stats={sTotal} type="total" bgColor="bg-white" onClick={() => {}} theme={theme} /></div>
         
         <div className="mt-6">
-            <h3 className={`font-bold text-sm ${theme.text} uppercase tracking-wider flex items-center gap-2 mb-3`}><Activity size={16}/> Marques les plus vendues</h3>
-            <div className={`${theme.card} border ${theme.border} rounded-xl overflow-hidden shadow-sm`}>
-                <table className="w-full text-left text-xs">
-                    <thead className={`bg-slate-50 dark:bg-slate-800/50 border-b ${theme.border}`}>
-                        <tr>
-                            <th className={`p-3 font-bold ${theme.textSub}`}>Marque</th>
-                            <th className={`p-3 font-bold text-center ${theme.textSub}`}>Modèles</th>
-                            <th className={`p-3 font-bold text-right ${theme.textSub}`}>Bilan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {mostSoldBrands.map(b => (
-                            <tr key={b.brand} className={`border-b ${theme.border} last:border-0`}>
-                                <td className={`p-3 font-bold ${theme.text}`}>{b.brand}</td>
-                                <td className={`p-3 text-center ${theme.text}`}>{b.count}</td>
-                                <td className={`p-3 text-right font-bold ${b.total >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{b.total >= 0 ? '+' : '-'}{formatPrice(Math.abs(b.total))}</td>
+            <button onClick={() => setShowMostSoldBrands(!showMostSoldBrands)} className={`w-full flex justify-between items-center font-bold text-sm ${theme.text} mb-3`}>
+                <span className="flex items-center gap-2"><Activity className="text-blue-500" size={16}/> Marques les plus vendues</span>
+                <ChevronDown className={`transition-transform ${showMostSoldBrands ? 'rotate-180' : ''}`} size={16} />
+            </button>
+            
+            {showMostSoldBrands && (
+                <div className={`${theme.card} border ${theme.border} rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-top-4 mb-6`}>
+                    <div className={`p-2 border-b ${theme.border} bg-slate-50 dark:bg-slate-800/50 flex justify-end`}>
+                        <div className={`flex ${theme.bg} rounded-lg p-0.5 shadow-inner`}>
+                            <button onClick={() => setMostSoldSortBy('count')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${mostSoldSortBy === 'count' ? `${theme.bgSecondary} shadow-sm ${theme.text}` : theme.textSub}`}>Volume</button>
+                            <button onClick={() => setMostSoldSortBy('profit')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${mostSoldSortBy === 'profit' ? `${theme.bgSecondary} shadow-sm ${theme.text}` : theme.textSub}`}>Bénéfice</button>
+                        </div>
+                    </div>
+                    <table className="w-full text-left text-xs">
+                        <thead className={`bg-slate-50 dark:bg-slate-800/50 border-b ${theme.border}`}>
+                            <tr>
+                                <th className={`p-3 font-bold ${theme.textSub}`}>Marque</th>
+                                <th className={`p-3 font-bold text-center ${theme.textSub}`}>Modèles</th>
+                                <th className={`p-3 font-bold text-right ${theme.textSub}`}>Bilan</th>
                             </tr>
-                        ))}
-                        {mostSoldBrands.length === 0 && <tr><td colSpan="3" className={`p-4 text-center ${theme.textSub}`}>Aucune vente.</td></tr>}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {mostSoldBrands.map(b => (
+                                <tr key={b.brand} className={`border-b ${theme.border} last:border-0`}>
+                                    <td className={`p-3 font-bold ${theme.text}`}>{b.brand}</td>
+                                    <td className={`p-3 text-center ${theme.text}`}>{b.count}</td>
+                                    <td className={`p-3 text-right font-bold ${b.total >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{b.total >= 0 ? '+' : '-'}{formatPrice(Math.abs(b.total))}</td>
+                                </tr>
+                            ))}
+                            {mostSoldBrands.length === 0 && <tr><td colSpan="3" className={`p-4 text-center ${theme.textSub}`}>Aucune vente.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
 
         <div className="mt-6">
