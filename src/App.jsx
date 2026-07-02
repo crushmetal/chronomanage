@@ -1,14 +1,14 @@
 /* eslint-disable */
 // @ts-nocheck
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, AlertCircle, Package, DollarSign, FileText, Box, Loader2,
   ChevronLeft, ChevronsLeft, ChevronsRight, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc, updateDoc } from 'firebase/firestore';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc } from 'firebase/firestore';
 
 // ==========================================================================
 // CONFIGURATION & DICTIONNAIRE
@@ -309,7 +309,6 @@ export default function App() {
   const [watchForm, setWatchForm] = useState(DEFAULT_WATCH_STATE);
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
 
-  // NEW: State pour se souvenir de la page précédente avant d'ouvrir un détail
   const [viewBeforeDetail, setViewBeforeDetail] = useState('list');
 
   const scrollRef = useRef(null);
@@ -345,8 +344,6 @@ export default function App() {
   const toggleVisibility = async (watch) => { const newVal = !watch.publicVisible; setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: newVal } : w)); if (!useLocalStorage) { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), { ...watch, publicVisible: newVal }, { merge: true }); } catch (e) { setWatches(prev => prev.map(w => w.id === watch.id ? { ...w, publicVisible: !newVal } : w)); } } };
   const handleMoveToCollection = async (watch) => { if (!confirm(t('move_collection') + " ?")) return; const updatedWatch = { ...watch, status: 'collection', dateAdded: new Date().toISOString() }; setWatches(prev => prev.map(w => w.id === watch.id ? updatedWatch : w)); setSelectedWatch(updatedWatch); if (!useLocalStorage) { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'watches', watch.id), updatedWatch, { merge: true }); } catch (e) {} } };
   
-  const setAsMainImage = (index) => { setWatchForm(prev => { const currentImages = [...(prev.images || [])]; if (index >= currentImages.length) return prev; const temp = currentImages[0]; currentImages[0] = currentImages[index]; currentImages[index] = temp; return { ...prev, images: currentImages, image: currentImages[0] }; }); };
-
   const handleCalendarDayClick = (dateStr) => { setSelectedCalendarDate(dateStr); setCalendarSearchTerm(''); const existing = calendarEvents.find(e => e.id === dateStr || e.date === dateStr); setSelectedCalendarWatches(existing ? (existing.watches || []) : []); };
   const handleCalendarSave = async () => { if (!selectedCalendarDate) return; let updatedEvents = [...calendarEvents]; const existingIdx = updatedEvents.findIndex(e => e.id === selectedCalendarDate || e.date === selectedCalendarDate); const eventData = { date: selectedCalendarDate, watches: selectedCalendarWatches }; if (selectedCalendarWatches.length === 0) { if (existingIdx >= 0) updatedEvents.splice(existingIdx, 1); } else { if (existingIdx >= 0) updatedEvents[existingIdx] = { ...updatedEvents[existingIdx], ...eventData }; else updatedEvents.push({ id: selectedCalendarDate, ...eventData }); } setCalendarEvents(updatedEvents); setSelectedCalendarDate(null); if (!useLocalStorage) { try { const docRef = doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, 'calendar', selectedCalendarDate); if (selectedCalendarWatches.length === 0) await deleteDoc(docRef); else await setDoc(docRef, eventData); } catch(e) {} } };
 
@@ -388,13 +385,37 @@ export default function App() {
       else { const base64 = await compressImage(files[0]); setBraceletForm(prev => ({ ...prev, image: base64 })); }
     } catch (err) {}
   };
+  
   const removeImage = (index) => { setWatchForm(prev => { const currentImages = [...(prev.images || [])]; currentImages.splice(index, 1); return { ...prev, images: currentImages, image: currentImages[0] || null }; }); };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); const id = editingId || Date.now().toString(); const isWatch = editingType === 'watch'; let data;
-    if (isWatch) { const images = watchForm.images && watchForm.images.length > 0 ? watchForm.images : (watchForm.image ? [watchForm.image] : []); data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice || 0), sellingPrice: Number(watchForm.sellingPrice || 0), minPrice: Number(watchForm.minPrice || 0), dateAdded: watchForm.dateAdded || new Date().toISOString(), images: images, image: images[0] || null }; } else { data = { ...braceletForm, id, dateAdded: braceletForm.dateAdded || new Date().toISOString() }; }
-    if (useLocalStorage) { if (isWatch) setWatches(prev => editingId ? prev.map(w => w.id === id ? data : w) : [data, ...prev]); else setBracelets(prev => editingId ? prev.map(b => b.id === id ? data : b) : [data, ...prev]); closeForm(data); } 
-    else { try { await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, isWatch ? 'watches' : 'bracelets', id), data); closeForm(data); } catch(e) {} }
+    e.preventDefault(); 
+    const id = editingId || Date.now().toString(); 
+    const isWatch = editingType === 'watch'; 
+    let data;
+    
+    if (isWatch) { 
+        const images = watchForm.images && watchForm.images.length > 0 ? watchForm.images : (watchForm.image ? [watchForm.image] : []); 
+        data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice || 0), sellingPrice: Number(watchForm.sellingPrice || 0), minPrice: Number(watchForm.minPrice || 0), dateAdded: watchForm.dateAdded || new Date().toISOString(), images: images, image: images[0] || null }; 
+    } else { 
+        data = { ...braceletForm, id, dateAdded: braceletForm.dateAdded || new Date().toISOString() }; 
+    }
+    
+    const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+
+    if (useLocalStorage) { 
+        if (isWatch) setWatches(prev => editingId ? prev.map(w => w.id === id ? cleanData : w) : [cleanData, ...prev]); 
+        else setBracelets(prev => editingId ? prev.map(b => b.id === id ? cleanData : b) : [cleanData, ...prev]); 
+        closeForm(cleanData); 
+    } else { 
+        try { 
+            await setDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, isWatch ? 'watches' : 'bracelets', id), cleanData); 
+            closeForm(cleanData); 
+        } catch(e) { 
+            alert("Erreur lors de la sauvegarde : " + e.message); 
+            console.error("Firebase Erreur:", e);
+        } 
+    }
   };
 
   const exportCSV = () => {
@@ -403,22 +424,17 @@ export default function App() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "collection.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
 
-  const closeForm = (data) => { if (editingType === 'watch') { if(selectedWatch) { setSelectedWatch(data); setViewedImageIndex(0); } setView(data.status === 'wishlist' ? 'wishlist' : 'list'); } else { setView('list'); } setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); };
+  const closeForm = (data) => { if (editingType === 'watch') { if(selectedWatch) { setSelectedWatch(data); setViewedImageIndex(0); } setView(data.status === 'wishlist' ? 'wishlist' : (viewBeforeDetail === 'detail' ? 'list' : viewBeforeDetail)); } else { setView('list'); } setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); };
   
   const openAdd = () => { setEditingId(null); setSelectedWatch(null); setWatchForm({ ...DEFAULT_WATCH_STATE, status: view === 'wishlist' ? 'wishlist' : 'collection' }); setBraceletForm(DEFAULT_BRACELET_STATE); setEditingType((filter === 'bracelets' && view !== 'wishlist') ? 'bracelet' : 'watch'); setView('add'); };
   
   const handleEdit = (item, type) => { if (type === 'watch') { const safeImages = item.images || (item.image ? [item.image] : []); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages }); } else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item }); setEditingType(type); setEditingId(item.id); setView('add'); };
   
-  const handleCancelForm = () => { setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); if (selectedWatch) { setView('detail'); } else { setView('list'); } };
+  const handleCancelForm = () => { setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); if (selectedWatch) { setView('detail'); } else { setView(viewBeforeDetail); } };
   
   const handleDelete = async (id, type) => { if(!confirm(t('delete') + " ?")) return; if(useLocalStorage) { if (type === 'watch') setWatches(prev => prev.filter(w => w.id !== id)); else setBracelets(prev => prev.filter(b => b.id !== id)); setView('list'); } else { await deleteDoc(doc(db, 'artifacts', APP_ID_STABLE, 'users', user.uid, type === 'watch' ? 'watches' : 'bracelets', id)); setView('list'); } };
 
-  // NEW: Centralized function to open detail view and remember previous state
-  const openWatchDetail = (watch) => {
-      setViewBeforeDetail(view);
-      setSelectedWatch(watch);
-      setView('detail');
-  };
+  const openWatchDetail = (watch) => { setViewBeforeDetail(view); setSelectedWatch(watch); setView('detail'); };
 
   const activeWatchesCount = watches.filter(w => w.status === 'collection').length;
 
@@ -434,6 +450,99 @@ export default function App() {
     else { sorted.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime(); return tb - ta; }); }
     return sorted;
   }, [watches, searchTerm, sortOrder]);
+
+  function renderForm() {
+    const isWatch = editingType === 'watch';
+    const form = isWatch ? watchForm : braceletForm;
+    const setForm = isWatch ? setWatchForm : setBraceletForm;
+    const handleInput = (field, val) => setForm(prev => ({...prev, [field]: val}));
+
+    return (
+      <div className={`pb-24 p-4 min-h-screen ${theme.bgSecondary}`}>
+        <div className={`flex justify-between items-center mb-6 sticky top-0 py-3 z-10 ${theme.bgSecondary}`}>
+            <h1 className={`text-2xl font-bold font-serif ${theme.text}`}>{editingId ? t('edit') : t('add_new')}</h1>
+            <button type="button" onClick={handleCancelForm} className={`p-2 rounded-full border ${theme.border} ${theme.bg} ${theme.textSub}`}><X size={20}/></button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {isWatch && (
+            <div className={`flex p-1 rounded-xl border ${theme.border} ${theme.bg} overflow-x-auto no-scrollbar`}>
+                {['collection', 'forsale', 'sold', 'wishlist'].map(s => (
+                    <button key={s} type="button" onClick={() => handleInput('status', s)} className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-colors whitespace-nowrap ${form.status === s ? `bg-white dark:bg-slate-700 shadow-sm ${theme.text}` : theme.textSub}`}>{t(s)}</button>
+                ))}
+            </div>
+          )}
+          
+          <div className="space-y-3">
+            <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Camera size={14}/> Photos</h3>
+            <div className="grid grid-cols-4 gap-2">
+              {(form.images || []).map((img, idx) => (
+                  <div key={idx} className={`relative aspect-square rounded-xl overflow-hidden border ${theme.border}`}><img src={img} className="w-full h-full object-cover" alt="Preview"/><button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full p-1 shadow-sm"><X size={12}/></button></div>
+              ))}
+              {(form.images || []).length < 3 && (
+                  <label className={`aspect-square rounded-xl border-2 border-dashed ${theme.border} flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors`}><Plus className={theme.textSub} size={20}/><span className={`text-[10px] ${theme.textSub} font-medium mt-1`}>Ajouter</span><input type="file" className="hidden" multiple onChange={(e) => handleImageUpload(e, isWatch ? 'watch' : 'bracelet')} accept="image/*"/></label>
+              )}
+            </div>
+          </div>
+
+          {isWatch ? (
+            <>
+              <div className="space-y-3">
+                <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Settings size={14}/> Identité</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <input className={`w-full p-3 rounded-xl border ${theme.input}`} placeholder={t('brand')} value={form.brand} onChange={e => handleInput('brand', e.target.value)} required />
+                  <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder={t('model')} value={form.model} onChange={e => handleInput('model', e.target.value)} required />
+                </div>
+                <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder={t('reference')} value={form.reference || ''} onChange={e => handleInput('reference', e.target.value)} />
+              </div>
+
+              <div className="space-y-3">
+                <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><DollarSign size={14}/> Finances & Dates</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder={t('purchase_price')} value={form.purchasePrice || ''} onChange={e => handleInput('purchasePrice', e.target.value)} />
+                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder={t('selling_price')} value={form.sellingPrice || ''} onChange={e => handleInput('sellingPrice', e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><label className="text-[10px] uppercase font-bold text-slate-500 ml-1">{t('date_purchase')}</label><input type="date" className={`w-full p-2.5 rounded-lg border ${theme.input} text-sm`} value={form.purchaseDate || ''} onChange={e => handleInput('purchaseDate', e.target.value)} /></div>
+                  {form.status === 'sold' && <div><label className="text-[10px] uppercase font-bold text-slate-500 ml-1">{t('date_sold')}</label><input type="date" className={`w-full p-2.5 rounded-lg border ${theme.input} text-sm`} value={form.soldDate || ''} onChange={e => handleInput('soldDate', e.target.value)} /></div>}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Layers size={14}/> Technique</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('diameter')} value={form.diameter || ''} onChange={e => handleInput('diameter', e.target.value)} />
+                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('thickness')} value={form.thickness || ''} onChange={e => handleInput('thickness', e.target.value)} />
+                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('lug_width')} value={form.strapWidth || ''} onChange={e => handleInput('strapWidth', e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('movement')} value={form.movement || ''} onChange={e => handleInput('movement', e.target.value)} />
+                  <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('movement_model')} value={form.movementModel || ''} onChange={e => handleInput('movementModel', e.target.value)} />
+                  <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('dial')} value={form.dialColor || ''} onChange={e => handleInput('dialColor', e.target.value)} />
+                  <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('glass')} value={form.glass || ''} onChange={e => handleInput('glass', e.target.value)} />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><BookOpen size={14}/> Histoire & Notes</h3>
+                  <textarea className={`w-full p-3 rounded-lg border ${theme.input} h-24 text-sm`} placeholder={t('notes')} value={form.conditionNotes || ''} onChange={e => handleInput('conditionNotes', e.target.value)}></textarea>
+                  <textarea className={`w-full p-3 rounded-lg border ${theme.input} h-20 text-sm`} placeholder={t('history_brand')} value={form.historyBrand || ''} onChange={e => handleInput('historyBrand', e.target.value)}></textarea>
+                  <textarea className={`w-full p-3 rounded-lg border ${theme.input} h-20 text-sm`} placeholder={t('history_model')} value={form.historyModel || ''} onChange={e => handleInput('historyModel', e.target.value)}></textarea>
+              </div>
+            </>
+          ) : (
+              <div className="space-y-3">
+                  <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Marque (Optionnel)" value={form.brand || ''} onChange={e => handleInput('brand', e.target.value)} />
+                  <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Type (Ex: Cuir, Acier)" value={form.type || ''} onChange={e => handleInput('type', e.target.value)} required />
+                  <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Largeur (mm)" value={form.width || ''} onChange={e => handleInput('width', e.target.value)} required />
+              </div>
+          )}
+
+          <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 mt-4"><Save size={20}/> {t('save')}</button>
+        </form>
+      </div>
+    );
+  }
 
   function renderBox() {
       const handleBoxClick = () => { setIsBoxOpening(true); setTimeout(() => { setFilter('collection'); setView('list'); setIsBoxOpening(false); }, 800); };
@@ -730,7 +839,7 @@ export default function App() {
                         <div className="flex gap-1 items-center">
                             <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear() - 1, currentMonth.getMonth(), 1))} className={`p-1 hover:${theme.bg} rounded ${theme.text}`}><ChevronsLeft size={16}/></button>
                             <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className={`p-1 hover:${theme.bg} rounded ${theme.text}`}><ChevronLeft size={16}/></button>
-                            <span className={`text-xs font-bold capitalize w-24 text-center ${theme.text}`}>{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+                            <span className={`text-xs font-bold capitalize w-24 text-center ${theme.text}`}>{currentMonth.toLocaleString('default', { month: 'short', year: 'numeric' })}</span>
                             <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className={`p-1 hover:${theme.bg} rounded ${theme.text}`}><ChevronRight size={16}/></button>
                             <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear() + 1, currentMonth.getMonth(), 1))} className={`p-1 hover:${theme.bg} rounded ${theme.text}`}><ChevronsRight size={16}/></button>
                         </div>
