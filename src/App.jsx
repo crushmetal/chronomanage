@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, AlertCircle, Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ChevronsLeft, ChevronsRight, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag
+  ChevronLeft, ChevronsLeft, ChevronsRight, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag, Euro, ChevronDown
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -14,8 +14,8 @@ import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, ge
 // CONFIGURATION & DICTIONNAIRE
 // ==========================================================================
 const TRANSLATIONS = {
-  fr: { box: "Coffre", list: "Liste", wishlist: "Souhaits", finance: "Finance", stats: "Stats", gallery: "Galerie", myWatches: "Mes Montres", pieces: "pièces", piece: "pièce", search: "Rechercher...", collection: "Ma Collection", forsale: "En Vente", sold: "Vendues", bracelets: "Bracelets", settings: "Paramètres", language: "Langue", theme: "Thème", light: "Clair", dark: "Sombre", total_value: "Valeur Totale", profit: "Plus-value", brand: "Marque", model: "Modèle", reference: "Référence", year: "Année", model_year: "Année du modèle", price: "Prix", add_new: "Ajouter", edit: "Modifier", delete: "Supprimer", save: "Sauvegarder", cancel: "Annuler", notes: "Notes", history: "Histoire", history_brand: "Histoire Marque", history_model: "Histoire Modèle", specs: "Caractéristiques", unknown: "Inconnu", total_displayed: "montres affichées", login_google: "Connexion Google", logout: "Déconnexion", config_cloud: "Config Cloud", export_csv: "Exporter CSV", filter_all: "Tout", all: "Tout", inventory: "Inventaire", friends: "Amis", requests: "Demandes", limited_edition: "EDITION LIMITÉE", movement: "Mouvement", movement_model: "Calibre/Modèle", manual: "Manuel", automatic: "Automatique", quartz: "Quartz", diameter: "Diamètre", thickness: "Épaisseur", lug_width: "Entre-corne", water_res: "Étanchéité", glass: "Verre", dial: "Cadran", country: "Pays", box_included: "Boîte", warranty: "Garantie", revision: "Révision", battery: "Pile", weight: "Poids", visibility_friends: "Visible par les amis", private_note: "Si décoché, cette montre restera privée.", move_collection: "J'ai obtenu cette montre !", set_main_image: "Définir principale", add_photo: "Ajouter", link_web: "Lien Web", visit_site: "Visiter le site marchand", purchase_price: "Prix Achat", selling_price: "Prix Vente/Estim", min_price: "Prix Min (Privé)", clock_style: "Style Horloge", box_style: "Style Coffre", color_digital: "Heure Digitale", color_h_hand: "Aig. Heures", color_m_hand: "Aig. Minutes", color_s_hand: "Aig. Secondes", color_index_main: "Gros Index", color_index_small: "Petits Index", color_leather: "Cuir Extérieur", color_interior: "Intérieur", color_cushion: "Cushions", top_worn: "Top Portées", calendar: "Calendrier", month: "Mois", all_time: "Tout", fav_brands: "Marques Favorites", fav_dials: "Couleurs Cadran", finance_timeline: "Chronologie Financière", spent: "Dépenses", gained: "Gains", balance: "Bilan", identity: "Identité", origin_maintenance: "Origine & Entretien", technical: "Technique", financial_status: "Finances & Status", date_release: "Date de Sortie", date_purchase: "Date d'Achat", date_sold: "Date de Vente", market_value: "Estimation du Marché", find_used: "Trouver d'Occasion", export_sheet: "Fiches & Documents", sheet_insurance: "Fiche Assurance", sheet_sale: "Fiche de Vente", print: "Imprimer", condition_rating: "État (1-10)", condition_comment: "Commentaire sur l'état", show_history: "Voir tout l'historique", show_less: "Réduire", year_summary: "Bilan Année", stats_usage: "Statistiques d'Usage", worn_this_month: "Ce mois", worn_this_year: "Cette année", worn_last_year: "Année dernière", invoice: "Facture", add_invoice: "Ajouter Facture", view_invoice: "Voir Facture", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Prix (Croissant)", sort_price_desc: "Prix (Décroissant)", purchases: "Achats", sales: "Ventes", show_all: "Voir tout" },
-  en: { box: "Box", list: "List", wishlist: "Wishlist", finance: "Finances", stats: "Statistics", gallery: "Gallery", myWatches: "My Watches", pieces: "pieces", piece: "piece", search: "Search...", collection: "Collection", forsale: "For Sale", sold: "Sold", bracelets: "Straps", settings: "Settings", language: "Language", theme: "Theme", light: "Light", dark: "Dark", total_value: "Total Value", profit: "Profit", brand: "Brand", model: "Model", reference: "Reference", year: "Year", model_year: "Model Year", price: "Price", add_new: "Add New", edit: "Edit", delete: "Delete", save: "Save", cancel: "Cancel", notes: "Notes", history: "History", history_brand: "Brand History", history_model: "Model History", specs: "Specifications", unknown: "Unknown", total_displayed: "watches displayed", login_google: "Google Login", logout: "Logout", config_cloud: "Cloud Config", export_csv: "Export CSV", filter_all: "All", all: "All", inventory: "Inventory", friends: "Friends", requests: "Requests", limited_edition: "LIMITED EDITION", movement: "Movement", movement_model: "Caliber/Model", manual: "Manual", automatic: "Automatic", quartz: "Quartz", diameter: "Diameter", thickness: "Thickness", lug_width: "Lug Width", water_res: "Water Res.", glass: "Glass", dial: "Dial", country: "Country", box_included: "Box", warranty: "Warranty", revision: "Service", battery: "Battery", weight: "Weight", visibility_friends: "Visible to friends", private_note: "If unchecked, stays private.", move_collection: "I got this watch!", set_main_image: "Set as main", add_photo: "Add", link_web: "Web Link", visit_site: "Visit Website", purchase_price: "Purchase Price", selling_price: "Selling/Estim Price", min_price: "Min Price (Private)", clock_style: "Clock Style", box_style: "Box Style", color_digital: "Digital Time", color_h_hand: "Hour Hand", color_m_hand: "Minute Hand", color_s_hand: "Second Hand", color_index_main: "Large Indexes", color_index_small: "Small Indexes", color_leather: "Outer Leather", color_interior: "Interior", color_cushion: "Cushions", top_worn: "Top Worn", calendar: "Calendar", month: "Month", all_time: "All Time", fav_brands: "Favorite Brands", fav_dials: "Dial Colors", finance_timeline: "Financial Timeline", spent: "Spent", gained: "Gained", balance: "Balance", identity: "Identity", origin_maintenance: "Origin & Maintenance", technical: "Technical", financial_status: "Finances & Status", date_release: "Release Date", date_purchase: "Purchase Date", date_sold: "Sold Date", market_value: "Market Estimation", find_used: "Find Used", export_sheet: "Sheets & Docs", sheet_insurance: "Insurance Sheet", sheet_sale: "Sale Sheet", print: "Print", condition_rating: "Condition (1-10)", condition_comment: "Condition Details", show_history: "Show Full History", show_less: "Show Less", year_summary: "Year Summary", stats_usage: "Usage Statistics", worn_this_month: "This Month", worn_this_year: "This Year", worn_last_year: "Last Year", invoice: "Invoice", add_invoice: "Add Invoice", view_invoice: "View Invoice", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Price (Asc)", sort_price_desc: "Price (Desc)", purchases: "Purchases", sales: "Sales", show_all: "Show All" }
+  fr: { box: "Coffre", list: "Liste", wishlist: "Souhaits", finance: "Finance", stats: "Stats", gallery: "Galerie", myWatches: "Mes Montres", pieces: "pièces", piece: "pièce", search: "Rechercher...", collection: "Ma Collection", forsale: "En Vente", sold: "Vendues", bracelets: "Bracelets", settings: "Paramètres", language: "Langue", theme: "Thème", light: "Clair", dark: "Sombre", total_value: "Valeur Totale", profit: "Plus-value", brand: "Marque", model: "Modèle", reference: "Référence", year: "Année", model_year: "Année du modèle", price: "Prix", add_new: "Ajouter", edit: "Modifier", delete: "Supprimer", save: "Sauvegarder", cancel: "Annuler", notes: "Notes", history: "Histoire", history_brand: "Histoire Marque", history_model: "Histoire Modèle", specs: "Caractéristiques", unknown: "Inconnu", total_displayed: "montres affichées", login_google: "Connexion Google", logout: "Déconnexion", config_cloud: "Config Cloud", export_csv: "Exporter CSV", filter_all: "Tout", all: "Tout", inventory: "Inventaire", friends: "Amis", requests: "Demandes", limited_edition: "EDITION LIMITÉE", movement: "Mouvement", movement_model: "Calibre/Modèle", manual: "Manuel", automatic: "Automatique", quartz: "Quartz", diameter: "Diamètre", thickness: "Épaisseur", lug_width: "Entre-corne", water_res: "Étanchéité", glass: "Verre", dial: "Cadran", country: "Pays", box_included: "Boîte", warranty: "Garantie", revision: "Révision", battery: "Pile", weight: "Poids", visibility_friends: "Visible par les amis", private_note: "Si décoché, cette montre restera privée.", move_collection: "J'ai obtenu cette montre !", set_main_image: "Définir principale", add_photo: "Ajouter", link_web: "Lien Web", visit_site: "Visiter le site marchand", purchase_price: "Prix Achat", selling_price: "Prix Vente / Estimation", min_price: "Prix Min (Privé)", clock_style: "Style Horloge", box_style: "Style Coffre", color_digital: "Heure Digitale", color_h_hand: "Aig. Heures", color_m_hand: "Aig. Minutes", color_s_hand: "Aig. Secondes", color_index_main: "Gros Index", color_index_small: "Petits Index", color_leather: "Cuir Extérieur", color_interior: "Intérieur", color_cushion: "Cushions", top_worn: "Top Portées", calendar: "Calendrier", month: "Mois", all_time: "Tout", fav_brands: "Marques Favorites", fav_dials: "Couleurs Cadran", finance_timeline: "Chronologie Financière", spent: "Dépenses", gained: "Gains", balance: "Bilan", identity: "Identité", origin_maintenance: "Origine & Entretien", technical: "Technique", financial_status: "Finances & Status", date_release: "Date de Sortie", date_purchase: "Date d'Achat", date_sold: "Date de Vente", market_value: "Estimation du Marché", find_used: "Trouver d'Occasion", export_sheet: "Fiches & Documents", sheet_insurance: "Fiche Assurance", sheet_sale: "Fiche de Vente", print: "Imprimer", condition_rating: "État (1-10)", condition_comment: "Commentaire sur l'état", show_history: "Voir tout l'historique", show_less: "Réduire", year_summary: "Bilan Année", stats_usage: "Statistiques d'Usage", worn_this_month: "Ce mois", worn_this_year: "Cette année", worn_last_year: "Année dernière", invoice: "Facture", add_invoice: "Ajouter Facture", view_invoice: "Voir Facture", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Prix (Croissant)", sort_price_desc: "Prix (Décroissant)", purchases: "Achats", sales: "Ventes", show_all: "Voir tout" },
+  en: { box: "Box", list: "List", wishlist: "Wishlist", finance: "Finances", stats: "Statistics", gallery: "Gallery", myWatches: "My Watches", pieces: "pieces", piece: "piece", search: "Search...", collection: "Collection", forsale: "For Sale", sold: "Sold", bracelets: "Straps", settings: "Settings", language: "Language", theme: "Theme", light: "Light", dark: "Dark", total_value: "Total Value", profit: "Profit", brand: "Brand", model: "Model", reference: "Reference", year: "Year", model_year: "Model Year", price: "Price", add_new: "Add New", edit: "Edit", delete: "Delete", save: "Save", cancel: "Cancel", notes: "Notes", history: "History", history_brand: "Brand History", history_model: "Model History", specs: "Specifications", unknown: "Unknown", total_displayed: "watches displayed", login_google: "Google Login", logout: "Logout", config_cloud: "Cloud Config", export_csv: "Export CSV", filter_all: "All", all: "All", inventory: "Inventory", friends: "Friends", requests: "Requests", limited_edition: "LIMITED EDITION", movement: "Movement", movement_model: "Caliber/Model", manual: "Manual", automatic: "Automatic", quartz: "Quartz", diameter: "Diameter", thickness: "Thickness", lug_width: "Lug Width", water_res: "Water Res.", glass: "Glass", dial: "Dial", country: "Country", box_included: "Box", warranty: "Warranty", revision: "Service", battery: "Battery", weight: "Weight", visibility_friends: "Visible to friends", private_note: "If unchecked, stays private.", move_collection: "I got this watch!", set_main_image: "Set as main", add_photo: "Add", link_web: "Web Link", visit_site: "Visit Website", purchase_price: "Purchase Price", selling_price: "Selling / Estim Price", min_price: "Min Price (Private)", clock_style: "Clock Style", box_style: "Box Style", color_digital: "Digital Time", color_h_hand: "Hour Hand", color_m_hand: "Minute Hand", color_s_hand: "Second Hand", color_index_main: "Large Indexes", color_index_small: "Small Indexes", color_leather: "Outer Leather", color_interior: "Interior", color_cushion: "Cushions", top_worn: "Top Worn", calendar: "Calendar", month: "Month", all_time: "All Time", fav_brands: "Favorite Brands", fav_dials: "Dial Colors", finance_timeline: "Financial Timeline", spent: "Spent", gained: "Gained", balance: "Balance", identity: "Identity", origin_maintenance: "Origin & Maintenance", technical: "Technical", financial_status: "Finances & Status", date_release: "Release Date", date_purchase: "Purchase Date", date_sold: "Sold Date", market_value: "Market Estimation", find_used: "Find Used", export_sheet: "Sheets & Docs", sheet_insurance: "Insurance Sheet", sheet_sale: "Sale Sheet", print: "Print", condition_rating: "Condition (1-10)", condition_comment: "Condition Details", show_history: "Show Full History", show_less: "Show Less", year_summary: "Year Summary", stats_usage: "Usage Statistics", worn_this_month: "This Month", worn_this_year: "This Year", worn_last_year: "Last Year", invoice: "Invoice", add_invoice: "Add Invoice", view_invoice: "View Invoice", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Price (Asc)", sort_price_desc: "Price (Desc)", purchases: "Purchases", sales: "Sales", show_all: "Show All" }
 };
 
 const productionConfig = { apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o", authDomain: "chronomanagerfinal.firebaseapp.com", projectId: "chronomanagerfinal", storageBucket: "chronomanagerfinal.firebasestorage.app", messagingSenderId: "913764049964", appId: "1:913764049964:web:542604509381001b801d89" };
@@ -31,7 +31,7 @@ const LOCAL_CONFIG_KEY = 'chrono_firebase_config';
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
 
-const DEFAULT_WATCH_STATE = { brand: '', model: '', reference: '', diameter: '', year: '', movement: '', movementModel: '', country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', dialColor: '', batteryModel: '', isLimitedEdition: false, limitedNumber: '', limitedTotal: '', publicVisible: true, box: '', warrantyDate: '', revision: '', purchasePrice: '', sellingPrice: '', minPrice: '', purchaseDate: '', soldDate: '', status: 'collection', conditionNotes: '', link: '', historyBrand: '', historyModel: '', conditionRating: '', conditionComment: '', image: null, images: [], invoice: null };
+const DEFAULT_WATCH_STATE = { brand: '', model: '', reference: '', diameter: '', year: '', movement: '', movementModel: '', powerReserve: '', jewels: '', country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', dialColor: '', batteryModel: '', isLimitedEdition: false, limitedNumber: '', limitedTotal: '', publicVisible: true, box: '', warrantyDate: '', revision: '', purchasePrice: '', sellingPrice: '', minPrice: '', purchaseDate: '', soldDate: '', status: 'collection', conditionNotes: '', link: '', historyBrand: '', historyModel: '', conditionRating: '', conditionComment: '', image: null, images: [], invoice: null };
 const DEFAULT_BRACELET_STATE = { width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' };
 
 const tryInitFirebase = (config) => {
@@ -191,6 +191,18 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                 </div>
                 {isSale && (watch.historyBrand || watch.historyModel) && (<div className="space-y-4">{watch.historyBrand && (<div><h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_brand')}</h3><p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyBrand}</p></div>)}{watch.historyModel && (<div><h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('history_model')}</h3><p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.historyModel}</p></div>)}</div>)}
                 {isSale && (<div className="border-t-2 border-black pt-4 mt-8 text-center text-sm text-slate-500"><p>Contactez le vendeur pour plus d'informations.</p><div className="mt-4 border border-dashed border-slate-300 p-4 rounded-lg inline-block">QR Code / Contact Info Placeholder</div></div>)}
+                
+                {/* Facture d'achat pour l'assurance */}
+                {!isSale && watch.invoice && (
+                    <div className="mt-8 border-t-2 border-black pt-8 print:break-before-page">
+                       <h3 className="font-bold uppercase mb-4 text-center">Facture d'achat / Justificatif</h3>
+                       {watch.invoice.startsWith('data:application/pdf') ? (
+                          <iframe src={watch.invoice} className="w-full h-[800px] border border-slate-200 print:h-[1000px]" title="Facture"/>
+                       ) : (
+                          <img src={watch.invoice} className="w-full max-w-full h-auto mx-auto object-contain" alt="Facture"/>
+                       )}
+                    </div>
+                )}
                 <div className="print:fixed print:bottom-4 print:left-0 print:w-full text-center text-[10px] text-slate-400">Généré par ChronoManager - {new Date().toLocaleDateString()}</div>
             </div>
         </div>
@@ -294,6 +306,7 @@ export default function App() {
   const [selectedCalendarWatches, setSelectedCalendarWatches] = useState([]);
   const [statsTimeframe, setStatsTimeframe] = useState('month'); 
   const [isTopWornExpanded, setIsTopWornExpanded] = useState(false);
+  const [showOtherStats, setShowOtherStats] = useState(false);
   const [calendarSearchTerm, setCalendarSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('dateDesc');
   const [error, setError] = useState(null); 
@@ -380,13 +393,42 @@ export default function App() {
   const handleImageUpload = async (e, type) => {
     const files = Array.from(e.target.files); if (!files || files.length === 0) return;
     try { 
-      if (type === 'watch') { const base64Images = await Promise.all(files.map(file => compressImage(file))); setWatchForm(prev => { const currentImages = prev.images || (prev.image ? [prev.image] : []); const combined = [...currentImages, ...base64Images]; if (combined.length > 3) { alert("Max 3 photos"); combined.splice(3); } return { ...prev, images: combined, image: combined[0] || null }; }); } 
-      else if (type === 'invoice') { const base64 = await compressImage(files[0]); setWatchForm(prev => ({...prev, invoice: base64})); } 
-      else { const base64 = await compressImage(files[0]); setBraceletForm(prev => ({ ...prev, image: base64 })); }
+      if (type === 'watch') { 
+          const base64Images = await Promise.all(files.map(file => compressImage(file))); 
+          setWatchForm(prev => { const currentImages = prev.images || (prev.image ? [prev.image] : []); const combined = [...currentImages, ...base64Images]; if (combined.length > 3) { alert("Max 3 photos"); combined.splice(3); } return { ...prev, images: combined, image: combined[0] || null }; }); 
+      } 
+      else if (type === 'invoice') { 
+          const file = files[0];
+          if (file.type === 'application/pdf') {
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = (e) => setWatchForm(prev => ({...prev, invoice: e.target.result}));
+          } else {
+              const base64 = await compressImage(file); 
+              setWatchForm(prev => ({...prev, invoice: base64})); 
+          }
+      } 
+      else { 
+          const base64 = await compressImage(files[0]); 
+          setBraceletForm(prev => ({ ...prev, image: base64 })); 
+      }
     } catch (err) {}
   };
   
   const removeImage = (index) => { setWatchForm(prev => { const currentImages = [...(prev.images || [])]; currentImages.splice(index, 1); return { ...prev, images: currentImages, image: currentImages[0] || null }; }); };
+
+  const closeForm = (data) => { 
+      if (editingType === 'watch') { 
+          if(selectedWatch) { 
+              setSelectedWatch(data); setViewedImageIndex(0); setView('detail'); 
+          } else {
+              setView(data.status === 'wishlist' ? 'wishlist' : 'list'); 
+          }
+      } else { 
+          setView('list'); 
+      } 
+      setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); 
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault(); 
@@ -423,8 +465,6 @@ export default function App() {
     watches.forEach(w => { const row = [ w.status, w.brand, w.model, w.purchasePrice, w.sellingPrice, w.minPrice, (w.sellingPrice||0)-w.purchasePrice, w.diameter, w.year, w.reference, w.movement, (w.conditionNotes||"").replace(/(\r\n|\n|\r|;)/gm, " ") ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`); csvContent += row.join(sep) + "\n"; });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "collection.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
-
-  const closeForm = (data) => { if (editingType === 'watch') { if(selectedWatch) { setSelectedWatch(data); setViewedImageIndex(0); } setView(data.status === 'wishlist' ? 'wishlist' : (viewBeforeDetail === 'detail' ? 'list' : viewBeforeDetail)); } else { setView('list'); } setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); };
   
   const openAdd = () => { setEditingId(null); setSelectedWatch(null); setWatchForm({ ...DEFAULT_WATCH_STATE, status: view === 'wishlist' ? 'wishlist' : 'collection' }); setBraceletForm(DEFAULT_BRACELET_STATE); setEditingType((filter === 'bracelets' && view !== 'wishlist') ? 'bracelet' : 'watch'); setView('add'); };
   
@@ -456,6 +496,9 @@ export default function App() {
     const form = isWatch ? watchForm : braceletForm;
     const setForm = isWatch ? setWatchForm : setBraceletForm;
     const handleInput = (field, val) => setForm(prev => ({...prev, [field]: val}));
+
+    const isAuto = /auto|manuel|mecanique/i.test(form.movement || '');
+    const isQuartz = /quartz|pile/i.test(form.movement || '');
 
     return (
       <div className={`pb-24 p-4 min-h-screen ${theme.bgSecondary}`}>
@@ -490,17 +533,36 @@ export default function App() {
               <div className="space-y-3">
                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Settings size={14}/> Identité</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <input className={`w-full p-3 rounded-xl border ${theme.input}`} placeholder={t('brand')} value={form.brand} onChange={e => handleInput('brand', e.target.value)} required />
-                  <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder={t('model')} value={form.model} onChange={e => handleInput('model', e.target.value)} required />
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('brand')}</label>
+                      <input className={`w-full p-3 rounded-xl border ${theme.input}`} placeholder="Ex: Seiko" value={form.brand} onChange={e => handleInput('brand', e.target.value)} required />
+                  </div>
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('model')}</label>
+                      <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: Alpinist" value={form.model} onChange={e => handleInput('model', e.target.value)} required />
+                  </div>
                 </div>
-                <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder={t('reference')} value={form.reference || ''} onChange={e => handleInput('reference', e.target.value)} />
+                <div>
+                    <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('reference')} (Optionnel)</label>
+                    <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: SPB117" value={form.reference || ''} onChange={e => handleInput('reference', e.target.value)} />
+                </div>
               </div>
 
               <div className="space-y-3">
-                <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><DollarSign size={14}/> Finances & Dates</h3>
+                <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Euro size={14}/> Finances & Dates</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder={t('purchase_price')} value={form.purchasePrice || ''} onChange={e => handleInput('purchasePrice', e.target.value)} />
-                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder={t('selling_price')} value={form.sellingPrice || ''} onChange={e => handleInput('sellingPrice', e.target.value)} />
+                  <div>
+                     <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('purchase_price')}</label>
+                     <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: 5000" value={form.purchasePrice || ''} onChange={e => handleInput('purchasePrice', e.target.value)} />
+                  </div>
+                  <div>
+                     <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{form.status === 'collection' ? "Estimation Actuelle" : t('selling_price')}</label>
+                     <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: 5500" value={form.sellingPrice || ''} onChange={e => handleInput('sellingPrice', e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                    <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('min_price')}</label>
+                    <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: 4800 (Prix plancher privé)" value={form.minPrice || ''} onChange={e => handleInput('minPrice', e.target.value)} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div><label className="text-[10px] uppercase font-bold text-slate-500 ml-1">{t('date_purchase')}</label><input type="date" className={`w-full p-2.5 rounded-lg border ${theme.input} text-sm`} value={form.purchaseDate || ''} onChange={e => handleInput('purchaseDate', e.target.value)} /></div>
@@ -511,15 +573,59 @@ export default function App() {
               <div className="space-y-3">
                 <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Layers size={14}/> Technique</h3>
                 <div className="grid grid-cols-3 gap-3">
-                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('diameter')} value={form.diameter || ''} onChange={e => handleInput('diameter', e.target.value)} />
-                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('thickness')} value={form.thickness || ''} onChange={e => handleInput('thickness', e.target.value)} />
-                  <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('lug_width')} value={form.strapWidth || ''} onChange={e => handleInput('strapWidth', e.target.value)} />
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('diameter')} (mm)</label>
+                      <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: 40" value={form.diameter || ''} onChange={e => handleInput('diameter', e.target.value)} />
+                  </div>
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('thickness')} (mm)</label>
+                      <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: 12" value={form.thickness || ''} onChange={e => handleInput('thickness', e.target.value)} />
+                  </div>
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('lug_width')} (mm)</label>
+                      <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: 20" value={form.strapWidth || ''} onChange={e => handleInput('strapWidth', e.target.value)} />
+                  </div>
                 </div>
+                
                 <div className="grid grid-cols-2 gap-3">
-                  <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('movement')} value={form.movement || ''} onChange={e => handleInput('movement', e.target.value)} />
-                  <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('movement_model')} value={form.movementModel || ''} onChange={e => handleInput('movementModel', e.target.value)} />
-                  <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('dial')} value={form.dialColor || ''} onChange={e => handleInput('dialColor', e.target.value)} />
-                  <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder={t('glass')} value={form.glass || ''} onChange={e => handleInput('glass', e.target.value)} />
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('movement')} (Type)</label>
+                      <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: Automatique" value={form.movement || ''} onChange={e => handleInput('movement', e.target.value)} />
+                  </div>
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('movement_model')}</label>
+                      <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: ETA 2824" value={form.movementModel || ''} onChange={e => handleInput('movementModel', e.target.value)} />
+                  </div>
+                </div>
+
+                {isAuto && (
+                   <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                      <div>
+                          <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">Réserve de marche (h)</label>
+                          <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: 42" value={form.powerReserve || ''} onChange={e => handleInput('powerReserve', e.target.value)} />
+                      </div>
+                      <div>
+                          <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">Nombre de rubis</label>
+                          <input type="number" className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: 21" value={form.jewels || ''} onChange={e => handleInput('jewels', e.target.value)} />
+                      </div>
+                   </div>
+                )}
+                {isQuartz && (
+                   <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">Modèle de la pile</label>
+                      <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: SR920SW / 371" value={form.batteryModel || ''} onChange={e => handleInput('batteryModel', e.target.value)} />
+                   </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('dial')} (Couleur)</label>
+                      <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: Bleu" value={form.dialColor || ''} onChange={e => handleInput('dialColor', e.target.value)} />
+                  </div>
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('glass')} (Type)</label>
+                      <input className={`w-full p-3 rounded-lg border ${theme.input} text-sm`} placeholder="Ex: Saphir" value={form.glass || ''} onChange={e => handleInput('glass', e.target.value)} />
+                  </div>
                 </div>
               </div>
 
@@ -528,6 +634,29 @@ export default function App() {
                   <textarea className={`w-full p-3 rounded-lg border ${theme.input} h-24 text-sm`} placeholder={t('notes')} value={form.conditionNotes || ''} onChange={e => handleInput('conditionNotes', e.target.value)}></textarea>
                   <textarea className={`w-full p-3 rounded-lg border ${theme.input} h-20 text-sm`} placeholder={t('history_brand')} value={form.historyBrand || ''} onChange={e => handleInput('historyBrand', e.target.value)}></textarea>
                   <textarea className={`w-full p-3 rounded-lg border ${theme.input} h-20 text-sm`} placeholder={t('history_model')} value={form.historyModel || ''} onChange={e => handleInput('historyModel', e.target.value)}></textarea>
+              </div>
+
+              <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Receipt size={14}/> Facture / Justificatif</h3>
+                  {form.invoice ? (
+                      <div className="relative aspect-video bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                          {form.invoice.startsWith('data:application/pdf') ? (
+                              <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                                  <FileText size={48} className="mb-2"/>
+                                  <span className="text-xs font-bold uppercase">Document PDF</span>
+                              </div>
+                          ) : (
+                              <img src={form.invoice} className="w-full h-full object-cover" alt="Facture" />
+                          )}
+                          <button type="button" onClick={() => setWatchForm(prev => ({...prev, invoice: null}))} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-md"><X size={14}/></button>
+                      </div>
+                  ) : (
+                      <label className={`w-full py-6 border-2 border-dashed ${theme.border} rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors`}>
+                          <Plus className={theme.textSub} size={24}/>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${theme.textSub} mt-2`}>Ajouter (Image ou PDF)</span>
+                          <input type="file" className="hidden" onChange={(e) => handleImageUpload(e, 'invoice')} accept="image/*,application/pdf"/>
+                      </label>
+                  )}
               </div>
             </>
           ) : (
@@ -728,11 +857,21 @@ export default function App() {
           {w.status === 'wishlist' && (<>{w.link && (<a href={w.link} target="_blank" rel="noreferrer" className="w-full py-4 bg-indigo-50 text-indigo-700 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-indigo-100 transition-colors mb-4 border border-indigo-100"><LinkIcon size={20} /> {t('visit_site')}</a>)}<button onClick={() => handleMoveToCollection(w)} className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-transform active:scale-95 mb-4"><Gift size={20} /> {t('move_collection')}</button></>)}
           {w.status === 'collection' && (<div className={`${theme.card} border ${theme.border} rounded-xl p-4 shadow-sm`}><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider flex items-center gap-2`}><BarChart2 size={14}/> {t('stats_usage')}</h3><div className="grid grid-cols-3 gap-2 text-center"><div className={`p-2 rounded-lg ${theme.bg}`}><div className={`text-lg font-bold ${theme.text}`}>{stats.monthCount}</div><div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_this_month')}</div></div><div className={`p-2 rounded-lg ${theme.bg}`}><div className={`text-lg font-bold ${theme.text}`}>{stats.yearCount}</div><div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_this_year')}</div></div><div className={`p-2 rounded-lg ${theme.bg}`}><div className={`text-lg font-bold ${theme.text}`}>{stats.lastYearCount}</div><div className={`text-[9px] uppercase ${theme.textSub}`}>{t('worn_last_year')}</div></div></div></div>)}
           <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('specs')}</h3><div className="grid grid-cols-2 gap-3"><DetailItem icon={Ruler} label={t('diameter')} value={w.diameter ? w.diameter + ' mm' : ''} theme={theme} /><DetailItem icon={Layers} label={t('thickness')} value={w.thickness ? w.thickness + ' mm' : ''} theme={theme} /><DetailItem icon={Activity} label={t('lug_width')} value={w.strapWidth ? w.strapWidth + ' mm' : ''} theme={theme} /><DetailItem icon={Scale} label={t('weight')} value={w.weight ? w.weight + ' g' : ''} theme={theme} /><DetailItem icon={Droplets} label={t('water_res')} value={w.waterResistance ? w.waterResistance + ' ATM' : ''} theme={theme} /></div></div>
-          <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3><div className="grid grid-cols-2 gap-3"><DetailItem icon={MovementIcon} label={t('movement')} value={w.movement} theme={theme} /><DetailItem icon={Settings} label={t('movement_model')} value={w.movementModel} theme={theme} />{w.batteryModel && <DetailItem icon={Battery} label={t('battery')} value={w.batteryModel} theme={theme} />}<DetailItem icon={Palette} label={t('dial')} value={w.dialColor} theme={theme} /><DetailItem icon={Search} label={t('glass')} value={w.glass} theme={theme} /></div></div>
+          <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('movement')} & {t('dial')}</h3>
+             <div className="grid grid-cols-2 gap-3">
+                 <DetailItem icon={MovementIcon} label={t('movement')} value={w.movement} theme={theme} />
+                 <DetailItem icon={Settings} label={t('movement_model')} value={w.movementModel} theme={theme} />
+                 {w.powerReserve && <DetailItem icon={Battery} label="Réserve de marche" value={w.powerReserve + 'h'} theme={theme} />}
+                 {w.jewels && <DetailItem icon={Gem} label="Rubis" value={w.jewels} theme={theme} />}
+                 {w.batteryModel && <DetailItem icon={Battery} label={t('battery')} value={w.batteryModel} theme={theme} />}
+                 <DetailItem icon={Palette} label={t('dial')} value={w.dialColor} theme={theme} />
+                 <DetailItem icon={Search} label={t('glass')} value={w.glass} theme={theme} />
+             </div>
+          </div>
           <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('origin_maintenance')}</h3><div className="grid grid-cols-2 gap-3"><DetailItem icon={MapPin} label={t('country')} value={w.country} theme={theme} /><DetailItem icon={Calendar} label={t('date_release')} value={w.releaseDate} theme={theme} /><DetailItem icon={Calendar} label={t('year')} value={w.year} theme={theme} /><DetailItem icon={Package} label={t('box_included')} value={w.box} theme={theme} /><DetailItem icon={ShieldCheck} label={t('warranty')} value={w.warrantyDate} theme={theme} /><DetailItem icon={Wrench} label={t('revision')} value={w.revision} theme={theme} /></div></div>
           {(w.conditionRating || w.conditionComment) && (<div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>{w.conditionRating && (<div className="flex items-center gap-2 mb-2"><div className={`text-lg font-bold ${theme.text} bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg`}>{w.conditionRating}/10</div><div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${w.conditionRating * 10}%` }}></div></div></div>)}{w.conditionComment && (<p className={`text-sm ${theme.text} italic`}>"{w.conditionComment}"</p>)}</div>)}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800"><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents</h3>{w.invoice ? (<div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer`} onClick={() => setFullScreenImage(w.invoice)}><img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="facture" /><div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2"><Receipt size={14}/> {t('view_invoice')}</div></div></div>) : (<div className={`p-4 text-center text-sm ${theme.textSub} italic border border-dashed ${theme.border} rounded-xl`}>Aucune facture enregistrée</div>)}</div>
-          <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('finance')} & Dates</h3><div className="grid grid-cols-2 gap-3 mb-3">{w.purchaseDate && <DetailItem icon={Calendar} label={t('date_purchase')} value={w.purchaseDate} theme={theme} />}{w.soldDate && w.status === 'sold' && <DetailItem icon={Calendar} label={t('date_sold')} value={w.soldDate} theme={theme} />}</div><div className={`grid grid-cols-2 gap-4 pt-4 border-t ${theme.border}`}><div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('purchase_price')}</div><div className={`text-lg font-bold ${theme.text}`}>{formatPrice(w.purchasePrice)}</div></div>{w.status !== 'wishlist' && (<div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('selling_price')}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice || w.purchasePrice)}</div></div>)}</div></div>
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800"><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents & Facture</h3>{w.invoice ? (<div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer bg-slate-100 dark:bg-slate-800`} onClick={() => setFullScreenImage(w.invoice)}>{w.invoice.startsWith('data:application/pdf') ? <div className="flex flex-col items-center justify-center h-full text-slate-500"><FileText size={48} className="mb-2"/><span className="text-xs font-bold uppercase">Document PDF</span></div> : <img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="facture" />}<div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2"><Receipt size={14}/> {t('view_invoice')}</div></div></div>) : (<div className={`p-4 text-center text-sm ${theme.textSub} italic border border-dashed ${theme.border} rounded-xl`}>Aucune facture enregistrée</div>)}</div>
+          <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}><Euro size={14} className="inline mr-1"/>{t('finance')} & Dates</h3><div className="grid grid-cols-2 gap-3 mb-3">{w.purchaseDate && <DetailItem icon={Calendar} label={t('date_purchase')} value={w.purchaseDate} theme={theme} />}{w.soldDate && w.status === 'sold' && <DetailItem icon={Calendar} label={t('date_sold')} value={w.soldDate} theme={theme} />}</div><div className={`grid grid-cols-2 gap-4 pt-4 border-t ${theme.border}`}><div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('purchase_price')}</div><div className={`text-lg font-bold ${theme.text}`}>{formatPrice(w.purchasePrice)}</div></div>{w.status !== 'wishlist' && (<div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('selling_price')}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice || w.purchasePrice)}</div></div>)}</div></div>
           {w.conditionNotes && (<div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100 mt-4"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> {t('notes')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.conditionNotes}</div></div>)}
           {w.historyBrand && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_brand')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyBrand}</div></div>)}
           {w.historyModel && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_model')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyModel}</div></div>)}
@@ -853,8 +992,24 @@ export default function App() {
                     {allTopWatches.length > 5 && (<button onClick={() => setIsTopWornExpanded(!isTopWornExpanded)} className={`w-full mt-3 py-2 text-xs font-bold rounded-lg border border-dashed transition-colors ${theme.textSub} ${theme.border} hover:bg-slate-50 dark:hover:bg-slate-800`}>{isTopWornExpanded ? t('show_less') : `${t('show_all')} (${allTopWatches.length})`}</button>)}
                 </div>
 
-                <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}><h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><PieChart className="text-blue-500" size={16} /> {t('fav_brands')}</h3><div className="space-y-3">{topBrands.map(([brand, count], i) => (<div key={brand} className="flex items-center justify-between"><div className="flex items-center gap-2 w-full"><span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span><div className="flex-1"><div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div><div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / (topBrands[0]?.[1] || 1)) * 100}%`}}></div></div></div></div></div>))}</div></div>
-                <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}><h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2 mb-4`}><Palette className="text-purple-500" size={16} /> {t('fav_dials')}</h3><div className="space-y-3">{topDials.map(([color, count], i) => (<div key={color} className="flex items-center justify-between"><div className="flex items-center gap-2 w-full"><span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span><div className="flex-1"><div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div><div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${(count / (topDials[0]?.[1] || 1)) * 100}%`}}></div></div></div></div></div>))}</div></div>
+                <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
+                    <button onClick={() => setShowOtherStats(!showOtherStats)} className={`w-full flex justify-between items-center font-bold text-sm ${theme.text}`}>
+                        <span className="flex items-center gap-2"><PieChart className="text-purple-500" size={16} /> Autres statistiques</span>
+                        <ChevronDown className={`transition-transform ${showOtherStats ? 'rotate-180' : ''}`} size={16} />
+                    </button>
+                    {showOtherStats && (
+                        <div className="mt-4 space-y-6 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-4">
+                            <div>
+                                <h3 className={`font-bold text-xs ${theme.textSub} mb-3 uppercase tracking-wider`}>{t('fav_brands')}</h3>
+                                <div className="space-y-3">{topBrands.map(([brand, count], i) => (<div key={brand} className="flex items-center justify-between"><div className="flex items-center gap-2 w-full"><span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span><div className="flex-1"><div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div><div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / (topBrands[0]?.[1] || 1)) * 100}%`}}></div></div></div></div></div>))}</div>
+                            </div>
+                            <div>
+                                <h3 className={`font-bold text-xs ${theme.textSub} mb-3 uppercase tracking-wider`}>{t('fav_dials')}</h3>
+                                <div className="space-y-3">{topDials.map(([color, count], i) => (<div key={color} className="flex items-center justify-between"><div className="flex items-center gap-2 w-full"><span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span><div className="flex-1"><div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{color}</span><span className="font-bold">{count}</span></div><div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-purple-500 rounded-full" style={{width: `${(count / (topDials[0]?.[1] || 1)) * 100}%`}}></div></div></div></div></div>))}</div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
             
             {/* Calendar Modal */}
@@ -911,14 +1066,57 @@ export default function App() {
     const formatMonthName = (dateStr) => { const [y, m] = dateStr.split('-'); const d = new Date(y, parseInt(m)-1, 1); return d.toLocaleString(settings.lang, { month: 'long' }); };
     const now = new Date(); const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
 
+    const getMostSoldBrands = () => {
+        const soldWatches = watches.filter(w => w.status === 'sold');
+        const brandStats = {};
+        soldWatches.forEach(w => {
+            const brand = w.brand || 'Inconnu';
+            if (!brandStats[brand]) brandStats[brand] = { count: 0, profit: 0, loss: 0 };
+            brandStats[brand].count += 1;
+            const p = (Number(w.sellingPrice) || 0) - (Number(w.purchasePrice) || 0);
+            if (p >= 0) brandStats[brand].profit += p;
+            else brandStats[brand].loss += Math.abs(p);
+        });
+        return Object.entries(brandStats)
+                     .map(([brand, stats]) => ({ brand, ...stats, total: stats.profit - stats.loss }))
+                     .sort((a, b) => b.count - a.count);
+    };
+    const mostSoldBrands = getMostSoldBrands();
+
     return (
       <div className="pb-24 px-3 space-y-2">
         <div className={`sticky top-0 ${theme.bgSecondary} z-10 py-2 border-b ${theme.border} mb-2`}><h1 className={`text-xl font-serif font-bold ${theme.text} tracking-wide px-1`}>{t('finance')}</h1></div>
         {financeDetail === 'collection' && <FinanceDetailList title={t('collection')} items={watches.filter(w=>w.status==='collection')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w) => openWatchDetail(w)} theme={theme} />}{financeDetail === 'forsale' && <FinanceDetailList title={t('forsale')} items={watches.filter(w=>w.status==='forsale')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w) => openWatchDetail(w)} theme={theme} />}{financeDetail === 'sold' && <FinanceDetailList title={t('sold')} items={watches.filter(w=>w.status==='sold')} onClose={() => setFinanceDetail(null)} onSelectWatch={(w) => openWatchDetail(w)} theme={theme} />}
         <FinanceCardFull title={t('collection')} icon={Watch} stats={sCol} type="collection" bgColor="bg-emerald-500" onClick={() => setFinanceDetail('collection')} theme={theme} />
         <FinanceCardFull title={t('forsale')} icon={TrendingUp} stats={sSale} type="forsale" bgColor="bg-amber-500" onClick={() => setFinanceDetail('forsale')} theme={theme} />
-        <FinanceCardFull title={t('sold')} icon={DollarSign} stats={sSold} type="sold" bgColor="bg-blue-600" onClick={() => setFinanceDetail('sold')} theme={theme} />
+        <FinanceCardFull title={t('sold')} icon={Euro} stats={sSold} type="sold" bgColor="bg-blue-600" onClick={() => setFinanceDetail('sold')} theme={theme} />
         <div className="mt-4 pt-2"><FinanceCardFull title={t('total_value')} icon={Activity} stats={sTotal} type="total" bgColor="bg-white" onClick={() => {}} theme={theme} /></div>
+        
+        <div className="mt-6">
+            <h3 className={`font-bold text-sm ${theme.text} uppercase tracking-wider flex items-center gap-2 mb-3`}><Activity size={16}/> Marques les plus vendues</h3>
+            <div className={`${theme.card} border ${theme.border} rounded-xl overflow-hidden shadow-sm`}>
+                <table className="w-full text-left text-xs">
+                    <thead className={`bg-slate-50 dark:bg-slate-800/50 border-b ${theme.border}`}>
+                        <tr>
+                            <th className={`p-3 font-bold ${theme.textSub}`}>Marque</th>
+                            <th className={`p-3 font-bold text-center ${theme.textSub}`}>Modèles</th>
+                            <th className={`p-3 font-bold text-right ${theme.textSub}`}>Bilan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {mostSoldBrands.map(b => (
+                            <tr key={b.brand} className={`border-b ${theme.border} last:border-0`}>
+                                <td className={`p-3 font-bold ${theme.text}`}>{b.brand}</td>
+                                <td className={`p-3 text-center ${theme.text}`}>{b.count}</td>
+                                <td className={`p-3 text-right font-bold ${b.total >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{b.total >= 0 ? '+' : '-'}{formatPrice(Math.abs(b.total))}</td>
+                            </tr>
+                        ))}
+                        {mostSoldBrands.length === 0 && <tr><td colSpan="3" className={`p-4 text-center ${theme.textSub}`}>Aucune vente.</td></tr>}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div className="mt-6">
             <div className="flex justify-between items-center mb-3"><h3 className={`font-bold text-sm ${theme.text} uppercase tracking-wider flex items-center gap-2`}><Briefcase size={16}/> {t('finance_timeline')}</h3><button onClick={() => setTimelineFilter(prev => prev === 'default' ? 'all' : 'default')} className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-colors ${timelineFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : `${theme.bgSecondary} ${theme.text} ${theme.border}`}`}>{timelineFilter === 'default' ? t('show_history') : t('show_less')}</button></div>
             {sortedYears.map(yearData => {
@@ -1104,8 +1302,8 @@ export default function App() {
                                                           </div>
                                                       )}
                                                   </div>
-                                                  <div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand}</div>
-                                                  <div className={`text-xs truncate ${theme.textSub}`}>{w.model}</div>
+                                                  <div className="font-bold text-sm truncate text-black dark:text-white">{w.brand}</div>
+                                                  <div className="text-xs truncate text-slate-800 dark:text-slate-300">{w.model}</div>
                                               </div>
                                           ))
                                       )}
