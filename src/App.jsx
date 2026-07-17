@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc } from 'firebase/firestore';
 
 // ==========================================================================
@@ -308,9 +308,8 @@ export default function App() {
   const [isTopWornExpanded, setIsTopWornExpanded] = useState(false);
   const [showOtherStats, setShowOtherStats] = useState(false);
   
-  // Nouveaux états pour le tri des marques les plus vendues
   const [showMostSoldBrands, setShowMostSoldBrands] = useState(false);
-  const [mostSoldSortBy, setMostSoldSortBy] = useState('count'); // 'count' ou 'profit'
+  const [mostSoldSortBy, setMostSoldSortBy] = useState('count'); 
 
   const [calendarSearchTerm, setCalendarSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('dateDesc');
@@ -370,9 +369,33 @@ export default function App() {
 
   useEffect(() => {
     if (useLocalStorage && !isAuthLoading) { setLoading(false); return; }
+
+    const initAuth = async () => {
+        if (!firebaseReady) return;
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token).catch(() => {
+                    signInAnonymously(auth).catch(() => setUseLocalStorage(true));
+                });
+            } else {
+                await signInAnonymously(auth).catch(() => setUseLocalStorage(true));
+            }
+        } catch (err) {
+            setUseLocalStorage(true);
+        }
+    };
+
+    initAuth();
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) { setUser(currentUser); setError(null); setLoading(false); if (useLocalStorage) setUseLocalStorage(false); } 
-      else { const timer = setTimeout(() => { if (!isAuthLoading) { signInAnonymously(auth).catch(() => { setUseLocalStorage(true); setUser({ uid: 'local-user' }); }).finally(() => setLoading(false)); } }, 1000); return () => clearTimeout(timer); }
+        if (currentUser) {
+            setUser(currentUser);
+            setError(null);
+            setLoading(false);
+            if (useLocalStorage && currentUser.uid !== 'local-user') setUseLocalStorage(false);
+        } else {
+            setLoading(false);
+        }
     });
     return () => unsubscribe();
   }, [useLocalStorage, isAuthLoading]);
