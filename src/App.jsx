@@ -368,19 +368,21 @@ export default function App() {
   const handleLogout = async () => { if (!firebaseReady) { setShowProfileMenu(false); return; } setIsAuthLoading(true); try { await signOut(auth); setShowProfileMenu(false); } finally { setIsAuthLoading(false); } };
 
   useEffect(() => {
-    if (useLocalStorage && !isAuthLoading) { setLoading(false); return; }
+    if (useLocalStorage && !firebaseReady) { setLoading(false); return; }
 
     const initAuth = async () => {
         if (!firebaseReady) return;
         try {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token).catch(() => {
-                    signInAnonymously(auth).catch(() => setUseLocalStorage(true));
-                });
-            } else {
-                await signInAnonymously(auth).catch(() => setUseLocalStorage(true));
+            await auth.authStateReady();
+            if (!auth.currentUser) {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
             }
         } catch (err) {
+            console.error("Erreur Auth:", err);
             setUseLocalStorage(true);
         }
     };
@@ -398,7 +400,7 @@ export default function App() {
         }
     });
     return () => unsubscribe();
-  }, [useLocalStorage, isAuthLoading]);
+  }, []);
 
   useEffect(() => {
     if (!user && !useLocalStorage) return;
