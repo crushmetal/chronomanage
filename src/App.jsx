@@ -210,12 +210,35 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
     const sortedItems = useMemo(() => {
         let sorted = [...items];
         const getTime = (w) => { if (w.purchaseDate) { const t = new Date(w.purchaseDate).getTime(); return isNaN(t) ? null : t; } return null; };
-        if (localSort === 'alpha') { sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || (a.model || '').localeCompare(b.model || '')); } else { sorted.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime(); return tb - ta; }); }
+        if (localSort === 'alpha') { 
+            sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || (a.model || '').localeCompare(b.model || '')); 
+        } else if (localSort === 'profitDesc') {
+            sorted.sort((a, b) => {
+                const profitA = (Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0);
+                const profitB = (Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0);
+                return profitB - profitA;
+            });
+        } else { 
+            sorted.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime(); return tb - ta; }); 
+        }
         return sorted;
     }, [items, localSort]);
     return (
         <div className={`fixed inset-0 z-[60] ${theme.card} flex flex-col animate-in slide-in-from-bottom-10`}>
-          <div className={`p-4 border-b ${theme.border} flex items-center justify-between ${theme.bgSecondary}`}><h2 className={`font-serif font-bold text-lg ${theme.text} tracking-wide`}>{title}</h2><div className="flex gap-2"><button onClick={() => setLocalSort(localSort === 'date' ? 'alpha' : 'date')} className={`flex items-center gap-1 px-3 py-1.5 border rounded-lg text-xs font-medium ${theme.textSub} ${theme.bg}`}><ArrowUpDown size={14} /> {localSort === 'date' ? 'Date' : 'A-Z'}</button><button onClick={onClose} className={`p-2 rounded-full shadow-sm border ${theme.border} ${theme.bg} ${theme.text}`}><X size={20}/></button></div></div>
+          <div className={`p-4 border-b ${theme.border} flex items-center justify-between ${theme.bgSecondary}`}>
+            <h2 className={`font-serif font-bold text-lg ${theme.text} tracking-wide`}>{title}</h2>
+            <div className="flex gap-2">
+                <div className="relative">
+                    <select value={localSort} onChange={(e) => setLocalSort(e.target.value)} className={`appearance-none bg-transparent border ${theme.border} ${theme.textSub} text-xs font-medium py-1.5 pl-2 pr-7 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer`}>
+                        <option value="alpha">A-Z</option>
+                        <option value="date">Date</option>
+                        <option value="profitDesc">Bénéfice</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500"><ArrowUpDown size={10} /></div>
+                </div>
+                <button onClick={onClose} className={`p-2 rounded-full shadow-sm border ${theme.border} ${theme.bg} ${theme.text}`}><X size={20}/></button>
+            </div>
+          </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
              {sortedItems.map(w => {
                const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image; const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
