@@ -357,11 +357,12 @@ export default function App() {
     if (view === 'news' && news.length === 0) {
       const fetchNews = async () => {
         setIsNewsLoading(true);
+        // Les Rhabilleurs est placé en dernier
         const feeds = [
-          'https://www.lesrhabilleurs.com/feed/',
           'https://lepetitpoussoir.fr/feed/',
           'https://www.fratellowatches.com/feed/',
-          'https://www.hodinkee.com/articles/feed'
+          'https://www.hodinkee.com/articles/feed',
+          'https://www.lesrhabilleurs.com/feed/'
         ];
         
         try {
@@ -371,9 +372,14 @@ export default function App() {
             const data = await res.json();
             
             if (data.status === 'ok') {
+              let cleanSourceName = data.feed.title || url;
+              // Nettoyage spécifique pour Fratello Watches
+              if (cleanSourceName.toLowerCase().includes('fratello')) {
+                cleanSourceName = 'Fratello Watches';
+              }
               const formattedItems = data.items.map(item => ({
                 ...item,
-                sourceName: data.feed.title || url 
+                sourceName: cleanSourceName
               }));
               allArticles.push(...formattedItems);
             }
@@ -606,7 +612,7 @@ export default function App() {
     const getTime = (w) => { if (w.purchaseDate) { const time = new Date(w.purchaseDate).getTime(); return isNaN(time) ? null : time; } return null; };
     if (sortOrder === 'priceAsc') sorted.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
     else if (sortOrder === 'priceDesc') sorted.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
-    else if (sortOrder === 'sellPriceAsc') sorted.sort((a, b) => (Number(a.sellingPrice) || 0) - (Number(b.sellingPrice) || 0));
+    else if (sortOrder === 'sellPriceAsc') sorted.sort((a, b) => (Number(a.sellingPrice) || 0) - (Number(a.sellingPrice) || 0));
     else if (sortOrder === 'sellPriceDesc') sorted.sort((a, b) => (Number(b.sellingPrice) || 0) - (Number(a.sellingPrice) || 0));
     else if (sortOrder === 'profitAsc') sorted.sort((a, b) => ((Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0)) - ((Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0)));
     else if (sortOrder === 'profitDesc') sorted.sort((a, b) => ((Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0)) - ((Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0)));
@@ -1041,7 +1047,7 @@ export default function App() {
     
     if (sortOrder === 'priceAsc') { displayWatches.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0)); } 
     else if (sortOrder === 'priceDesc') { displayWatches.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0)); } 
-    else if (sortOrder === 'sellPriceAsc') { displayWatches.sort((a, b) => (Number(a.sellingPrice) || 0) - (Number(b.sellingPrice) || 0)); } 
+    else if (sortOrder === 'sellPriceAsc') { displayWatches.sort((a, b) => (Number(a.sellingPrice) || 0) - (Number(a.sellingPrice) || 0)); } 
     else if (sortOrder === 'sellPriceDesc') { displayWatches.sort((a, b) => (Number(b.sellingPrice) || 0) - (Number(a.sellingPrice) || 0)); } 
     else if (sortOrder === 'profitAsc') { displayWatches.sort((a, b) => ((Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0)) - ((Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0))); } 
     else if (sortOrder === 'profitDesc') { displayWatches.sort((a, b) => ((Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0)) - ((Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0))); } 
@@ -1593,11 +1599,22 @@ export default function App() {
   }
 
   function renderNews() {
-    // Récupérer la liste des sources uniques
+    // 1. Récupération des sources
     const sources = ['all', ...new Set(news.map(a => a.sourceName))];
-    const filteredNews = selectedNewsSource === 'all' 
+    
+    // 2. Filtre par source sélectionnée
+    let filteredNews = selectedNewsSource === 'all' 
       ? news 
       : news.filter(a => a.sourceName === selectedNewsSource);
+
+    // 3. Filtre par mot-clé (recherche)
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      filteredNews = filteredNews.filter(a => 
+        (a.title && a.title.toLowerCase().includes(lowerSearch)) ||
+        (a.description && a.description.toLowerCase().includes(lowerSearch))
+      );
+    }
 
     return (
       <div className="pb-24 px-4">
@@ -1660,6 +1677,12 @@ export default function App() {
                 </a>
               );
             })}
+            
+            {!isNewsLoading && filteredNews.length === 0 && (
+              <div className={`text-center ${theme.textSub} py-10 text-sm`}>
+                Aucun article ne correspond à votre recherche.
+              </div>
+            )}
           </div>
         )}
       </div>
