@@ -28,7 +28,7 @@ const LOCAL_CONFIG_KEY = 'chrono_firebase_config';
 const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
 
-const DEFAULT_WATCH_STATE = { brand: '', model: '', reference: '', diameter: '', year: '', movement: '', movementModel: '', powerReserve: '', jewels: '', country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', dialColor: '', batteryModel: '', isLimitedEdition: false, limitedNumber: '', limitedTotal: '', publicVisible: true, box: '', warrantyDate: '', revision: '', purchasePrice: '', sellingPrice: '', minPrice: '', purchaseDate: '', soldDate: '', status: 'collection', conditionNotes: '', link: '', historyBrand: '', historyModel: '', conditionRating: '', conditionComment: '', image: null, images: [], invoice: null };
+const DEFAULT_WATCH_STATE = { brand: '', model: '', reference: '', watchType: '', diameter: '', year: '', movement: '', movementModel: '', powerReserve: '', jewels: '', country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', dialColor: '', batteryModel: '', isLimitedEdition: false, limitedNumber: '', limitedTotal: '', publicVisible: true, box: '', warrantyDate: '', revision: '', purchasePrice: '', sellingPrice: '', minPrice: '', purchaseDate: '', soldDate: '', status: 'collection', conditionNotes: '', link: '', historyBrand: '', historyModel: '', conditionRating: '', conditionComment: '', image: null, images: [], invoice: null, additionalCosts: [{label: '', price: ''}] };
 const DEFAULT_BRACELET_STATE = { width: '', type: 'Standard', material: '', color: '', brand: '', quickRelease: false, image: null, notes: '' };
 
 const tryInitFirebase = (config) => {
@@ -50,6 +50,14 @@ const formatPrice = (price) => {
   const numPrice = Number(price);
   if (isNaN(numPrice)) return '0 €';
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(numPrice);
+};
+
+const getTotalCost = (watch) => {
+    let total = Number(watch.purchasePrice || 0);
+    if (watch.additionalCosts && Array.isArray(watch.additionalCosts)) {
+        total += watch.additionalCosts.reduce((sum, cost) => sum + Number(cost.price || 0), 0);
+    }
+    return total;
 };
 
 const compressImage = (file) => {
@@ -178,11 +186,13 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                 <div className="grid grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
                     <div>
                         {watch.images && watch.images[0] && (<div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4"><img src={watch.images[0]} className="w-full h-full object-cover" alt="Montre"/></div>)}
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white"><div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{isSale ? t('selling_price') : t('purchase_price')}</div><div className="text-3xl font-bold font-serif">{formatPrice(isSale ? (watch.sellingPrice || watch.purchasePrice) : watch.purchasePrice)}</div>{isSale && <div className="mt-2 text-xs text-slate-500 italic">*Prix non contractuel, sujet à négociation</div>}</div>
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white"><div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{isSale ? t('selling_price') : 'Valeur Totale (Achat + Frais)'}</div><div className="text-3xl font-bold font-serif">{formatPrice(isSale ? (watch.sellingPrice || getTotalCost(watch)) : getTotalCost(watch))}</div>{isSale && <div className="mt-2 text-xs text-slate-500 italic">*Prix non contractuel, sujet à négociation</div>}</div>
                     </div>
                     <div className="space-y-4">
                         <h3 className="font-bold uppercase border-b border-slate-200 pb-1">{t('specs')}</h3>
-                        <div className="grid grid-cols-2 gap-y-2 text-sm"><div className="text-slate-500">{t('year')}:</div><div>{watch.year || '-'}</div><div className="text-slate-500">{t('diameter')}:</div><div>{watch.diameter ? watch.diameter + ' mm' : '-'}</div><div className="text-slate-500">{t('thickness')}:</div><div>{watch.thickness ? watch.thickness + ' mm' : '-'}</div><div className="text-slate-500">{t('lug_width')}:</div><div>{watch.strapWidth ? watch.strapWidth + ' mm' : '-'}</div><div className="text-slate-500">{t('movement')}:</div><div>{watch.movement || '-'}</div><div className="text-slate-500">{t('dial')}:</div><div>{watch.dialColor || '-'}</div><div className="text-slate-500">{t('box_included')}:</div><div>{watch.box || '-'}</div><div className="text-slate-500">{t('warranty')}:</div><div>{watch.warrantyDate || '-'}</div><div className="text-slate-500">{t('country')}:</div><div>{watch.country || '-'}</div><div className="text-slate-500">{t('weight')}:</div><div>{watch.weight ? watch.weight + ' g' : '-'}</div>{watch.batteryModel && <><div className="text-slate-500">{t('battery')}:</div><div>{watch.batteryModel}</div></>}</div>
+                        <div className="grid grid-cols-2 gap-y-2 text-sm">
+                            {watch.watchType && <><div className="text-slate-500">Type:</div><div>{watch.watchType}</div></>}
+                            <div className="text-slate-500">{t('year')}:</div><div>{watch.year || '-'}</div><div className="text-slate-500">{t('diameter')}:</div><div>{watch.diameter ? watch.diameter + ' mm' : '-'}</div><div className="text-slate-500">{t('thickness')}:</div><div>{watch.thickness ? watch.thickness + ' mm' : '-'}</div><div className="text-slate-500">{t('lug_width')}:</div><div>{watch.strapWidth ? watch.strapWidth + ' mm' : '-'}</div><div className="text-slate-500">{t('movement')}:</div><div>{watch.movement || '-'}</div><div className="text-slate-500">{t('dial')}:</div><div>{watch.dialColor || '-'}</div><div className="text-slate-500">{t('box_included')}:</div><div>{watch.box || '-'}</div><div className="text-slate-500">{t('warranty')}:</div><div>{watch.warrantyDate || '-'}</div><div className="text-slate-500">{t('country')}:</div><div>{watch.country || '-'}</div><div className="text-slate-500">{t('weight')}:</div><div>{watch.weight ? watch.weight + ' g' : '-'}</div>{watch.batteryModel && <><div className="text-slate-500">{t('battery')}:</div><div>{watch.batteryModel}</div></>}</div>
                         {watch.conditionNotes && (<div className="mt-6"><h3 className="font-bold uppercase border-b border-slate-200 pb-1 mb-2">{t('notes')}</h3><p className="text-sm text-justify leading-relaxed whitespace-pre-wrap">{watch.conditionNotes}</p></div>)}
                     </div>
                 </div>
@@ -214,8 +224,8 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
             sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || (a.model || '').localeCompare(b.model || '')); 
         } else if (localSort === 'profitDesc') {
             sorted.sort((a, b) => {
-                const profitA = (Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0);
-                const profitB = (Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0);
+                const profitA = (Number(a.sellingPrice) || 0) - getTotalCost(a);
+                const profitB = (Number(b.sellingPrice) || 0) - getTotalCost(b);
                 return profitB - profitA;
             });
         } else { 
@@ -241,8 +251,10 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
              {sortedItems.map(w => {
-               const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image; const profit = (w.sellingPrice || 0) - (w.purchasePrice || 0);
-               return (<div key={w.id} onClick={() => { onClose(); onSelectWatch && onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}><div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover" alt="Thumb"/>}</div><div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div><div className={`text-xs ${theme.textSub}`}>Achat: {formatPrice(w.purchasePrice)}</div></div><div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || w.purchasePrice)}</div><div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div></div>)
+               const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image; 
+               const totalCost = getTotalCost(w);
+               const profit = (w.sellingPrice || 0) - totalCost;
+               return (<div key={w.id} onClick={() => { onClose(); onSelectWatch && onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}><div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover" alt="Thumb"/>}</div><div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div><div className={`text-xs ${theme.textSub}`}>Coût Total: {formatPrice(totalCost)}</div></div><div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || totalCost)}</div><div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div></div>)
              })}
              {sortedItems.length === 0 && <div className={`text-center ${theme.textSub} py-10 text-sm`}>Aucune montre.</div>}
           </div>
@@ -255,7 +267,7 @@ const FinanceCardFull = ({ title, icon: Icon, stats, type, onClick, bgColor, the
     return (
         <div onClick={onClick} className={`${cardBg} ${borderClass} p-4 rounded-xl shadow-md mb-3 cursor-pointer hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden relative`}>
             <div className="flex justify-between items-center mb-4 relative z-10"><div className="flex items-center gap-3"><div className={`p-2 rounded-lg ${bgIcon}`}><Icon size={18} /></div><span className={`font-serif font-bold text-lg tracking-wide ${txtMain}`}>{title}</span></div>{type !== 'total' && <div className={`bg-white/20 p-1 rounded-full ${txtMain}`}><ChevronLeft className="rotate-180" size={16}/></div>}</div>
-            <div className="grid grid-cols-3 gap-2 text-center relative z-10"><div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Achat</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div></div><div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div></div><div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div><div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>{stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}</div></div></div>
+            <div className="grid grid-cols-3 gap-2 text-center relative z-10"><div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Revient</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.buy)}</div></div><div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>{type === 'sold' ? 'Vendu' : 'Estim.'}</div><div className={`font-bold text-base ${txtMain}`}>{formatPrice(stats.val)}</div></div><div><div className={`text-[10px] uppercase tracking-wider font-semibold ${txtSub}`}>Bénéfice</div><div className={`font-bold text-base ${isWhite ? (stats.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-white'}`}>{stats.profit > 0 ? '+' : ''}{formatPrice(stats.profit)}</div></div></div>
             {!isWhite && <Icon size={120} className="absolute -bottom-4 -right-4 opacity-10 text-white transform rotate-12 pointer-events-none" />}
         </div>
     );
@@ -303,10 +315,7 @@ export default function App() {
   const [friendFilter, setFriendFilter] = useState('collection');
   const [selectedFriendWatch, setSelectedFriendWatch] = useState(null);
 
-  const [showGalleryCollection, setShowGalleryCollection] = useState(true);
-  const [showGalleryForsale, setShowGalleryForsale] = useState(true);
-  const [showGallerySold, setShowGallerySold] = useState(false);
-  const [showGalleryWishlist, setShowGalleryWishlist] = useState(false);
+  const [galleryPhotoFilter, setGalleryPhotoFilter] = useState('face'); // face, back, profile, macro, box
   const [fullScreenImage, setFullScreenImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('box'); 
@@ -357,7 +366,6 @@ export default function App() {
     if (view === 'news' && news.length === 0) {
       const fetchNews = async () => {
         setIsNewsLoading(true);
-        // Les Rhabilleurs est placé en dernier
         const feeds = [
           'https://lepetitpoussoir.fr/feed/',
           'https://www.fratellowatches.com/feed/',
@@ -373,14 +381,8 @@ export default function App() {
             
             if (data.status === 'ok') {
               let cleanSourceName = data.feed.title || url;
-              // Nettoyage spécifique pour Fratello Watches
-              if (cleanSourceName.toLowerCase().includes('fratello')) {
-                cleanSourceName = 'Fratello Watches';
-              }
-              const formattedItems = data.items.map(item => ({
-                ...item,
-                sourceName: cleanSourceName
-              }));
+              if (cleanSourceName.toLowerCase().includes('fratello')) cleanSourceName = 'Fratello Watches';
+              const formattedItems = data.items.map(item => ({ ...item, sourceName: cleanSourceName }));
               allArticles.push(...formattedItems);
             }
           }
@@ -514,7 +516,12 @@ export default function App() {
     try { 
       if (type === 'watch') { 
           const base64Images = await Promise.all(files.map(file => compressImage(file))); 
-          setWatchForm(prev => { const currentImages = prev.images || (prev.image ? [prev.image] : []); const combined = [...currentImages, ...base64Images]; if (combined.length > 3) combined.splice(3); return { ...prev, images: combined, image: combined[0] || null }; }); 
+          setWatchForm(prev => { 
+              const currentImages = prev.images || (prev.image ? [prev.image] : []); 
+              const combined = [...currentImages, ...base64Images]; 
+              if (combined.length > 6) combined.splice(6); 
+              return { ...prev, images: combined, image: combined[0] || null }; 
+          }); 
       } 
       else if (type === 'invoice') { 
           const file = files[0];
@@ -535,6 +542,28 @@ export default function App() {
   };
   
   const removeImage = (index) => { setWatchForm(prev => { const currentImages = [...(prev.images || [])]; currentImages.splice(index, 1); return { ...prev, images: currentImages, image: currentImages[0] || null }; }); };
+
+  const handleCostChange = (index, field, value) => {
+      setWatchForm(prev => {
+          const newCosts = [...(prev.additionalCosts || [])];
+          newCosts[index] = { ...newCosts[index], [field]: value };
+          if (index === newCosts.length - 1 && (newCosts[index].label || newCosts[index].price)) {
+              newCosts.push({ label: '', price: '' });
+          }
+          return { ...prev, additionalCosts: newCosts };
+      });
+  };
+
+  const removeCost = (index) => {
+      setWatchForm(prev => {
+          const newCosts = [...(prev.additionalCosts || [])];
+          newCosts.splice(index, 1);
+          if (newCosts.length === 0 || (newCosts[newCosts.length - 1].label || newCosts[newCosts.length - 1].price)) {
+              newCosts.push({ label: '', price: '' });
+          }
+          return { ...prev, additionalCosts: newCosts };
+      });
+  };
 
   const closeForm = (data) => { 
       if (editingType === 'watch') { 
@@ -557,7 +586,8 @@ export default function App() {
     
     if (isWatch) { 
         const images = watchForm.images && watchForm.images.length > 0 ? watchForm.images : (watchForm.image ? [watchForm.image] : []); 
-        data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice || 0), sellingPrice: Number(watchForm.sellingPrice || 0), minPrice: Number(watchForm.minPrice || 0), dateAdded: watchForm.dateAdded || new Date().toISOString(), images: images, image: images[0] || null }; 
+        const cleanCosts = (watchForm.additionalCosts || []).filter(c => c.label || c.price).map(c => ({...c, price: Number(c.price)}));
+        data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice || 0), sellingPrice: Number(watchForm.sellingPrice || 0), minPrice: Number(watchForm.minPrice || 0), additionalCosts: cleanCosts, dateAdded: watchForm.dateAdded || new Date().toISOString(), images: images, image: images[0] || null }; 
     } else { 
         data = { ...braceletForm, id, dateAdded: braceletForm.dateAdded || new Date().toISOString() }; 
     }
@@ -580,14 +610,18 @@ export default function App() {
   };
 
   const exportCSV = () => {
-    const sep = ";"; let csvContent = "\uFEFF"; csvContent += "sep=;\n"; const headers = [ "Statut", "Marque", "Modele", "Prix Achat", "Prix Vente/Estim", "Prix Min", "Plus-Value", "Diametre", "Annee", "Reference", "Mouvement", "Notes" ]; csvContent += headers.join(sep) + "\n";
-    watches.forEach(w => { const row = [ w.status, w.brand, w.model, w.purchasePrice, w.sellingPrice, w.minPrice, (w.sellingPrice||0)-w.purchasePrice, w.diameter, w.year, w.reference, w.movement, (w.conditionNotes||"").replace(/(\r\n|\n|\r|;)/gm, " ") ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`); csvContent += row.join(sep) + "\n"; });
+    const sep = ";"; let csvContent = "\uFEFF"; csvContent += "sep=;\n"; const headers = [ "Statut", "Marque", "Modele", "Type", "Prix Achat", "Frais Annexes", "Coût Total", "Prix Vente/Estim", "Plus-Value", "Diametre", "Annee", "Reference", "Mouvement", "Notes" ]; csvContent += headers.join(sep) + "\n";
+    watches.forEach(w => { 
+        const tCost = getTotalCost(w);
+        const extra = tCost - (Number(w.purchasePrice)||0);
+        const row = [ w.status, w.brand, w.model, w.watchType, w.purchasePrice, extra, tCost, w.sellingPrice, (w.sellingPrice||0)-tCost, w.diameter, w.year, w.reference, w.movement, (w.conditionNotes||"").replace(/(\r\n|\n|\r|;)/gm, " ") ].map(e => `"${(e || '').toString().replace(/"/g, '""')}"`); csvContent += row.join(sep) + "\n"; 
+    });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "collection.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
   
-  const openAdd = () => { setEditingId(null); setSelectedWatch(null); setWatchForm({ ...DEFAULT_WATCH_STATE, status: filter === 'wishlist' ? 'wishlist' : 'collection' }); setBraceletForm(DEFAULT_BRACELET_STATE); setEditingType(filter === 'bracelets' ? 'bracelet' : 'watch'); setView('add'); };
+  const openAdd = () => { setEditingId(null); setSelectedWatch(null); setWatchForm({ ...DEFAULT_WATCH_STATE, status: filter === 'wishlist' ? 'wishlist' : 'collection', additionalCosts: [{label: '', price: ''}] }); setBraceletForm(DEFAULT_BRACELET_STATE); setEditingType(filter === 'bracelets' ? 'bracelet' : 'watch'); setView('add'); };
   
-  const handleEdit = (item, type) => { if (type === 'watch') { const safeImages = item.images || (item.image ? [item.image] : []); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages }); } else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item }); setEditingType(type); setEditingId(item.id); setView('add'); };
+  const handleEdit = (item, type) => { if (type === 'watch') { const safeImages = item.images || (item.image ? [item.image] : []); const costs = item.additionalCosts && item.additionalCosts.length > 0 ? [...item.additionalCosts] : []; costs.push({label: '', price: ''}); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages, additionalCosts: costs }); } else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item }); setEditingType(type); setEditingId(item.id); setView('add'); };
   
   const handleCancelForm = () => { setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); if (selectedWatch) { setView('detail'); } else { setView(viewBeforeDetail); } };
   
@@ -610,12 +644,12 @@ export default function App() {
     if (searchTerm) { const lower = searchTerm.toLowerCase(); filtered = filtered.filter(w => { const fullSearchString = `${w.brand || ''} ${w.model || ''}`.toLowerCase(); return fullSearchString.includes(lower); }); }
     let sorted = [...filtered];
     const getTime = (w) => { if (w.purchaseDate) { const time = new Date(w.purchaseDate).getTime(); return isNaN(time) ? null : time; } return null; };
-    if (sortOrder === 'priceAsc') sorted.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0));
-    else if (sortOrder === 'priceDesc') sorted.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0));
-    else if (sortOrder === 'sellPriceAsc') sorted.sort((a, b) => (Number(a.sellingPrice) || 0) - (Number(a.sellingPrice) || 0));
+    if (sortOrder === 'priceAsc') sorted.sort((a, b) => getTotalCost(a) - getTotalCost(b));
+    else if (sortOrder === 'priceDesc') sorted.sort((a, b) => getTotalCost(b) - getTotalCost(a));
+    else if (sortOrder === 'sellPriceAsc') sorted.sort((a, b) => (Number(a.sellingPrice) || 0) - (Number(b.sellingPrice) || 0));
     else if (sortOrder === 'sellPriceDesc') sorted.sort((a, b) => (Number(b.sellingPrice) || 0) - (Number(a.sellingPrice) || 0));
-    else if (sortOrder === 'profitAsc') sorted.sort((a, b) => ((Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0)) - ((Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0)));
-    else if (sortOrder === 'profitDesc') sorted.sort((a, b) => ((Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0)) - ((Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0)));
+    else if (sortOrder === 'profitAsc') sorted.sort((a, b) => ((Number(a.sellingPrice) || 0) - getTotalCost(a)) - ((Number(b.sellingPrice) || 0) - getTotalCost(b)));
+    else if (sortOrder === 'profitDesc') sorted.sort((a, b) => ((Number(b.sellingPrice) || 0) - getTotalCost(b)) - ((Number(a.sellingPrice) || 0) - getTotalCost(a)));
     else if (sortOrder === 'alpha') sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
     else if (sortOrder === 'dateAsc') { sorted.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime(); return ta - tb; }); } 
     else { sorted.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime(); return tb - ta; }); }
@@ -648,15 +682,28 @@ export default function App() {
           )}
           
           <div className="space-y-3">
-            <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Camera size={14}/> Photos</h3>
-            <div className="grid grid-cols-4 gap-2">
+            <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Camera size={14}/> Photos (Face, Dos, Profil, Macros, Boîte)</h3>
+            <div className="grid grid-cols-3 gap-2">
               {(form.images || []).map((img, idx) => (
-                  <div key={idx} className={`relative aspect-square rounded-xl overflow-hidden border ${theme.border}`}><img src={img} className="w-full h-full object-cover" alt="Preview"/><button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full p-1 shadow-sm"><X size={12}/></button></div>
+                  <div key={idx} className={`relative aspect-square rounded-xl overflow-hidden border ${theme.border}`}>
+                      <img src={img} className="w-full h-full object-cover" alt="Preview"/>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] font-bold text-center py-0.5">
+                          {idx === 0 ? 'Face' : idx === 1 ? 'Dos' : idx === 2 ? 'Profil' : idx === 3 ? 'Macro 1' : idx === 4 ? 'Macro 2' : 'Boîte/Pap.'}
+                      </div>
+                      <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full p-1 shadow-sm"><X size={12}/></button>
+                  </div>
               ))}
-              {(form.images || []).length < 3 && (
-                  <label className={`aspect-square rounded-xl border-2 border-dashed ${theme.border} flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors`}><Plus className={theme.textSub} size={20}/><span className={`text-[10px] ${theme.textSub} font-medium mt-1`}>Ajouter</span><input type="file" className="hidden" multiple onChange={(e) => handleImageUpload(e, isWatch ? 'watch' : 'bracelet')} accept="image/*"/></label>
+              {(form.images || []).length < 6 && (
+                  <label className={`aspect-square rounded-xl border-2 border-dashed ${theme.border} flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors`}><Plus className={theme.textSub} size={20}/><span className={`text-[10px] ${theme.textSub} font-medium mt-1 text-center px-1`}>Ajouter<br/>{
+                      (form.images || []).length === 0 ? '(Face)' : 
+                      (form.images || []).length === 1 ? '(Dos)' : 
+                      (form.images || []).length === 2 ? '(Profil)' : 
+                      (form.images || []).length === 3 ? '(Macro 1)' : 
+                      (form.images || []).length === 4 ? '(Macro 2)' : '(Boîte/Pap.)'
+                  }</span><input type="file" className="hidden" multiple onChange={(e) => handleImageUpload(e, isWatch ? 'watch' : 'bracelet')} accept="image/*"/></label>
               )}
             </div>
+            <p className="text-[10px] text-slate-400 italic">* La photo "Boîte/Pap." (6ème position) sera automatiquement masquée pour vos amis.</p>
           </div>
 
           {isWatch ? (
@@ -673,9 +720,15 @@ export default function App() {
                       <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: Alpinist" value={form.model} onChange={e => handleInput('model', e.target.value)} required />
                   </div>
                 </div>
-                <div>
-                    <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('reference')} (Optionnel)</label>
-                    <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: SPB117" value={form.reference || ''} onChange={e => handleInput('reference', e.target.value)} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('reference')} (Optionnel)</label>
+                      <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: SPB117" value={form.reference || ''} onChange={e => handleInput('reference', e.target.value)} />
+                  </div>
+                  <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">Type (Plongeuse, Dress...)</label>
+                      <input className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: Toolwatch" value={form.watchType || ''} onChange={e => handleInput('watchType', e.target.value)} />
+                  </div>
                 </div>
               </div>
 
@@ -695,7 +748,21 @@ export default function App() {
                     <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('min_price')}</label>
                     <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: 4800 (Prix plancher privé)" value={form.minPrice || ''} onChange={e => handleInput('minPrice', e.target.value)} />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800 mt-2">
+                    <label className="text-[10px] font-bold uppercase text-slate-500 ml-1 block"><Plus size={10} className="inline"/> Frais annexes (Révision, Boîte...)</label>
+                    {(form.additionalCosts || []).map((cost, idx) => (
+                        <div key={idx} className="flex gap-2 items-center">
+                            <input className={`flex-1 p-2 rounded-lg border ${theme.input} text-sm`} placeholder="Libellé (ex: Révision)" value={cost.label || ''} onChange={e => handleCostChange(idx, 'label', e.target.value)} />
+                            <input type="number" className={`w-24 p-2 rounded-lg border ${theme.input} text-sm`} placeholder="Prix (€)" value={cost.price || ''} onChange={e => handleCostChange(idx, 'price', e.target.value)} />
+                            {(cost.label || cost.price) ? (
+                                <button type="button" onClick={() => removeCost(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><X size={16}/></button>
+                            ) : <div className="w-8"></div>}
+                        </div>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2 mt-2">
                   <div><label className="text-[10px] uppercase font-bold text-slate-500 ml-1">{t('date_purchase')}</label><input type="date" className={`w-full p-2.5 rounded-lg border ${theme.input} text-sm`} value={form.purchaseDate || ''} onChange={e => handleInput('purchaseDate', e.target.value)} /></div>
                   {form.status === 'sold' && <div><label className="text-[10px] uppercase font-bold text-slate-500 ml-1">{t('date_sold')}</label><input type="date" className={`w-full p-2.5 rounded-lg border ${theme.input} text-sm`} value={form.soldDate || ''} onChange={e => handleInput('soldDate', e.target.value)} /></div>}
                 </div>
@@ -931,8 +998,8 @@ export default function App() {
             <Card key={w.id} onClick={() => { setViewedImageIndex(0); openWatchDetail(w); }} theme={theme}>
               <div className={`aspect-square ${theme.bg} relative`}>
                 {displayImage ? <img src={displayImage} className="w-full h-full object-cover" alt="montre"/> : <div className="flex h-full items-center justify-center text-slate-300"><Camera/></div>}
-                {(w.purchasePrice) && (<div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{formatPrice(w.purchasePrice)}</div>)}
-                <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">{w.status === 'sold' ? (<><span className="text-emerald-600 font-extrabold uppercase">{t('sold')}</span><span className="text-emerald-500 font-bold text-[9px]">{formatPrice(w.sellingPrice)}</span></>) : (formatPrice(w.sellingPrice || w.purchasePrice))}</div>
+                {(w.purchasePrice) && (<div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{formatPrice(getTotalCost(w))}</div>)}
+                <div className="absolute top-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold text-slate-800 shadow-sm flex flex-col items-end">{w.status === 'sold' ? (<><span className="text-emerald-600 font-extrabold uppercase">{t('sold')}</span><span className="text-emerald-500 font-bold text-[9px]">{formatPrice(w.sellingPrice)}</span></>) : (formatPrice(w.sellingPrice || getTotalCost(w)))}</div>
                 <div className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm cursor-pointer z-10" onClick={(e) => { e.stopPropagation(); toggleVisibility(w); }}>{w.publicVisible ? <Eye size={14} className="text-emerald-600"/> : <EyeOff size={14} className="text-slate-400"/>}</div>
               </div>
               <div className="p-3"><div className={`font-bold font-serif text-sm truncate ${theme.text}`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div>
@@ -970,10 +1037,13 @@ export default function App() {
     if(!selectedWatch) return null;
     const w = selectedWatch;
     const displayImages = w.images && w.images.length > 0 ? w.images : (w.image ? [w.image] : []);
+    const safeViewedImageIndex = viewedImageIndex < displayImages.length ? viewedImageIndex : 0;
+    
     const searchQuery = `${w.brand} ${w.model}`.replace(/\s+/g, '+');
     const marketLinks = [{ name: "Chrono24", url: `https://www.chrono24.fr/search/index.htm?query=${searchQuery}`, icon: Clock }, { name: "eBay", url: `https://www.ebay.fr/sch/i.html?_nkw=${searchQuery}`, icon: ShoppingCart }, { name: "Vinted", url: `https://www.vinted.fr/vetements?search_text=${searchQuery}`, icon: Gem }, { name: "LeBonCoin", url: `https://www.leboncoin.fr/recherche?text=${searchQuery}`, icon: MapPin }];
     const getWatchStats = (watchId) => { const now = new Date(); const currentMonth = now.getMonth(); const currentYear = now.getFullYear(); let monthCount = 0; let yearCount = 0; let lastYearCount = 0; calendarEvents.forEach(evt => { if (evt.watches && evt.watches.includes(watchId)) { const d = new Date(evt.date); const dy = d.getFullYear(); const dm = d.getMonth(); if (dy === currentYear) { yearCount++; if (dm === currentMonth) monthCount++; } else if (dy === currentYear - 1) { lastYearCount++; } } }); return { monthCount, yearCount, lastYearCount }; };
     const stats = getWatchStats(w.id);
+    const tCost = getTotalCost(w);
 
     return (
       <div className={`pb-24 ${theme.bgSecondary} min-h-screen`}>
@@ -984,15 +1054,16 @@ export default function App() {
         </div>
         <div className="p-4 space-y-6">
           <div className="space-y-4">
-              <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative group`} onClick={() => setFullScreenImage(displayImages[viewedImageIndex])}>
-                {displayImages[viewedImageIndex] ? <img src={displayImages[viewedImageIndex]} className="w-full h-full object-cover" alt="montre"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
-                {displayImages.length > 1 && (<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">{displayImages.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === viewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>)}</div>)}
+              <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative group`} onClick={() => setFullScreenImage(displayImages[safeViewedImageIndex])}>
+                {displayImages[safeViewedImageIndex] ? <img src={displayImages[safeViewedImageIndex]} className="w-full h-full object-cover" alt="montre"/> : <div className="flex h-full items-center justify-center"><Camera size={48} className={theme.textSub}/></div>}
+                {displayImages.length > 1 && (<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">{displayImages.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === safeViewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>)}</div>)}
               </div>
-              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img, i) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === viewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} className="w-full h-full object-cover" alt="thumb" /></div>))}</div>)}
+              {displayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{displayImages.map((img, i) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === safeViewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} className="w-full h-full object-cover" alt="thumb" /></div>))}</div>)}
               <div>
                 <h1 className={`text-3xl font-serif font-bold ${theme.text} leading-tight`}>{w.brand}</h1><p className={`text-xl ${theme.textSub} font-medium font-serif`}>{w.model}</p>
-                {w.reference && <span className={`text-xs ${theme.bg} px-2 py-1 rounded mt-2 inline-block border ${theme.border} font-mono ${theme.textSub}`}>REF: {w.reference}</span>}
-                {w.isLimitedEdition && (<div className={`mt-2 inline-flex items-center px-3 py-1 ${theme.text} bg-indigo-500/10 text-xs font-bold rounded-full border border-indigo-500/30`}>{t('limited_edition')} {w.limitedNumber && w.limitedTotal ? `${w.limitedNumber} / ${w.limitedTotal}` : ''}</div>)}
+                {w.reference && <span className={`text-xs ${theme.bg} px-2 py-1 rounded mt-2 inline-block border ${theme.border} font-mono ${theme.textSub} mr-2`}>REF: {w.reference}</span>}
+                {w.watchType && <span className={`text-xs ${theme.bg} px-2 py-1 rounded mt-2 inline-block border ${theme.border} text-indigo-600 font-bold`}>{w.watchType}</span>}
+                {w.isLimitedEdition && (<div className={`mt-2 block w-fit px-3 py-1 ${theme.text} bg-indigo-500/10 text-xs font-bold rounded-full border border-indigo-500/30`}>{t('limited_edition')} {w.limitedNumber && w.limitedTotal ? `${w.limitedNumber} / ${w.limitedTotal}` : ''}</div>)}
               </div>
           </div>
           <div className="flex gap-2">
@@ -1017,7 +1088,36 @@ export default function App() {
           <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>{t('origin_maintenance')}</h3><div className="grid grid-cols-2 gap-3"><DetailItem icon={MapPin} label={t('country')} value={w.country} theme={theme} /><DetailItem icon={Calendar} label={t('date_release')} value={w.releaseDate} theme={theme} /><DetailItem icon={Calendar} label={t('year')} value={w.year} theme={theme} /><DetailItem icon={Package} label={t('box_included')} value={w.box} theme={theme} /><DetailItem icon={ShieldCheck} label={t('warranty')} value={w.warrantyDate} theme={theme} /><DetailItem icon={Wrench} label={t('revision')} value={w.revision} theme={theme} /></div></div>
           {(w.conditionRating || w.conditionComment) && (<div className={`p-4 rounded-xl border ${theme.border} ${theme.bg}`}><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>État & Condition</h3>{w.conditionRating && (<div className="flex items-center gap-2 mb-2"><div className={`text-lg font-bold ${theme.text} bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg`}>{w.conditionRating}/10</div><div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${w.conditionRating * 10}%` }}></div></div></div>)}{w.conditionComment && (<p className={`text-sm ${theme.text} italic`}>"{w.conditionComment}"</p>)}</div>)}
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800"><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}>Documents & Facture</h3>{w.invoice ? (<div className={`aspect-video rounded-xl overflow-hidden border ${theme.border} relative group cursor-pointer bg-slate-100 dark:bg-slate-800`} onClick={() => setFullScreenImage(w.invoice)}>{w.invoice.startsWith('data:application/pdf') ? <div className="flex flex-col items-center justify-center h-full text-slate-500"><FileText size={48} className="mb-2"/><span className="text-xs font-bold uppercase">Document PDF</span></div> : <img src={w.invoice} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="facture" />}<div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2"><Receipt size={14}/> {t('view_invoice')}</div></div></div>) : (<div className={`p-4 text-center text-sm ${theme.textSub} italic border border-dashed ${theme.border} rounded-xl`}>Aucune facture enregistrée</div>)}</div>
-          <div><h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}><Euro size={14} className="inline mr-1"/>{t('finance')} & Dates</h3><div className="grid grid-cols-2 gap-3 mb-3">{w.purchaseDate && <DetailItem icon={Calendar} label={t('date_purchase')} value={w.purchaseDate} theme={theme} />}{w.soldDate && w.status === 'sold' && <DetailItem icon={Calendar} label={t('date_sold')} value={w.soldDate} theme={theme} />}</div><div className={`grid grid-cols-2 gap-4 pt-4 border-t ${theme.border}`}><div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('purchase_price')}</div><div className={`text-lg font-bold ${theme.text}`}>{formatPrice(w.purchasePrice)}</div></div>{w.status !== 'wishlist' && (<div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}><div className={`text-xs ${theme.textSub} uppercase`}>{t('selling_price')}</div><div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice || w.purchasePrice)}</div></div>)}</div></div>
+          
+          <div>
+              <h3 className={`text-xs font-bold uppercase ${theme.textSub} mb-3 tracking-wider`}><Euro size={14} className="inline mr-1"/>{t('finance')} & Dates</h3>
+              <div className="grid grid-cols-2 gap-3 mb-3">{w.purchaseDate && <DetailItem icon={Calendar} label={t('date_purchase')} value={w.purchaseDate} theme={theme} />}{w.soldDate && w.status === 'sold' && <DetailItem icon={Calendar} label={t('date_sold')} value={w.soldDate} theme={theme} />}</div>
+              <div className={`grid grid-cols-2 gap-4 pt-4 border-t ${theme.border}`}>
+                  <div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}>
+                      <div className={`text-xs ${theme.textSub} uppercase`}>{t('purchase_price')}</div>
+                      <div className={`text-lg font-bold ${theme.text}`}>{formatPrice(w.purchasePrice)}</div>
+                      {w.additionalCosts && w.additionalCosts.length > 0 && (
+                          <div className="mt-2 space-y-1 border-t border-slate-200 dark:border-slate-700 pt-2">
+                              {w.additionalCosts.map((c, i) => (
+                                  <div key={i} className="flex justify-between text-xs">
+                                      <span className={theme.textSub}>{c.label}</span><span className={theme.text}>{formatPrice(c.price)}</span>
+                                  </div>
+                              ))}
+                              <div className="flex justify-between text-xs font-bold pt-1 text-indigo-600 dark:text-indigo-400">
+                                  <span>Total Revient</span><span>{formatPrice(tCost)}</span>
+                              </div>
+                          </div>
+                      )}
+                  </div>
+                  {w.status !== 'wishlist' && (
+                      <div className={`p-3 ${theme.bg} rounded-lg border ${theme.border}`}>
+                          <div className={`text-xs ${theme.textSub} uppercase`}>{t('selling_price')}</div>
+                          <div className="text-lg font-bold text-emerald-600">{formatPrice(w.sellingPrice || tCost)}</div>
+                      </div>
+                  )}
+              </div>
+          </div>
+
           {w.conditionNotes && (<div className="bg-amber-50 p-4 rounded-lg text-sm text-slate-800 border border-amber-100 mt-4"><div className="flex items-center font-bold text-amber-800 mb-2 text-xs uppercase"><FileText size={12} className="mr-1"/> {t('notes')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.conditionNotes}</div></div>)}
           {w.historyBrand && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_brand')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyBrand}</div></div>)}
           {w.historyModel && (<div className="bg-indigo-50 p-4 rounded-lg text-sm text-slate-800 border border-indigo-100 mt-4"><div className="flex items-center font-bold text-indigo-800 mb-2 text-xs uppercase"><BookOpen size={12} className="mr-1"/> {t('history_model')}</div><div className="whitespace-pre-wrap text-justify leading-relaxed">{w.historyModel}</div></div>)}
@@ -1045,15 +1145,29 @@ export default function App() {
 
     const getTime = (w) => { if (w.purchaseDate) { const t = new Date(w.purchaseDate).getTime(); return isNaN(t) ? null : t; } return null; };
     
-    if (sortOrder === 'priceAsc') { displayWatches.sort((a, b) => (Number(a.purchasePrice) || 0) - (Number(b.purchasePrice) || 0)); } 
-    else if (sortOrder === 'priceDesc') { displayWatches.sort((a, b) => (Number(b.purchasePrice) || 0) - (Number(a.purchasePrice) || 0)); } 
-    else if (sortOrder === 'sellPriceAsc') { displayWatches.sort((a, b) => (Number(a.sellingPrice) || 0) - (Number(a.sellingPrice) || 0)); } 
+    if (sortOrder === 'priceAsc') { displayWatches.sort((a, b) => getTotalCost(a) - getTotalCost(b)); } 
+    else if (sortOrder === 'priceDesc') { displayWatches.sort((a, b) => getTotalCost(b) - getTotalCost(a)); } 
+    else if (sortOrder === 'sellPriceAsc') { displayWatches.sort((a, b) => (Number(a.sellingPrice) || 0) - (Number(b.sellingPrice) || 0)); } 
     else if (sortOrder === 'sellPriceDesc') { displayWatches.sort((a, b) => (Number(b.sellingPrice) || 0) - (Number(a.sellingPrice) || 0)); } 
-    else if (sortOrder === 'profitAsc') { displayWatches.sort((a, b) => ((Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0)) - ((Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0))); } 
-    else if (sortOrder === 'profitDesc') { displayWatches.sort((a, b) => ((Number(b.sellingPrice) || 0) - (Number(b.purchasePrice) || 0)) - ((Number(a.sellingPrice) || 0) - (Number(a.purchasePrice) || 0))); } 
+    else if (sortOrder === 'profitAsc') { displayWatches.sort((a, b) => ((Number(a.sellingPrice) || 0) - getTotalCost(a)) - ((Number(b.sellingPrice) || 0) - getTotalCost(b))); } 
+    else if (sortOrder === 'profitDesc') { displayWatches.sort((a, b) => ((Number(b.sellingPrice) || 0) - getTotalCost(b)) - ((Number(a.sellingPrice) || 0) - getTotalCost(a))); } 
     else if (sortOrder === 'alpha') { displayWatches.sort((a, b) => (a.brand || '').localeCompare(b.brand || '')); } 
     else if (sortOrder === 'dateAsc') { displayWatches.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime(); return ta - tb; }); } 
     else { displayWatches.sort((a, b) => { const ta = getTime(a), tb = getTime(b); if (ta === null && tb !== null) return 1; if (tb === null && ta !== null) return -1; if (ta === null && tb === null) return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime(); return tb - ta; }); }
+
+    const galleryItems = [];
+    displayWatches.forEach(w => {
+        if (galleryPhotoFilter === 'face' && (w.images?.[0] || w.image)) { galleryItems.push({ id: w.id, img: w.images?.[0] || w.image, w }); } 
+        else if (galleryPhotoFilter === 'back' && w.images?.[1]) { galleryItems.push({ id: w.id + '-back', img: w.images[1], w }); } 
+        else if (galleryPhotoFilter === 'profile' && w.images?.[2]) { galleryItems.push({ id: w.id + '-profile', img: w.images[2], w }); } 
+        else if (galleryPhotoFilter === 'macro') {
+            if (w.images?.[3]) galleryItems.push({ id: w.id + '-m1', img: w.images[3], w });
+            if (w.images?.[4]) galleryItems.push({ id: w.id + '-m2', img: w.images[4], w });
+        }
+        else if (galleryPhotoFilter === 'box') {
+            if (w.images?.[5]) galleryItems.push({ id: w.id + '-box', img: w.images[5], w });
+        }
+    });
 
     return (
         <div className="pb-24 px-2">
@@ -1079,9 +1193,20 @@ export default function App() {
                 </div>
              </div>
              {isGallerySearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={gallerySearchTerm} onChange={(e) => setGallerySearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
-             <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1"><button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button><button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button><button onClick={() => setShowGallerySold(!showGallerySold)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('sold')}</button><button onClick={() => setShowGalleryWishlist(!showGalleryWishlist)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('wishlist')}</button></div>
+             
+             <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-2 mb-1">
+                {['face', 'back', 'profile', 'macro', 'box'].map(pFilter => (
+                    <button key={pFilter} onClick={() => setGalleryPhotoFilter(pFilter)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${galleryPhotoFilter === pFilter ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>
+                        {pFilter === 'face' ? 'Face (1)' : pFilter === 'back' ? 'Dos (2)' : pFilter === 'profile' ? 'Profil (3)' : pFilter === 'macro' ? 'Macros (4-5)' : 'Boîte/Pap. (6)'}
+                    </button>
+                ))}
+             </div>
+
+             <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar pb-1 border-t border-slate-100 dark:border-slate-800 pt-2">
+                <button onClick={() => setShowGalleryCollection(!showGalleryCollection)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryCollection ? 'bg-blue-50 border-blue-200 text-blue-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('collection')}</button><button onClick={() => setShowGalleryForsale(!showGalleryForsale)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryForsale ? 'bg-amber-50 border-amber-200 text-amber-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('forsale')}</button><button onClick={() => setShowGallerySold(!showGallerySold)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGallerySold ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('sold')}</button><button onClick={() => setShowGalleryWishlist(!showGalleryWishlist)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex-shrink-0 ${showGalleryWishlist ? 'bg-rose-50 border-rose-200 text-rose-600' : `${theme.bg} ${theme.border} ${theme.textSub}`}`}>{t('wishlist')}</button>
+             </div>
           </div>
-          <div className="grid grid-cols-3 gap-1 mt-2 px-1">{displayWatches.map(w => (<div key={w.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { openWatchDetail(w); }}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Galerie" /></div>))}{displayWatches.length === 0 && (<div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible.</div>)}</div>
+          <div className="grid grid-cols-3 gap-1 mt-2 px-1">{galleryItems.map(item => (<div key={item.id} className={`aspect-square ${theme.bg} rounded overflow-hidden relative cursor-pointer`} onClick={() => { openWatchDetail(item.w); }}><img src={item.img} className="w-full h-full object-cover" alt="Galerie" /></div>))}{galleryItems.length === 0 && (<div className={`col-span-3 text-center ${theme.textSub} py-10 text-sm`}>Aucune photo disponible pour cette vue.</div>)}</div>
         </div>
     );
   }
@@ -1138,8 +1263,9 @@ export default function App() {
 
       const getTopBrands = () => { const brands = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.brand) acc[w.brand] = (acc[w.brand] || 0) + 1; return acc; }, {}); return Object.entries(brands).sort((a,b) => b[1] - a[1]).slice(0, 5); };
       const getTopDials = () => { const dials = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.dialColor) acc[w.dialColor] = (acc[w.dialColor] || 0) + 1; return acc; }, {}); return Object.entries(dials).sort((a,b) => b[1] - a[1]).slice(0, 5); };
+      const getTopTypes = () => { const types = watches.filter(w => w.status === 'collection').reduce((acc, w) => { if(w.watchType) acc[w.watchType] = (acc[w.watchType] || 0) + 1; return acc; }, {}); return Object.entries(types).sort((a,b) => b[1] - a[1]).slice(0, 5); };
 
-      const topBrands = getTopBrands(); const topDials = getTopDials();
+      const topBrands = getTopBrands(); const topDials = getTopDials(); const topTypes = getTopTypes();
       const allTopWatches = getTopWatches(); const displayedTopWatches = isTopWornExpanded ? allTopWatches : allTopWatches.slice(0, 5);
 
       return (
@@ -1173,6 +1299,10 @@ export default function App() {
                     </button>
                     {showOtherStats && (
                         <div className="mt-4 space-y-6 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-4">
+                            <div>
+                                <h3 className={`font-bold text-xs ${theme.textSub} mb-3 uppercase tracking-wider`}>Types de montres</h3>
+                                <div className="space-y-3">{topTypes.map(([type, count], i) => (<div key={type} className="flex items-center justify-between"><div className="flex items-center gap-2 w-full"><span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span><div className="flex-1"><div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{type}</span><span className="font-bold">{count}</span></div><div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-indigo-500 rounded-full" style={{width: `${(count / (topTypes[0]?.[1] || 1)) * 100}%`}}></div></div></div></div></div>))}</div>
+                            </div>
                             <div>
                                 <h3 className={`font-bold text-xs ${theme.textSub} mb-3 uppercase tracking-wider`}>{t('fav_brands')}</h3>
                                 <div className="space-y-3">{topBrands.map(([brand, count], i) => (<div key={brand} className="flex items-center justify-between"><div className="flex items-center gap-2 w-full"><span className={`text-xs font-bold w-6 text-center ${theme.textSub}`}>#{i+1}</span><div className="flex-1"><div className={`flex justify-between text-xs mb-1 ${theme.text}`}><span>{brand}</span><span className="font-bold">{count}</span></div><div className={`h-1.5 rounded-full ${theme.bg} overflow-hidden`}><div className="h-full bg-blue-500 rounded-full" style={{width: `${(count / (topBrands[0]?.[1] || 1)) * 100}%`}}></div></div></div></div></div>))}</div>
@@ -1229,9 +1359,9 @@ export default function App() {
   }
 
   function renderFinance() {
-    const sCol = { buy: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
-    const sSale = { buy: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
-    const sSold = { buy: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.purchasePrice||0),0), val: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.sellingPrice||w.purchasePrice||0),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
+    const sCol = { buy: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+getTotalCost(w),0), val: watches.filter(w=>w.status==='collection').reduce((a,w)=>a+(w.sellingPrice||getTotalCost(w)),0), profit: 0 }; sCol.profit = sCol.val - sCol.buy;
+    const sSale = { buy: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+getTotalCost(w),0), val: watches.filter(w=>w.status==='forsale').reduce((a,w)=>a+(w.sellingPrice||getTotalCost(w)),0), profit: 0 }; sSale.profit = sSale.val - sSale.buy;
+    const sSold = { buy: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+getTotalCost(w),0), val: watches.filter(w=>w.status==='sold').reduce((a,w)=>a+(w.sellingPrice||getTotalCost(w)),0), profit: 0 }; sSold.profit = sSold.val - sSold.buy;
     const sTotal = { buy: sCol.buy+sSale.buy+sSold.buy, val: sCol.val+sSale.val+sSold.val, profit: sCol.profit+sSale.profit+sSold.profit };
     
     const timelineMap = watches.reduce((acc, w) => { 
@@ -1239,7 +1369,7 @@ export default function App() {
             const d = new Date(w.purchaseDate); 
             const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; 
             if (!acc[key]) acc[key] = { date: key, year: d.getFullYear(), month: d.getMonth()+1, spent: 0, gained: 0, count: 0, boughtWatches: [], soldWatches: [] }; 
-            acc[key].spent += Number(w.purchasePrice); acc[key].count += 1; acc[key].boughtWatches.push(w); 
+            acc[key].spent += getTotalCost(w); acc[key].count += 1; acc[key].boughtWatches.push(w); 
         } 
         if (w.status === 'sold' && w.soldDate && w.sellingPrice) { 
             const d = new Date(w.soldDate); 
@@ -1272,7 +1402,7 @@ export default function App() {
             const brand = w.brand || 'Inconnu';
             if (!brandStats[brand]) brandStats[brand] = { count: 0, profit: 0, loss: 0 };
             brandStats[brand].count += 1;
-            const p = (Number(w.sellingPrice) || 0) - (Number(w.purchasePrice) || 0);
+            const p = (Number(w.sellingPrice) || 0) - getTotalCost(w);
             if (p >= 0) brandStats[brand].profit += p;
             else brandStats[brand].loss += Math.abs(p);
         });
@@ -1381,7 +1511,7 @@ export default function App() {
                                                             <div key={`buy-${w.id}`} onClick={() => openWatchDetail(w)} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
                                                                 <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">{w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}</div>
                                                                 <div className="flex-1 min-w-0"><div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div><div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div></div>
-                                                                <div className="text-xs font-bold text-red-500">- {formatPrice(w.purchasePrice)}</div>
+                                                                <div className="text-xs font-bold text-red-500">- {formatPrice(getTotalCost(w))}</div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -1416,6 +1546,11 @@ export default function App() {
 
   const renderFriends = () => {
       const displayFriendWatches = friendWatches.filter(w => w.status === friendFilter);
+      // Restriction de sécurité pour les amis : ne garder que les 5 premières photos (Face à Macro 2)
+      const friendDisplayImages = selectedFriendWatch?.images?.length > 0 
+          ? selectedFriendWatch.images.slice(0, 5) 
+          : (selectedFriendWatch?.image ? [selectedFriendWatch.image] : []);
+      const safeFriendViewedImageIndex = viewedImageIndex < friendDisplayImages.length ? viewedImageIndex : 0;
 
       return (
           <div className="pb-24 px-4">
@@ -1483,23 +1618,26 @@ export default function App() {
                                       <h3 className={`font-bold text-lg ${theme.text}`}>Retour</h3>
                                   </div>
                                   
-                                  <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative`}>
-                                      {selectedFriendWatch.images?.[0] || selectedFriendWatch.image ? (
-                                          <img src={selectedFriendWatch.images?.[0] || selectedFriendWatch.image} className="w-full h-full object-cover" alt="Montre"/>
+                                  <div className={`aspect-square ${theme.bg} rounded-2xl overflow-hidden shadow-sm border ${theme.border} relative group`} onClick={() => setFullScreenImage(friendDisplayImages[safeFriendViewedImageIndex])}>
+                                      {friendDisplayImages[safeFriendViewedImageIndex] ? (
+                                          <img src={friendDisplayImages[safeFriendViewedImageIndex]} className="w-full h-full object-cover" alt="Montre"/>
                                       ) : (
                                           <Watch size={48} className="m-auto mt-24 text-slate-400"/>
                                       )}
+                                      {friendDisplayImages.length > 1 && (<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">{friendDisplayImages.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all shadow-sm ${i === safeFriendViewedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}></div>)}</div>)}
                                   </div>
+                                  {friendDisplayImages.length > 1 && (<div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">{friendDisplayImages.map((img, i) => (<div key={i} onClick={() => setViewedImageIndex(i)} className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 ${i === safeFriendViewedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}><img src={img} className="w-full h-full object-cover" alt="thumb" /></div>))}</div>)}
                                   
                                   <div>
                                       <h1 className={`text-3xl font-serif font-bold ${theme.text} leading-tight`}>{selectedFriendWatch.brand}</h1>
                                       <p className={`text-xl ${theme.textSub} font-medium font-serif`}>{selectedFriendWatch.model}</p>
-                                      {selectedFriendWatch.reference && <span className={`text-xs ${theme.bg} px-2 py-1 rounded mt-2 inline-block border ${theme.border} font-mono ${theme.textSub}`}>REF: {selectedFriendWatch.reference}</span>}
+                                      {selectedFriendWatch.reference && <span className={`text-xs ${theme.bg} px-2 py-1 rounded mt-2 inline-block border ${theme.border} font-mono ${theme.textSub} mr-2`}>REF: {selectedFriendWatch.reference}</span>}
+                                      {selectedFriendWatch.watchType && <span className={`text-xs ${theme.bg} px-2 py-1 rounded mt-2 inline-block border ${theme.border} text-indigo-600 font-bold`}>{selectedFriendWatch.watchType}</span>}
                                   </div>
 
                                   {selectedFriendWatch.status === 'forsale' && selectedFriendWatch.sellingPrice && (
                                       <div className={`p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 flex items-center justify-between`}>
-                                          <div className="text-amber-800 dark:text-amber-400 font-bold uppercase text-xs">Prix demandé</div>
+                                          <div className="text-amber-800 dark:text-amber-400 font-bold uppercase text-xs">Prix de vente espéré</div>
                                           <div className="text-2xl font-bold text-amber-600">{formatPrice(selectedFriendWatch.sellingPrice)}</div>
                                       </div>
                                   )}
@@ -1555,12 +1693,12 @@ export default function App() {
                                           <div className={`col-span-2 text-center text-sm py-8 ${theme.textSub}`}>Aucune montre dans cette catégorie.</div>
                                       ) : (
                                           displayFriendWatches.map(w => (
-                                              <div key={w.id} onClick={() => setSelectedFriendWatch(w)} className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} p-2 shadow-sm cursor-pointer hover:border-indigo-400 transition-colors ${w.status === 'sold' ? 'opacity-70' : ''}`}>
+                                              <div key={w.id} onClick={() => { setSelectedFriendWatch(w); setViewedImageIndex(0); }} className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} p-2 shadow-sm cursor-pointer hover:border-indigo-400 transition-colors ${w.status === 'sold' ? 'opacity-70' : ''}`}>
                                                   <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-2 relative">
                                                       {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={24} className="m-auto mt-8 text-slate-400"/>}
                                                       {w.status === 'forsale' && (
                                                           <div className="absolute top-1 right-1 bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">
-                                                              {formatPrice(w.sellingPrice || w.purchasePrice)}
+                                                              {w.sellingPrice ? `Vente: ${formatPrice(w.sellingPrice)}` : 'À Vendre'}
                                                           </div>
                                                       )}
                                                       {w.status === 'sold' && (
