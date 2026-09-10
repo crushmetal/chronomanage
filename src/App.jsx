@@ -888,7 +888,7 @@ export default function App() {
           </div>
           {isSearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
           {withFilters && !isSearchOpen && (
-            <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
+            <div className="flex flex-wrap gap-2 px-2 pb-1">
                 {['all', 'collection', 'forsale', 'sold', 'wishlist', 'bracelets'].map(f => (
                     <button key={f} onClick={() => { setFilter(f); if (f !== 'sold' && f !== 'forsale' && ['sellPriceAsc', 'sellPriceDesc', 'profitAsc', 'profitDesc'].includes(sortOrder)) setSortOrder('dateDesc'); }} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>
                         {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.filter(w => w.status !== 'wishlist').length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : f==='sold' ? watches.filter(w=>w.status==='sold').length : watches.filter(w=>w.status==='wishlist').length)})`}
