@@ -185,7 +185,7 @@ const ExportView = ({ watch, type, onClose, theme, t }) => {
                 <div className="flex items-center justify-between border-b-2 border-black pb-4"><div><h1 className="text-4xl font-serif font-bold uppercase tracking-widest">{watch.brand}</h1><h2 className="text-xl text-slate-600 font-medium">{watch.model}</h2>{watch.reference && <p className="font-mono text-sm mt-1">REF: {watch.reference}</p>}</div><div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center"><Watch size={32} /></div></div>
                 <div className="grid grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
                     <div>
-                        {watch.images && watch.images[0] && (<div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4"><img src={watch.images[0]} className="w-full h-full object-cover" alt="Montre"/></div>)}
+                        {watch.images && watch.images.find(i=>i) && (<div className="aspect-square rounded-xl overflow-hidden border border-slate-200 mb-4"><img src={watch.images.find(i=>i)} className="w-full h-full object-cover" alt="Montre"/></div>)}
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 print:border-black print:bg-white"><div className="text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{isSale ? t('selling_price') : 'Valeur Totale (Achat + Frais)'}</div><div className="text-3xl font-bold font-serif">{formatPrice(isSale ? (watch.sellingPrice || getTotalCost(watch)) : getTotalCost(watch))}</div>{isSale && <div className="mt-2 text-xs text-slate-500 italic">*Prix non contractuel, sujet à négociation</div>}</div>
                     </div>
                     <div className="space-y-4">
@@ -251,7 +251,7 @@ const FinanceDetailList = ({ title, items, onClose, theme, onSelectWatch }) => {
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
              {sortedItems.map(w => {
-               const thumb = w.images && w.images.length > 0 ? w.images[0] : w.image; 
+               const thumb = w.images?.find(i=>i) || w.image; 
                const totalCost = getTotalCost(w);
                const profit = (w.sellingPrice || 0) - totalCost;
                return (<div key={w.id} onClick={() => { onClose(); onSelectWatch && onSelectWatch(w); }} className={`flex items-center p-3 border rounded-lg shadow-sm ${theme.bg} ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}><div className={`w-12 h-12 rounded overflow-hidden flex-shrink-0 mr-3 border ${theme.border} ${theme.bgSecondary}`}>{thumb && <img src={thumb} className="w-full h-full object-cover" alt="Thumb"/>}</div><div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${theme.text}`}>{w.brand} {w.model}</div><div className={`text-xs ${theme.textSub}`}>Coût Total: {formatPrice(totalCost)}</div></div><div className="text-right"><div className={`font-bold text-sm ${theme.text}`}>{formatPrice(w.sellingPrice || totalCost)}</div><div className={`text-xs font-medium ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit > 0 ? '+' : ''}{formatPrice(profit)}</div></div></div>)
@@ -315,7 +315,7 @@ export default function App() {
   const [friendFilter, setFriendFilter] = useState('collection');
   const [selectedFriendWatch, setSelectedFriendWatch] = useState(null);
 
-  const [galleryPhotoFilter, setGalleryPhotoFilter] = useState('face'); // face, back, profile, macro, box
+  const [galleryPhotoFilter, setGalleryPhotoFilter] = useState('face'); 
   const [fullScreenImage, setFullScreenImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('box'); 
@@ -336,6 +336,11 @@ export default function App() {
   const [isTopWornExpanded, setIsTopWornExpanded] = useState(false);
   const [showOtherStats, setShowOtherStats] = useState(false);
   
+  const [showGalleryCollection, setShowGalleryCollection] = useState(true);
+  const [showGalleryForsale, setShowGalleryForsale] = useState(true);
+  const [showGallerySold, setShowGallerySold] = useState(false);
+  const [showGalleryWishlist, setShowGalleryWishlist] = useState(false);
+
   const [showMostSoldBrands, setShowMostSoldBrands] = useState(false);
   const [mostSoldSortBy, setMostSoldSortBy] = useState('count'); 
 
@@ -511,37 +516,43 @@ export default function App() {
 
   useEffect(() => { if (useLocalStorage) { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(watches)); localStorage.setItem(LOCAL_STORAGE_BRACELETS_KEY, JSON.stringify(bracelets)); localStorage.setItem(LOCAL_STORAGE_CALENDAR_KEY, JSON.stringify(calendarEvents)); } }, [watches, bracelets, calendarEvents, useLocalStorage]);
 
-  const handleImageUpload = async (e, type) => {
-    const files = Array.from(e.target.files); if (!files || files.length === 0) return;
+  const handleImageUploadSlot = async (e, type, slotIndex = 0) => {
+    const file = e.target.files[0];
+    if (!file) return;
     try { 
       if (type === 'watch') { 
-          const base64Images = await Promise.all(files.map(file => compressImage(file))); 
+          const base64 = await compressImage(file); 
           setWatchForm(prev => { 
-              const currentImages = prev.images || (prev.image ? [prev.image] : []); 
-              const combined = [...currentImages, ...base64Images]; 
-              if (combined.length > 6) combined.splice(6); 
-              return { ...prev, images: combined, image: combined[0] || null }; 
+              const newImages = [...(prev.images || [])]; 
+              while (newImages.length < 6) newImages.push(null);
+              newImages[slotIndex] = base64;
+              return { ...prev, images: newImages, image: newImages.find(img => img !== null) || null }; 
           }); 
       } 
       else if (type === 'invoice') { 
-          const file = files[0];
           if (file.type === 'application/pdf') {
               const reader = new FileReader();
               reader.readAsDataURL(file);
-              reader.onload = (e) => setWatchForm(prev => ({...prev, invoice: e.target.result}));
+              reader.onload = (ev) => setWatchForm(prev => ({...prev, invoice: ev.target.result}));
           } else {
               const base64 = await compressImage(file); 
               setWatchForm(prev => ({...prev, invoice: base64})); 
           }
       } 
       else { 
-          const base64 = await compressImage(files[0]); 
+          const base64 = await compressImage(file); 
           setBraceletForm(prev => ({ ...prev, image: base64 })); 
       }
     } catch (err) {}
   };
   
-  const removeImage = (index) => { setWatchForm(prev => { const currentImages = [...(prev.images || [])]; currentImages.splice(index, 1); return { ...prev, images: currentImages, image: currentImages[0] || null }; }); };
+  const removeImageSlot = (index) => {
+      setWatchForm(prev => {
+          const newImages = [...(prev.images || [])];
+          newImages[index] = null;
+          return { ...prev, images: newImages, image: newImages.find(img => img !== null) || null };
+      });
+  };
 
   const handleCostChange = (index, field, value) => {
       setWatchForm(prev => {
@@ -585,9 +596,8 @@ export default function App() {
     let data;
     
     if (isWatch) { 
-        const images = watchForm.images && watchForm.images.length > 0 ? watchForm.images : (watchForm.image ? [watchForm.image] : []); 
         const cleanCosts = (watchForm.additionalCosts || []).filter(c => c.label || c.price).map(c => ({...c, price: Number(c.price)}));
-        data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice || 0), sellingPrice: Number(watchForm.sellingPrice || 0), minPrice: Number(watchForm.minPrice || 0), additionalCosts: cleanCosts, dateAdded: watchForm.dateAdded || new Date().toISOString(), images: images, image: images[0] || null }; 
+        data = { ...watchForm, id, purchasePrice: Number(watchForm.purchasePrice || 0), sellingPrice: Number(watchForm.sellingPrice || 0), minPrice: Number(watchForm.minPrice || 0), additionalCosts: cleanCosts, dateAdded: watchForm.dateAdded || new Date().toISOString() }; 
     } else { 
         data = { ...braceletForm, id, dateAdded: braceletForm.dateAdded || new Date().toISOString() }; 
     }
@@ -621,7 +631,7 @@ export default function App() {
   
   const openAdd = () => { setEditingId(null); setSelectedWatch(null); setWatchForm({ ...DEFAULT_WATCH_STATE, status: filter === 'wishlist' ? 'wishlist' : 'collection', additionalCosts: [{label: '', price: ''}] }); setBraceletForm(DEFAULT_BRACELET_STATE); setEditingType(filter === 'bracelets' ? 'bracelet' : 'watch'); setView('add'); };
   
-  const handleEdit = (item, type) => { if (type === 'watch') { const safeImages = item.images || (item.image ? [item.image] : []); const costs = item.additionalCosts && item.additionalCosts.length > 0 ? [...item.additionalCosts] : []; costs.push({label: '', price: ''}); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages, additionalCosts: costs }); } else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item }); setEditingType(type); setEditingId(item.id); setView('add'); };
+  const handleEdit = (item, type) => { if (type === 'watch') { const costs = item.additionalCosts && item.additionalCosts.length > 0 ? [...item.additionalCosts] : []; costs.push({label: '', price: ''}); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, additionalCosts: costs }); } else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item }); setEditingType(type); setEditingId(item.id); setView('add'); };
   
   const handleCancelForm = () => { setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); if (selectedWatch) { setView('detail'); } else { setView(viewBeforeDetail); } };
   
@@ -665,6 +675,15 @@ export default function App() {
     const isAuto = /auto|manuel|mecanique/i.test(form.movement || '');
     const isQuartz = /quartz|pile/i.test(form.movement || '');
 
+    const IMAGE_SLOTS = [
+        { label: 'Face', idx: 0 },
+        { label: 'Dos', idx: 1 },
+        { label: 'Profil', idx: 2 },
+        { label: 'Macro 1', idx: 3 },
+        { label: 'Macro 2', idx: 4 },
+        { label: 'Boîte/Pap.', idx: 5 }
+    ];
+
     return (
       <div className={`pb-24 p-4 min-h-screen ${theme.bgSecondary}`}>
         <div className={`flex justify-between items-center mb-6 sticky top-0 py-3 z-10 ${theme.bgSecondary}`}>
@@ -682,28 +701,31 @@ export default function App() {
           )}
           
           <div className="space-y-3">
-            <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Camera size={14}/> Photos (Face, Dos, Profil, Macros, Boîte)</h3>
+            <h3 className={`text-xs font-bold uppercase ${theme.textSub} tracking-wider flex items-center gap-2`}><Camera size={14}/> Photos (Cliquez sur une case)</h3>
+            
             <div className="grid grid-cols-3 gap-2">
-              {(form.images || []).map((img, idx) => (
-                  <div key={idx} className={`relative aspect-square rounded-xl overflow-hidden border ${theme.border}`}>
-                      <img src={img} className="w-full h-full object-cover" alt="Preview"/>
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] font-bold text-center py-0.5">
-                          {idx === 0 ? 'Face' : idx === 1 ? 'Dos' : idx === 2 ? 'Profil' : idx === 3 ? 'Macro 1' : idx === 4 ? 'Macro 2' : 'Boîte/Pap.'}
-                      </div>
-                      <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full p-1 shadow-sm"><X size={12}/></button>
-                  </div>
-              ))}
-              {(form.images || []).length < 6 && (
-                  <label className={`aspect-square rounded-xl border-2 border-dashed ${theme.border} flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors`}><Plus className={theme.textSub} size={20}/><span className={`text-[10px] ${theme.textSub} font-medium mt-1 text-center px-1`}>Ajouter<br/>{
-                      (form.images || []).length === 0 ? '(Face)' : 
-                      (form.images || []).length === 1 ? '(Dos)' : 
-                      (form.images || []).length === 2 ? '(Profil)' : 
-                      (form.images || []).length === 3 ? '(Macro 1)' : 
-                      (form.images || []).length === 4 ? '(Macro 2)' : '(Boîte/Pap.)'
-                  }</span><input type="file" className="hidden" multiple onChange={(e) => handleImageUpload(e, isWatch ? 'watch' : 'bracelet')} accept="image/*"/></label>
-              )}
+              {IMAGE_SLOTS.map((slot) => {
+                  const currentImg = (form.images || [])[slot.idx];
+                  if (currentImg) {
+                      return (
+                          <div key={slot.idx} className={`relative aspect-square rounded-xl overflow-hidden border ${theme.border}`}>
+                            <img src={currentImg} className="w-full h-full object-cover" alt="Preview"/>
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] font-bold text-center py-0.5">{slot.label}</div>
+                            <button type="button" onClick={() => removeImageSlot(slot.idx)} className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full p-1 shadow-sm"><X size={12}/></button>
+                          </div>
+                      );
+                  } else {
+                      return (
+                          <label key={slot.idx} className={`aspect-square rounded-xl border-2 border-dashed ${theme.border} flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors`}>
+                             <Plus className={theme.textSub} size={20}/>
+                             <span className={`text-[10px] ${theme.textSub} font-medium mt-1 text-center px-1`}>Ajouter<br/>({slot.label})</span>
+                             <input type="file" className="hidden" onChange={(e) => handleImageUploadSlot(e, isWatch ? 'watch' : 'bracelet', slot.idx)} accept="image/*"/>
+                          </label>
+                      );
+                  }
+              })}
             </div>
-            <p className="text-[10px] text-slate-400 italic">* La photo "Boîte/Pap." (6ème position) sera automatiquement masquée pour vos amis.</p>
+            <p className="text-[10px] text-slate-400 italic">* La photo "Boîte/Pap." sera automatiquement masquée pour vos amis.</p>
           </div>
 
           {isWatch ? (
@@ -852,7 +874,7 @@ export default function App() {
                       <label className={`w-full py-6 border-2 border-dashed ${theme.border} rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors`}>
                           <Plus className={theme.textSub} size={24}/>
                           <span className={`text-[10px] font-bold uppercase tracking-wider ${theme.textSub} mt-2`}>Ajouter (Image ou PDF)</span>
-                          <input type="file" className="hidden" onChange={(e) => handleImageUpload(e, 'invoice')} accept="image/*,application/pdf"/>
+                          <input type="file" className="hidden" onChange={(e) => handleImageUploadSlot(e, 'invoice')} accept="image/*,application/pdf"/>
                       </label>
                   )}
               </div>
@@ -993,7 +1015,7 @@ export default function App() {
         <div className={`text-center text-xs ${theme.textSub} py-2 bg-opacity-50`}>{displayWatches.length} {t('total_displayed')}</div>
         <div className="grid grid-cols-2 gap-3 px-3 mt-1">
           {displayWatches.map(w => {
-            const displayImage = w.images && w.images.length > 0 ? w.images[0] : w.image;
+            const displayImage = w.images?.find(i=>i) || w.image;
             return (
             <Card key={w.id} onClick={() => { setViewedImageIndex(0); openWatchDetail(w); }} theme={theme}>
               <div className={`aspect-square ${theme.bg} relative`}>
@@ -1018,7 +1040,7 @@ export default function App() {
         <div className="space-y-3 px-3 mt-3">
           <button onClick={() => openAdd()} className={`w-full py-4 border-2 border-dashed ${theme.border} rounded-xl flex items-center justify-center ${theme.textSub} font-medium hover:border-rose-400 hover:text-rose-500 transition-colors`}><Plus className="mr-2" size={20}/> {t('add_new')}</button>
           {wishes.map(w => {
-            const displayImage = w.images?.[0] || w.image;
+            const displayImage = w.images?.find(i=>i) || w.image;
             return (
             <Card key={w.id} className="flex p-3 gap-3 relative" onClick={() => { openWatchDetail(w); }} theme={theme}>
                 <div className={`w-20 h-20 ${theme.bg} rounded-lg flex-shrink-0 overflow-hidden`}>{displayImage ? <img src={displayImage} className="w-full h-full object-cover" alt="montre"/> : <div className="flex h-full items-center justify-center text-slate-300"><Heart size={20}/></div>}</div>
@@ -1036,7 +1058,8 @@ export default function App() {
   function renderDetail() {
     if(!selectedWatch) return null;
     const w = selectedWatch;
-    const displayImages = w.images && w.images.length > 0 ? w.images : (w.image ? [w.image] : []);
+    const rawImages = w.images || [];
+    const displayImages = rawImages.length > 0 ? rawImages.filter(img => img !== null) : (w.image ? [w.image] : []);
     const safeViewedImageIndex = viewedImageIndex < displayImages.length ? viewedImageIndex : 0;
     
     const searchQuery = `${w.brand} ${w.model}`.replace(/\s+/g, '+');
@@ -1237,7 +1260,7 @@ export default function App() {
 
             const firstWatchId = event?.watches?.[0];
             const firstWatch = firstWatchId ? watches.find(wa => wa.id === firstWatchId) : null;
-            const watchImg = firstWatch ? (firstWatch.images?.[0] || firstWatch.image) : null;
+            const watchImg = firstWatch ? (firstWatch.images?.find(i=>i) || firstWatch.image) : null;
 
             let bubbleBg = 'bg-transparent';
             let bubbleText = `${theme.textSub} font-medium`;
@@ -1288,7 +1311,7 @@ export default function App() {
 
                 <div className={`${theme.card} p-4 rounded-xl border ${theme.border} shadow-sm`}>
                     <div className="flex justify-between items-center mb-4"><h3 className={`font-bold text-sm ${theme.text} flex items-center gap-2`}><TrendingUp className="text-emerald-500" size={16} /> {t('top_worn')}</h3><div className={`flex ${theme.bg} rounded-lg p-0.5`}>{[{id: 'month', label: t('month')}, {id: 'year', label: t('year')}, {id: 'all', label: t('all_time')}].map(tObj => (<button key={tObj.id} onClick={() => setStatsTimeframe(tObj.id)} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${statsTimeframe === tObj.id ? `${theme.bgSecondary} shadow ${theme.text}` : theme.textSub}`}>{tObj.label}</button>))}</div></div>
-                    <div className="space-y-3">{displayedTopWatches.map((w, i) => (<div key={w.id} onClick={() => openWatchDetail(w)} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border} cursor-pointer`}><div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div><div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}><img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /></div><div className="flex-1 min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div><div className="font-bold text-indigo-600 text-sm">{w.count}</div></div>))}</div>
+                    <div className="space-y-3">{displayedTopWatches.map((w, i) => (<div key={w.id} onClick={() => openWatchDetail(w)} className={`flex items-center gap-3 ${theme.bg} p-2 rounded-lg border ${theme.border} cursor-pointer`}><div className={`font-black ${theme.textSub} text-xl w-6 text-center`}>#{i+1}</div><div className={`w-10 h-10 ${theme.bgSecondary} rounded-lg overflow-hidden flex-shrink-0`}><img src={w.images?.find(i=>i) || w.image} className="w-full h-full object-cover" alt="Montre" /></div><div className="flex-1 min-w-0"><div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div><div className={`text-xs ${theme.textSub} truncate`}>{w.model}</div></div><div className="font-bold text-indigo-600 text-sm">{w.count}</div></div>))}</div>
                     {allTopWatches.length > 5 && (<button onClick={() => setIsTopWornExpanded(!isTopWornExpanded)} className={`w-full mt-3 py-2 text-xs font-bold rounded-lg border border-dashed transition-colors ${theme.textSub} ${theme.border} hover:bg-slate-50 dark:hover:bg-slate-800`}>{isTopWornExpanded ? t('show_less') : `${t('show_all')} (${allTopWatches.length})`}</button>)}
                 </div>
 
@@ -1340,7 +1363,7 @@ export default function App() {
                                 <div key={w.id} onClick={() => setSelectedCalendarWatches(prev => isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id])} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/10' : `${theme.border} hover:${theme.bg}`}`}>
                                     <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-600 border-indigo-600' : `${theme.bgSecondary} ${theme.border}`}`}>{isSelected && <Check size={12} className="text-white" />}</div>
                                     <div className="w-10 h-10 rounded-md overflow-hidden bg-slate-200 shrink-0">
-                                        {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Miniature" /> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
+                                        {w.images?.find(i=>i) || w.image ? <img src={w.images?.find(i=>i) || w.image} className="w-full h-full object-cover" alt="Miniature" /> : <Watch size={20} className="m-auto mt-2.5 text-slate-400"/>}
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className={`font-bold text-sm ${theme.text} truncate`}>{w.brand}</div>
@@ -1509,7 +1532,7 @@ export default function App() {
                                                     <div className="space-y-2">
                                                         {tItem.boughtWatches.map((w) => (
                                                             <div key={`buy-${w.id}`} onClick={() => openWatchDetail(w)} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">{w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}</div>
+                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">{w.images?.find(i=>i) || w.image ? <img src={w.images?.find(i=>i) || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}</div>
                                                                 <div className="flex-1 min-w-0"><div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div><div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div></div>
                                                                 <div className="text-xs font-bold text-red-500">- {formatPrice(getTotalCost(w))}</div>
                                                             </div>
@@ -1523,7 +1546,7 @@ export default function App() {
                                                     <div className="space-y-2">
                                                         {tItem.soldWatches.map((w) => (
                                                             <div key={`sell-${w.id}`} onClick={() => openWatchDetail(w)} className={`flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-slate-800 border ${theme.border} cursor-pointer hover:border-indigo-300 transition-colors`}>
-                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">{w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}</div>
+                                                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-100 shrink-0">{w.images?.find(i=>i) || w.image ? <img src={w.images?.find(i=>i) || w.image} className="w-full h-full object-cover" alt="Montre" /> : <Watch size={16} className="m-auto mt-2 text-slate-400"/>}</div>
                                                                 <div className="flex-1 min-w-0"><div className={`font-bold text-xs ${theme.text} truncate`}>{w.brand}</div><div className={`text-[10px] ${theme.textSub} truncate`}>{w.model}</div></div>
                                                                 <div className="text-xs font-bold text-emerald-500">+ {formatPrice(w.sellingPrice)}</div>
                                                             </div>
@@ -1546,9 +1569,9 @@ export default function App() {
 
   const renderFriends = () => {
       const displayFriendWatches = friendWatches.filter(w => w.status === friendFilter);
-      // Restriction de sécurité pour les amis : ne garder que les 5 premières photos (Face à Macro 2)
+      // Sécurité : On ne sélectionne QUE les 5 premiers slots (index 0 à 4) pour exclure fermement la photo Boîte/Papiers (index 5)
       const friendDisplayImages = selectedFriendWatch?.images?.length > 0 
-          ? selectedFriendWatch.images.slice(0, 5) 
+          ? selectedFriendWatch.images.slice(0, 5).filter(img => img !== null)
           : (selectedFriendWatch?.image ? [selectedFriendWatch.image] : []);
       const safeFriendViewedImageIndex = viewedImageIndex < friendDisplayImages.length ? viewedImageIndex : 0;
 
@@ -1695,7 +1718,7 @@ export default function App() {
                                           displayFriendWatches.map(w => (
                                               <div key={w.id} onClick={() => { setSelectedFriendWatch(w); setViewedImageIndex(0); }} className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} p-2 shadow-sm cursor-pointer hover:border-indigo-400 transition-colors ${w.status === 'sold' ? 'opacity-70' : ''}`}>
                                                   <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-2 relative">
-                                                      {w.images?.[0] || w.image ? <img src={w.images?.[0] || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={24} className="m-auto mt-8 text-slate-400"/>}
+                                                      {w.images?.find(i=>i) || w.image ? <img src={w.images?.find(i=>i) || w.image} alt="Montre" className="w-full h-full object-cover"/> : <Watch size={24} className="m-auto mt-8 text-slate-400"/>}
                                                       {w.status === 'forsale' && (
                                                           <div className="absolute top-1 right-1 bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">
                                                               {w.sellingPrice ? `Vente: ${formatPrice(w.sellingPrice)}` : 'À Vendre'}
