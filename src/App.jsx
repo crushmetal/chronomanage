@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, AlertCircle, Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ChevronsLeft, ChevronsRight, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag, Euro, ChevronDown
+  ChevronLeft, ChevronsLeft, ChevronsRight, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag, Euro, ChevronDown, Newspaper
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -11,8 +11,8 @@ import { getAuth, signInAnonymously, onAuthStateChanged, signInWithPopup, Google
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, where, addDoc } from 'firebase/firestore';
 
 const TRANSLATIONS = {
-  fr: { box: "Coffre", list: "Liste", wishlist: "Souhaits", finance: "Finance", stats: "Stats", gallery: "Galerie", myWatches: "Mes Montres", pieces: "pièces", piece: "pièce", search: "Rechercher...", collection: "Ma Collection", forsale: "En Vente", sold: "Vendues", bracelets: "Bracelets", settings: "Paramètres", language: "Langue", theme: "Thème", light: "Clair", dark: "Sombre", total_value: "Valeur Totale", profit: "Plus-value", brand: "Marque", model: "Modèle", reference: "Référence", year: "Année", model_year: "Année du modèle", price: "Prix", add_new: "Ajouter", edit: "Modifier", delete: "Supprimer", save: "Sauvegarder", cancel: "Annuler", notes: "Notes", history: "Histoire", history_brand: "Histoire Marque", history_model: "Histoire Modèle", specs: "Caractéristiques", unknown: "Inconnu", total_displayed: "montres affichées", login_google: "Connexion Google", logout: "Déconnexion", config_cloud: "Config Cloud", export_csv: "Exporter CSV", filter_all: "Tout", all: "Tout", inventory: "Inventaire", friends: "Amis", requests: "Demandes", limited_edition: "EDITION LIMITÉE", movement: "Mouvement", movement_model: "Calibre/Modèle", manual: "Manuel", automatic: "Automatique", quartz: "Quartz", diameter: "Diamètre", thickness: "Épaisseur", lug_width: "Entre-corne", water_res: "Étanchéité", glass: "Verre", dial: "Cadran", country: "Pays", box_included: "Boîte", warranty: "Garantie", revision: "Révision", battery: "Pile", weight: "Poids", visibility_friends: "Visible par les amis", private_note: "Si décoché, cette montre restera privée.", move_collection: "J'ai obtenu cette montre !", set_main_image: "Définir principale", add_photo: "Ajouter", link_web: "Lien Web", visit_site: "Visiter le site marchand", purchase_price: "Prix Achat", selling_price: "Prix Vente / Estimation", min_price: "Prix Min (Privé)", clock_style: "Style Horloge", box_style: "Style Coffre", color_digital: "Heure Digitale", color_h_hand: "Aig. Heures", color_m_hand: "Aig. Minutes", color_s_hand: "Aig. Secondes", color_index_main: "Gros Index", color_index_small: "Petits Index", color_leather: "Cuir Extérieur", color_interior: "Intérieur", color_cushion: "Cushions", top_worn: "Top Portées", calendar: "Calendrier", month: "Mois", all_time: "Tout", fav_brands: "Marques Favorites", fav_dials: "Couleurs Cadran", finance_timeline: "Chronologie Financière", spent: "Dépenses", gained: "Gains", balance: "Bilan", identity: "Identité", origin_maintenance: "Origine & Entretien", technical: "Technique", financial_status: "Finances & Status", date_release: "Date de Sortie", date_purchase: "Date d'Achat", date_sold: "Date de Vente", market_value: "Estimation du Marché", find_used: "Trouver d'Occasion", export_sheet: "Fiches & Documents", sheet_insurance: "Fiche Assurance", sheet_sale: "Fiche de Vente", print: "Imprimer", condition_rating: "État (1-10)", condition_comment: "Commentaire sur l'état", show_history: "Voir tout l'historique", show_less: "Réduire", year_summary: "Bilan Année", stats_usage: "Statistiques d'Usage", worn_this_month: "Ce mois", worn_this_year: "Cette année", worn_last_year: "Année dernière", invoice: "Facture", add_invoice: "Ajouter Facture", view_invoice: "Voir Facture", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Prix Achat (Croissant)", sort_price_desc: "Prix Achat (Décroissant)", sort_sell_price_asc: "Prix Vente (Croissant)", sort_sell_price_desc: "Prix Vente (Décroissant)", sort_profit_asc: "Bénéfice (Croissant)", sort_profit_desc: "Bénéfice (Décroissant)", purchases: "Achats", sales: "Ventes", show_all: "Voir tout" },
-  en: { box: "Box", list: "List", wishlist: "Wishlist", finance: "Finances", stats: "Statistics", gallery: "Gallery", myWatches: "My Watches", pieces: "pieces", piece: "piece", search: "Search...", collection: "Collection", forsale: "For Sale", sold: "Sold", bracelets: "Straps", settings: "Settings", language: "Language", theme: "Theme", light: "Light", dark: "Dark", total_value: "Total Value", profit: "Profit", brand: "Brand", model: "Model", reference: "Reference", year: "Year", model_year: "Model Year", price: "Price", add_new: "Add New", edit: "Edit", delete: "Delete", save: "Save", cancel: "Cancel", notes: "Notes", history: "History", history_brand: "Brand History", history_model: "Model History", specs: "Specifications", unknown: "Unknown", total_displayed: "watches displayed", login_google: "Google Login", logout: "Logout", config_cloud: "Cloud Config", export_csv: "Export CSV", filter_all: "All", all: "All", inventory: "Inventory", friends: "Friends", requests: "Requests", limited_edition: "LIMITED EDITION", movement: "Movement", movement_model: "Caliber/Model", manual: "Manual", automatic: "Automatic", quartz: "Quartz", diameter: "Diameter", thickness: "Thickness", lug_width: "Lug Width", water_res: "Water Res.", glass: "Glass", dial: "Dial", country: "Country", box_included: "Box", warranty: "Warranty", revision: "Service", battery: "Battery", weight: "Weight", visibility_friends: "Visible to friends", private_note: "If unchecked, stays private.", move_collection: "I got this watch!", set_main_image: "Set as main", add_photo: "Add", link_web: "Web Link", visit_site: "Visit Website", purchase_price: "Purchase Price", selling_price: "Selling / Estim Price", min_price: "Min Price (Private)", clock_style: "Clock Style", box_style: "Box Style", color_digital: "Digital Time", color_h_hand: "Hour Hand", color_m_hand: "Minute Hand", color_s_hand: "Second Hand", color_index_main: "Large Indexes", color_index_small: "Small Indexes", color_leather: "Outer Leather", color_interior: "Interior", color_cushion: "Cushions", top_worn: "Top Worn", calendar: "Calendar", month: "Month", all_time: "All Time", fav_brands: "Favorite Brands", fav_dials: "Dial Colors", finance_timeline: "Financial Timeline", spent: "Spent", gained: "Gained", balance: "Balance", identity: "Identity", origin_maintenance: "Origin & Maintenance", technical: "Technical", financial_status: "Finances & Status", date_release: "Release Date", date_purchase: "Purchase Date", date_sold: "Sold Date", market_value: "Market Estimation", find_used: "Find Used", export_sheet: "Sheets & Docs", sheet_insurance: "Insurance Sheet", sheet_sale: "Sale Sheet", print: "Print", condition_rating: "Condition (1-10)", condition_comment: "Condition Details", show_history: "Show Full History", show_less: "Show Less", year_summary: "Year Summary", stats_usage: "Usage Statistics", worn_this_month: "This Month", worn_this_year: "This Year", worn_last_year: "Last Year", invoice: "Invoice", add_invoice: "Add Invoice", view_invoice: "View Invoice", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Buy Price (Asc)", sort_price_desc: "Buy Price (Desc)", sort_sell_price_asc: "Sell Price (Asc)", sort_sell_price_desc: "Sell Price (Desc)", sort_profit_asc: "Profit (Asc)", sort_profit_desc: "Profit (Desc)", purchases: "Purchases", sales: "Sales", show_all: "Show All" }
+  fr: { box: "Coffre", list: "Liste", wishlist: "Souhaits", finance: "Finance", stats: "Stats", gallery: "Galerie", myWatches: "Mes Montres", pieces: "pièces", piece: "pièce", search: "Rechercher...", collection: "Ma Collection", forsale: "En Vente", sold: "Vendues", bracelets: "Bracelets", settings: "Paramètres", language: "Langue", theme: "Thème", light: "Clair", dark: "Sombre", total_value: "Valeur Totale", profit: "Plus-value", brand: "Marque", model: "Modèle", reference: "Référence", year: "Année", model_year: "Année du modèle", price: "Prix", add_new: "Ajouter", edit: "Modifier", delete: "Supprimer", save: "Sauvegarder", cancel: "Annuler", notes: "Notes", history: "Histoire", history_brand: "Histoire Marque", history_model: "Histoire Modèle", specs: "Caractéristiques", unknown: "Inconnu", total_displayed: "montres affichées", login_google: "Connexion Google", logout: "Déconnexion", config_cloud: "Config Cloud", export_csv: "Exporter CSV", filter_all: "Tout", all: "Tout", inventory: "Inventaire", friends: "Amis", requests: "Demandes", limited_edition: "EDITION LIMITÉE", movement: "Mouvement", movement_model: "Calibre/Modèle", manual: "Manuel", automatic: "Automatique", quartz: "Quartz", diameter: "Diamètre", thickness: "Épaisseur", lug_width: "Entre-corne", water_res: "Étanchéité", glass: "Verre", dial: "Cadran", country: "Pays", box_included: "Boîte", warranty: "Garantie", revision: "Révision", battery: "Pile", weight: "Poids", visibility_friends: "Visible par les amis", private_note: "Si décoché, cette montre restera privée.", move_collection: "J'ai obtenu cette montre !", set_main_image: "Définir principale", add_photo: "Ajouter", link_web: "Lien Web", visit_site: "Visiter le site marchand", purchase_price: "Prix Achat", selling_price: "Prix Vente / Estimation", min_price: "Prix Min (Privé)", clock_style: "Style Horloge", box_style: "Style Coffre", color_digital: "Heure Digitale", color_h_hand: "Aig. Heures", color_m_hand: "Aig. Minutes", color_s_hand: "Aig. Secondes", color_index_main: "Gros Index", color_index_small: "Petits Index", color_leather: "Cuir Extérieur", color_interior: "Intérieur", color_cushion: "Cushions", top_worn: "Top Portées", calendar: "Calendrier", month: "Mois", all_time: "Tout", fav_brands: "Marques Favorites", fav_dials: "Couleurs Cadran", finance_timeline: "Chronologie Financière", spent: "Dépenses", gained: "Gains", balance: "Bilan", identity: "Identité", origin_maintenance: "Origine & Entretien", technical: "Technique", financial_status: "Finances & Status", date_release: "Date de Sortie", date_purchase: "Date d'Achat", date_sold: "Date de Vente", market_value: "Estimation du Marché", find_used: "Trouver d'Occasion", export_sheet: "Fiches & Documents", sheet_insurance: "Fiche Assurance", sheet_sale: "Fiche de Vente", print: "Imprimer", condition_rating: "État (1-10)", condition_comment: "Commentaire sur l'état", show_history: "Voir tout l'historique", show_less: "Réduire", year_summary: "Bilan Année", stats_usage: "Statistiques d'Usage", worn_this_month: "Ce mois", worn_this_year: "Cette année", worn_last_year: "Année dernière", invoice: "Facture", add_invoice: "Ajouter Facture", view_invoice: "Voir Facture", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Prix Achat (Croissant)", sort_price_desc: "Prix Achat (Décroissant)", sort_sell_price_asc: "Prix Vente (Croissant)", sort_sell_price_desc: "Prix Vente (Décroissant)", sort_profit_asc: "Bénéfice (Croissant)", sort_profit_desc: "Bénéfice (Décroissant)", purchases: "Achats", sales: "Ventes", show_all: "Voir tout", news: "Actualités" },
+  en: { box: "Box", list: "List", wishlist: "Wishlist", finance: "Finances", stats: "Statistics", gallery: "Gallery", myWatches: "My Watches", pieces: "pieces", piece: "piece", search: "Search...", collection: "Collection", forsale: "For Sale", sold: "Sold", bracelets: "Straps", settings: "Settings", language: "Language", theme: "Theme", light: "Light", dark: "Dark", total_value: "Total Value", profit: "Profit", brand: "Brand", model: "Model", reference: "Reference", year: "Year", model_year: "Model Year", price: "Price", add_new: "Add New", edit: "Edit", delete: "Delete", save: "Save", cancel: "Cancel", notes: "Notes", history: "History", history_brand: "Brand History", history_model: "Model History", specs: "Specifications", unknown: "Unknown", total_displayed: "watches displayed", login_google: "Google Login", logout: "Logout", config_cloud: "Cloud Config", export_csv: "Export CSV", filter_all: "All", all: "All", inventory: "Inventory", friends: "Friends", requests: "Requests", limited_edition: "LIMITED EDITION", movement: "Movement", movement_model: "Caliber/Model", manual: "Manual", automatic: "Automatic", quartz: "Quartz", diameter: "Diameter", thickness: "Thickness", lug_width: "Lug Width", water_res: "Water Res.", glass: "Glass", dial: "Dial", country: "Country", box_included: "Box", warranty: "Warranty", revision: "Service", battery: "Battery", weight: "Weight", visibility_friends: "Visible to friends", private_note: "If unchecked, stays private.", move_collection: "I got this watch!", set_main_image: "Set as main", add_photo: "Add", link_web: "Web Link", visit_site: "Visit Website", purchase_price: "Purchase Price", selling_price: "Selling / Estim Price", min_price: "Min Price (Private)", clock_style: "Clock Style", box_style: "Box Style", color_digital: "Digital Time", color_h_hand: "Hour Hand", color_m_hand: "Minute Hand", color_s_hand: "Second Hand", color_index_main: "Large Indexes", color_index_small: "Small Indexes", color_leather: "Outer Leather", color_interior: "Interior", color_cushion: "Cushions", top_worn: "Top Worn", calendar: "Calendar", month: "Month", all_time: "All Time", fav_brands: "Favorite Brands", fav_dials: "Dial Colors", finance_timeline: "Financial Timeline", spent: "Spent", gained: "Gained", balance: "Balance", identity: "Identity", origin_maintenance: "Origin & Maintenance", technical: "Technical", financial_status: "Finances & Status", date_release: "Release Date", date_purchase: "Purchase Date", date_sold: "Sold Date", market_value: "Market Estimation", find_used: "Find Used", export_sheet: "Sheets & Docs", sheet_insurance: "Insurance Sheet", sheet_sale: "Sale Sheet", print: "Print", condition_rating: "Condition (1-10)", condition_comment: "Condition Details", show_history: "Show Full History", show_less: "Show Less", year_summary: "Year Summary", stats_usage: "Usage Statistics", worn_this_month: "This Month", worn_this_year: "This Year", worn_last_year: "Last Year", invoice: "Invoice", add_invoice: "Add Invoice", view_invoice: "View Invoice", sort_date_desc: "Purchase Date (Newest)", sort_date_asc: "Purchase Date (Oldest)", sort_alpha: "A-Z", sort_price_asc: "Buy Price (Asc)", sort_price_desc: "Buy Price (Desc)", sort_sell_price_asc: "Sell Price (Asc)", sort_sell_price_desc: "Sell Price (Desc)", sort_profit_asc: "Profit (Asc)", sort_profit_desc: "Profit (Desc)", purchases: "Purchases", sales: "Sales", show_all: "Show All", news: "News" }
 };
 
 const productionConfig = { apiKey: "AIzaSyCOk85wxq6mTKj3mfzjJTQN64dcg6N_4-o", authDomain: "chronomanagerfinal.firebaseapp.com", projectId: "chronomanagerfinal", storageBucket: "chronomanagerfinal.firebasestorage.app", messagingSenderId: "913764049964", appId: "1:913764049964:web:542604509381001b801d89" };
@@ -346,9 +346,47 @@ export default function App() {
   const [braceletForm, setBraceletForm] = useState(DEFAULT_BRACELET_STATE);
 
   const [viewBeforeDetail, setViewBeforeDetail] = useState('list');
+  const [news, setNews] = useState([]);
+  const [isNewsLoading, setIsNewsLoading] = useState(false);
 
   const scrollRef = useRef(null);
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [view, viewingFriend, financeDetail]);
+
+  useEffect(() => {
+    if (view === 'news' && news.length === 0) {
+      const fetchNews = async () => {
+        setIsNewsLoading(true);
+        const feeds = [
+          'https://www.lesrhabilleurs.com/feed/',
+          'https://lepetitpoussoir.fr/feed/',
+          'https://www.fratellowatches.com/feed/',
+          'https://www.hodinkee.com/articles/feed'
+        ];
+        
+        try {
+          const allArticles = [];
+          for (const url of feeds) {
+            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`);
+            const data = await res.json();
+            
+            if (data.status === 'ok') {
+              const formattedItems = data.items.map(item => ({
+                ...item,
+                sourceName: data.feed.title || url 
+              }));
+              allArticles.push(...formattedItems);
+            }
+          }
+          allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+          setNews(allArticles);
+        } catch (e) {
+          console.error("Erreur de chargement des flux RSS", e);
+        }
+        setIsNewsLoading(false);
+      };
+      fetchNews();
+    }
+  }, [view, news.length]);
 
   useEffect(() => { if (!firebaseReady && productionConfig.apiKey) { tryInitFirebase(productionConfig); if (firebaseReady) { setUseLocalStorage(false); setLoading(true); } } }, []);
 
@@ -1550,6 +1588,55 @@ export default function App() {
       );
   }
 
+  function renderNews() {
+    return (
+      <div className="pb-24 px-4">
+        {renderHeader(t('news'))}
+        
+        {isNewsLoading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className={`animate-spin text-indigo-500`} size={32} />
+          </div>
+        ) : (
+          <div className="space-y-4 mt-4 animate-in slide-in-from-bottom-4">
+            {news.map((article, index) => {
+              const cleanText = article.description.replace(/<[^>]+>/g, '').substring(0, 120) + '...';
+              
+              return (
+                <a key={index} href={article.link} target="_blank" rel="noreferrer" 
+                   className={`${theme.card} rounded-xl overflow-hidden border ${theme.border} shadow-sm flex flex-col hover:border-indigo-400 transition-colors`}>
+                  
+                  {article.thumbnail && (
+                    <div className="h-40 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <img src={article.thumbnail} alt={article.title} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  
+                  <div className="p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                        {article.sourceName}
+                      </span>
+                      <span className={`text-[10px] ${theme.textSub}`}>
+                        {new Date(article.pubDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <h3 className={`font-serif font-bold text-sm ${theme.text} leading-snug mb-2`}>
+                      {article.title}
+                    </h3>
+                    <p className={`text-xs ${theme.textSub} leading-relaxed`}>
+                      {cleanText}
+                    </p>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (loading) return <div className={`flex h-screen items-center justify-center ${theme.bgSecondary}`}><Loader2 className={`animate-spin ${theme.text}`}/></div>;
 
   return (
@@ -1565,6 +1652,7 @@ export default function App() {
             {view === 'friends' && renderFriends()}
             {view === 'summary' && renderSummary()}
             {view === 'detail' && renderDetail()}
+            {view === 'news' && renderNews()}
             {view === 'add' && renderForm()}
         </div>
         
@@ -1575,14 +1663,16 @@ export default function App() {
         {showRulesHelp && <RulesHelpModal onClose={() => setShowRulesHelp(false)} theme={theme} />}
 
         {view !== 'add' && (
-          <nav className={`fixed bottom-0 w-full max-w-md ${theme.nav} border-t flex justify-between px-4 py-2 z-50 text-[10px] font-medium ${theme.textSub}`}>
-            <button onClick={() => setView('box')} className={`flex flex-col items-center w-1/6 ${view === 'box' ? 'text-amber-600' : ''}`}><Box size={20}/><span className="mt-1">{t('box')}</span></button>
-            <button onClick={() => { setFilter('all'); setView('list'); }} className={`flex flex-col items-center w-1/6 ${view === 'list' ? 'text-indigo-600' : ''}`}><Watch size={20}/><span className="mt-1">{t('list')}</span></button>
-            <button onClick={() => setView('wishlist')} className={`flex flex-col items-center w-1/6 ${view === 'wishlist' ? 'text-rose-600' : ''}`}><Heart size={20}/><span className="mt-1">{t('wishlist')}</span></button>
-            <button onClick={() => openAdd()} className="flex-none flex items-center justify-center w-12 h-12 bg-slate-900 text-white rounded-full shadow-lg -mt-4 border-2 border-slate-50"><Plus size={24}/></button>
-            <button onClick={() => setView('finance')} className={`flex flex-col items-center w-1/6 ${view === 'finance' ? 'text-emerald-600' : ''}`}><TrendingUp size={20}/><span className="mt-1">{t('finance')}</span></button>
-            <button onClick={() => setView('stats')} className={`flex flex-col items-center w-1/6 ${view === 'stats' ? 'text-blue-600' : ''}`}><BarChart2 size={20}/><span className="mt-1">{t('stats')}</span></button>
-            <button onClick={() => setView('profile')} className={`flex flex-col items-center w-1/6 ${view === 'profile' ? 'text-slate-900' : ''}`}><Grid size={20}/><span className="mt-1">{t('gallery')}</span></button>
+          <nav className={`fixed bottom-0 w-full max-w-md ${theme.nav} border-t flex justify-between px-2 py-2 z-50 text-[10px] font-medium ${theme.textSub}`}>
+            <button onClick={() => setView('box')} className={`flex flex-col items-center flex-1 ${view === 'box' ? 'text-amber-600' : ''}`}><Box size={20}/><span className="mt-1 truncate">{t('box')}</span></button>
+            <button onClick={() => { setFilter('all'); setView('list'); }} className={`flex flex-col items-center flex-1 ${view === 'list' ? 'text-indigo-600' : ''}`}><Watch size={20}/><span className="mt-1 truncate">{t('list')}</span></button>
+            <button onClick={() => setView('news')} className={`flex flex-col items-center flex-1 ${view === 'news' ? 'text-blue-500' : ''}`}><Newspaper size={20}/><span className="mt-1 truncate">{t('news')}</span></button>
+            
+            <button onClick={() => openAdd()} className="flex-none flex items-center justify-center w-12 h-12 bg-slate-900 text-white rounded-full shadow-lg -mt-4 border-2 border-slate-50 mx-1"><Plus size={24}/></button>
+            
+            <button onClick={() => setView('finance')} className={`flex flex-col items-center flex-1 ${view === 'finance' ? 'text-emerald-600' : ''}`}><TrendingUp size={20}/><span className="mt-1 truncate">{t('finance')}</span></button>
+            <button onClick={() => setView('stats')} className={`flex flex-col items-center flex-1 ${view === 'stats' ? 'text-blue-600' : ''}`}><BarChart2 size={20}/><span className="mt-1 truncate">{t('stats')}</span></button>
+            <button onClick={() => setView('profile')} className={`flex flex-col items-center flex-1 ${view === 'profile' ? 'text-slate-900' : ''}`}><Grid size={20}/><span className="mt-1 truncate">{t('gallery')}</span></button>
           </nav>
         )}
       </div>
