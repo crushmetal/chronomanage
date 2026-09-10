@@ -348,6 +348,7 @@ export default function App() {
   const [viewBeforeDetail, setViewBeforeDetail] = useState('list');
   const [news, setNews] = useState([]);
   const [isNewsLoading, setIsNewsLoading] = useState(false);
+  const [selectedNewsSource, setSelectedNewsSource] = useState('all');
 
   const scrollRef = useRef(null);
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [view, viewingFriend, financeDetail]);
@@ -534,7 +535,7 @@ export default function App() {
           if(selectedWatch) { 
               setSelectedWatch(data); setViewedImageIndex(0); setView('detail'); 
           } else {
-              setView(data.status === 'wishlist' ? 'wishlist' : 'list'); 
+              setView('list'); 
           }
       } else { 
           setView('list'); 
@@ -578,7 +579,7 @@ export default function App() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "collection.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
   
-  const openAdd = () => { setEditingId(null); setSelectedWatch(null); setWatchForm({ ...DEFAULT_WATCH_STATE, status: view === 'wishlist' ? 'wishlist' : 'collection' }); setBraceletForm(DEFAULT_BRACELET_STATE); setEditingType((filter === 'bracelets' && view !== 'wishlist') ? 'bracelet' : 'watch'); setView('add'); };
+  const openAdd = () => { setEditingId(null); setSelectedWatch(null); setWatchForm({ ...DEFAULT_WATCH_STATE, status: filter === 'wishlist' ? 'wishlist' : 'collection' }); setBraceletForm(DEFAULT_BRACELET_STATE); setEditingType(filter === 'bracelets' ? 'bracelet' : 'watch'); setView('add'); };
   
   const handleEdit = (item, type) => { if (type === 'watch') { const safeImages = item.images || (item.image ? [item.image] : []); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, images: safeImages }); } else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item }); setEditingType(type); setEditingId(item.id); setView('add'); };
   
@@ -882,9 +883,9 @@ export default function App() {
           {isSearchOpen && (<div className="px-2 mb-3"><input autoFocus type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`w-full p-2 pl-3 ${theme.input} rounded-lg text-sm focus:outline-none focus:ring-2`}/></div>)}
           {withFilters && !isSearchOpen && (
             <div className="flex gap-2 overflow-x-auto max-w-full no-scrollbar px-2 pb-1">
-                {['all', 'collection', 'forsale', 'sold', 'bracelets'].map(f => (
+                {['all', 'collection', 'forsale', 'sold', 'wishlist', 'bracelets'].map(f => (
                     <button key={f} onClick={() => { setFilter(f); if (f !== 'sold' && f !== 'forsale' && ['sellPriceAsc', 'sellPriceDesc', 'profitAsc', 'profitDesc'].includes(sortOrder)) setSortOrder('dateDesc'); }} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${filter===f ? 'bg-slate-800 text-white shadow-md' : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`}`}>
-                        {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.filter(w => w.status !== 'wishlist').length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : watches.filter(w=>w.status==='sold').length)})`}
+                        {t(f)} {f !== 'bracelets' && `(${f === 'all' ? watches.filter(w => w.status !== 'wishlist').length : (f==='collection' ? watches.filter(w=>w.status==='collection').length : f==='forsale' ? watches.filter(w=>w.status==='forsale').length : f==='sold' ? watches.filter(w=>w.status==='sold').length : watches.filter(w=>w.status==='wishlist').length)})`}
                     </button>
                 ))}
             </div>
@@ -894,6 +895,9 @@ export default function App() {
   }
 
   function renderList() {
+    if (filter === 'wishlist') {
+        return renderWishlist();
+    }
     const displayWatches = filteredWatches.filter(w => { if (w.status === 'wishlist') return false; if (filter === 'all') return true; if (filter === 'bracelets') return false; return w.status === filter; });
     if (filter === 'bracelets') {
         return (
@@ -937,7 +941,7 @@ export default function App() {
     const wishes = filteredWatches.filter(w => w.status === 'wishlist');
     return (
       <div className="pb-24">
-        {renderHeader(t('wishlist'))}
+        {renderHeader(t('wishlist'), true)}
         <div className="space-y-3 px-3 mt-3">
           <button onClick={() => openAdd()} className={`w-full py-4 border-2 border-dashed ${theme.border} rounded-xl flex items-center justify-center ${theme.textSub} font-medium hover:border-rose-400 hover:text-rose-500 transition-colors`}><Plus className="mr-2" size={20}/> {t('add_new')}</button>
           {wishes.map(w => {
@@ -1589,17 +1593,42 @@ export default function App() {
   }
 
   function renderNews() {
+    // Récupérer la liste des sources uniques
+    const sources = ['all', ...new Set(news.map(a => a.sourceName))];
+    const filteredNews = selectedNewsSource === 'all' 
+      ? news 
+      : news.filter(a => a.sourceName === selectedNewsSource);
+
     return (
       <div className="pb-24 px-4">
         {renderHeader(t('news'))}
         
+        {/* Filtres par source */}
+        {!isNewsLoading && news.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto no-scrollbar my-3 pb-1">
+            {sources.map(source => (
+              <button
+                key={source}
+                onClick={() => setSelectedNewsSource(source)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                  selectedNewsSource === source
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : `${theme.bgSecondary} border ${theme.border} ${theme.textSub}`
+                }`}
+              >
+                {source === 'all' ? t('filter_all') : source}
+              </button>
+            ))}
+          </div>
+        )}
+
         {isNewsLoading ? (
           <div className="flex justify-center py-10">
             <Loader2 className={`animate-spin text-indigo-500`} size={32} />
           </div>
         ) : (
-          <div className="space-y-4 mt-4 animate-in slide-in-from-bottom-4">
-            {news.map((article, index) => {
+          <div className="space-y-4 mt-2 animate-in slide-in-from-bottom-4">
+            {filteredNews.map((article, index) => {
               const cleanText = article.description.replace(/<[^>]+>/g, '').substring(0, 120) + '...';
               
               return (
