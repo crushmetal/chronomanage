@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, AlertCircle, Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ChevronsLeft, ChevronsRight, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag, Euro, ChevronDown, Newspaper
+  ChevronLeft, ChevronsLeft, ChevronsRight, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag, Euro, ChevronDown, Newspaper, Type, Circle, Square
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -25,7 +25,7 @@ const LOCAL_STORAGE_KEY = 'chrono_manager_universal_db';
 const LOCAL_STORAGE_BRACELETS_KEY = 'chrono_manager_bracelets_db';
 const LOCAL_STORAGE_CALENDAR_KEY = 'chrono_manager_calendar_db';
 const LOCAL_CONFIG_KEY = 'chrono_firebase_config'; 
-const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v3'; 
+const LOCAL_SETTINGS_KEY = 'chrono_user_settings_v4'; 
 const APP_ID_STABLE = typeof __app_id !== 'undefined' ? __app_id : 'chrono-manager-universal'; 
 
 const DEFAULT_WATCH_STATE = { brand: '', model: '', reference: '', watchType: '', diameter: '', year: '', movement: '', movementModel: '', powerReserve: '', jewels: '', country: '', waterResistance: '', glass: '', strapWidth: '', thickness: '', weight: '', dialColor: '', batteryModel: '', isLimitedEdition: false, limitedNumber: '', limitedTotal: '', publicVisible: true, box: '', warrantyDate: '', revision: '', purchasePrice: '', sellingPrice: '', minPrice: '', purchaseDate: '', soldDate: '', status: 'collection', conditionNotes: '', link: '', historyBrand: '', historyModel: '', conditionRating: '', conditionComment: '', image: null, images: [], invoice: null, additionalCosts: [{label: '', price: ''}] };
@@ -85,28 +85,41 @@ const MovementIcon = ({ size = 24, className = "" }) => (
 
 const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
   const leatherColor = settings.boxLeather || (isDark ? "#3E2723" : "#5D4037");
-  const interiorColor = settings.boxInterior || (isDark ? "#424242" : "#f5f5f0");
-  const cushionColor = settings.boxCushion || (isDark ? "#616161" : "#fdfbf7");
+  
+  let cushionColor = settings.boxCushion || 'beige';
+  let realCushion = isDark ? "#616161" : "#fdfbf7";
+  if(cushionColor === 'white') realCushion = "#FFFFFF";
+  if(cushionColor === 'black') realCushion = "#222222";
+  if(cushionColor === 'beige') realCushion = "#F5F5DC";
+  
+  let lockColor = settings.boxLock || 'gold';
+  let gradStops = [];
+  if(lockColor === 'gold') gradStops = [{offset:"0%", color:"#FFECB3"}, {offset:"50%", color:"#FFC107"}, {offset:"100%", color:"#FFB300"}];
+  if(lockColor === 'silver') gradStops = [{offset:"0%", color:"#F8FAFC"}, {offset:"50%", color:"#CBD5E1"}, {offset:"100%", color:"#94A3B8"}];
+  if(lockColor === 'black') gradStops = [{offset:"0%", color:"#334155"}, {offset:"50%", color:"#0F172A"}, {offset:"100%", color:"#020617"}];
+
   return (
   <div style={{ perspective: '1000px', width: '220px', height: '180px' }}>
     <svg viewBox="0 0 200 160" className="w-full h-full drop-shadow-2xl" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="leatherGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={leatherColor} /><stop offset="100%" stopColor={leatherColor} stopOpacity="0.8" /></linearGradient>
-        <linearGradient id="interior" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={interiorColor} /><stop offset="100%" stopColor={interiorColor} stopOpacity="0.8" /></linearGradient>
-        <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={cushionColor} /><stop offset="100%" stopColor={cushionColor} stopOpacity="0.8" /></linearGradient>
+        <linearGradient id="interior" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#2c2c2c" /><stop offset="100%" stopColor="#1a1a1a" stopOpacity="0.8" /></linearGradient>
+        <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={realCushion} /><stop offset="100%" stopColor={realCushion} stopOpacity="0.7" /></linearGradient>
         <linearGradient id="windowGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="rgba(220, 240, 255, 0.4)" /><stop offset="50%" stopColor="rgba(200, 230, 255, 0.2)" /><stop offset="100%" stopColor="rgba(220, 240, 255, 0.5)" /></linearGradient>
-        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#FFECB3" /><stop offset="50%" stopColor="#FFC107" /><stop offset="100%" stopColor="#FFB300" /></linearGradient>
+        <linearGradient id="lockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            {gradStops.map((stop, i) => <stop key={i} offset={stop.offset} stopColor={stop.color} />)}
+        </linearGradient>
       </defs>
-      <path d="M30,60 L170,60 L180,100 L20,100 Z" fill="url(#interior)" stroke="#8D6E63" strokeWidth="0.5" />
-      <g transform="translate(0, 0)">{[32, 66, 100, 134].map((x, i) => (<rect key={i} x={x} y={65} width="28" height="30" rx="4" fill="url(#cushionGrad)" stroke="#D7CCC8" strokeWidth="0.5" />))}</g>
-      <path d="M20,100 L180,100 L180,140 L20,140 Z" fill="url(#leatherGrad)" stroke="#271c19" strokeWidth="0.5"/>
-      <g transform="translate(94, 102)"><rect x="0" y="0" width="12" height="10" rx="1" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" /><circle cx="6" cy="5" r="1.5" fill="#3E2723" /></g>
+      <path d="M30,60 L170,60 L180,100 L20,100 Z" fill="url(#interior)" stroke="#111" strokeWidth="0.5" />
+      <g transform="translate(0, 0)">{[32, 66, 100, 134].map((x, i) => (<rect key={i} x={x} y={65} width="28" height="30" rx="4" fill="url(#cushionGrad)" stroke="#111" strokeWidth="0.5" />))}</g>
+      <path d="M20,100 L180,100 L180,140 L20,140 Z" fill="url(#leatherGrad)" stroke="#111" strokeWidth="0.5"/>
+      <g transform="translate(94, 102)"><rect x="0" y="0" width="12" height="10" rx="1" fill="url(#lockGrad)" stroke="#111" strokeWidth="0.5" /><circle cx="6" cy="5" r="1.5" fill="#111" /></g>
       <g className="transition-all duration-1000 ease-in-out" style={{ transformOrigin: '100px 60px', transform: isOpen ? 'rotateX(-110deg)' : 'rotateX(0deg)' }}>
-          <path d="M20,100 L180,100 L170,60 L30,60 Z" fill="url(#leatherGrad)" stroke="#3E2723" strokeWidth="1" />
-          <path d="M35,92 L165,92 L158,68 L42,68 Z" fill="url(#windowGrad)" stroke="#8D6E63" strokeWidth="0.5" />
+          <path d="M20,100 L180,100 L170,60 L30,60 Z" fill="url(#leatherGrad)" stroke="#111" strokeWidth="1" />
+          <path d="M35,92 L165,92 L158,68 L42,68 Z" fill="url(#windowGrad)" stroke="#111" strokeWidth="0.5" />
           <path d="M35,92 L80,92 L75,68 L42,68 Z" fill="rgba(255,255,255,0.1)" />
-          <path d="M20,100 L180,100 L180,108 L20,108 Z" fill="#3E2723" />
-          <g transform="translate(94, 100)"><path d="M0,0 H12 V6 C12,8 0,8 0,6 Z" fill="url(#goldGrad)" stroke="#B7880B" strokeWidth="0.5" /></g>
+          <path d="M20,100 L180,100 L180,108 L20,108 Z" fill="#111" />
+          <g transform="translate(94, 100)"><path d="M0,0 H12 V6 C12,8 0,8 0,6 Z" fill="url(#lockGrad)" stroke="#111" strokeWidth="0.5" /></g>
       </g>
     </svg>
   </div>
@@ -116,19 +129,69 @@ const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
 const AnalogClock = ({ isDark, settings }) => {
   const [time, setTime] = useState(new Date());
   useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
-  const secondsRatio = time.getSeconds() / 60; const minutesRatio = (secondsRatio + time.getMinutes()) / 60; const hoursRatio = (minutesRatio + time.getHours()) / 12;
-  const borderColor = isDark ? 'border-slate-600' : 'border-slate-800'; const bgColor = isDark ? 'bg-slate-800' : 'bg-white';
-  const tickColor = settings.indexColorSmall || (isDark ? '#64748b' : '#94a3b8'); const thickColor = settings.indexColorMain || (isDark ? '#cbd5e1' : '#1e293b'); 
-  const hHandColor = settings.handHour || (isDark ? '#cbd5e1' : '#0f172a'); const mHandColor = settings.handMinute || (isDark ? '#94a3b8' : '#475569'); const sHandColor = settings.handSecond || '#ef4444'; 
+  
+  const secondsRatio = time.getSeconds() / 60; 
+  const minutesRatio = (secondsRatio + time.getMinutes()) / 60; 
+  const hoursRatio = (minutesRatio + time.getHours()) / 12;
+  
+  const tickColor = settings.clockIndexSmallColor || (isDark ? '#64748b' : '#94a3b8'); 
+  const thickColor = settings.clockIndexMainColor || (isDark ? '#cbd5e1' : '#1e293b'); 
+  const hHandColor = settings.clockHandHColor || (isDark ? '#cbd5e1' : '#0f172a'); 
+  const mHandColor = settings.clockHandMColor || (isDark ? '#94a3b8' : '#475569'); 
+  const sHandColor = settings.clockHandSColor || '#ef4444'; 
+  const frameColor = settings.clockFrameColor || (isDark ? '#475569' : '#1e293b');
+  
+  const showIndexes = settings.clockShowIndexes ?? true;
+  const showNumbers = settings.clockShowNumbers ?? false;
+  const indexStyle = settings.clockIndexStyle || 'line'; 
+  const handStyle = settings.clockHandStyle || 'rect'; 
+
+  const renderIndexes = () => {
+      if(!showIndexes) return null;
+      return [...Array(12)].map((_, i) => {
+          const isMain = i % 3 === 0;
+          const color = isMain ? thickColor : tickColor;
+          let el = null;
+          if (indexStyle === 'dot') {
+              el = <div className="absolute rounded-full left-1/2" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: color, width: isMain ? '6px' : '4px', height: isMain ? '6px' : '4px' }}></div>;
+          } else if (indexStyle === 'rect') {
+              el = <div className="absolute left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: color, width: isMain ? '4px' : '2px', height: isMain ? '12px' : '8px' }}></div>;
+          } else { // line
+              el = <div className="absolute left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: color, width: isMain ? '2px' : '1px', height: isMain ? '12px' : '8px' }}></div>;
+          }
+          return <React.Fragment key={i}>{el}</React.Fragment>;
+      });
+  };
+
+  const renderNumbers = () => {
+      if(!showNumbers) return null;
+      return [...Array(12)].map((_, i) => {
+          const num = i === 0 ? 12 : i;
+          const angle = (i * 30) * (Math.PI / 180);
+          const radius = 24; 
+          const x = 50 + radius * Math.sin(angle);
+          const y = 50 - radius * Math.cos(angle);
+          return (
+              <div key={`num-${i}`} className="absolute text-[10px] font-bold font-serif -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%`, color: thickColor }}>
+                  {num}
+              </div>
+          );
+      });
+  };
+
+  const handHClass = handStyle === 'tapered' ? "absolute w-2 h-8 rounded-t-full origin-bottom left-1/2 bottom-1/2" : "absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2";
+  const handMClass = handStyle === 'tapered' ? "absolute w-1.5 h-12 rounded-t-full origin-bottom left-1/2 bottom-1/2" : "absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2";
+
   return (
     <div className="w-32 h-32 relative mx-auto mb-2">
-       <div className={`w-full h-full rounded-full border-4 ${borderColor} ${bgColor} shadow-inner flex items-center justify-center relative`}>
-         {[...Array(12)].map((_, i) => (<div key={i} className="absolute w-1 h-2 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: tickColor }}></div>))}
-         {[0, 3, 6, 9].map((i) => (<div key={i} className="absolute w-1.5 h-3 left-1/2 origin-bottom" style={{ bottom: '50%', transform: `translateX(-50%) rotate(${i * 30}deg) translateY(-36px)`, backgroundColor: thickColor }}></div>))}
-         <div className="absolute w-1.5 h-8 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
-         <div className="absolute w-1 h-12 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
+       <div className={`w-full h-full rounded-full shadow-inner flex items-center justify-center relative ${isDark ? 'bg-slate-800' : 'bg-white'}`} style={{ border: `4px solid ${frameColor}` }}>
+         {renderIndexes()}
+         {renderNumbers()}
+         
+         <div className={handHClass} style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
+         <div className={handMClass} style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
          <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
-         <div className={`absolute w-3 h-3 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} rounded-full border-2 border-white z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}></div>
+         <div className={`absolute w-3 h-3 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} rounded-full z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`} style={{ border: `2px solid ${sHandColor}`}}></div>
        </div>
     </div>
   );
@@ -137,15 +200,21 @@ const AnalogClock = ({ isDark, settings }) => {
 const LiveClock = ({ isDark, settings }) => {
   const [time, setTime] = useState(new Date());
   useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
-  return <div className={`font-mono text-4xl sm:text-5xl font-medium tracking-widest mb-2 opacity-90`} style={{ color: settings.digitalColor || (isDark ? '#e2e8f0' : '#1e293b') }}>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</div>;
-};
-
-const GraphicBackground = ({ isDark }) => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(${isDark ? '#475569' : '#cbd5e1'} 1px, transparent 1px)`, backgroundSize: '30px 30px', opacity: 0.5 }}></div>
-      <svg className={`absolute -right-20 -top-20 w-96 h-96 opacity-40 ${isDark ? 'text-slate-700' : 'text-slate-200'}`} viewBox="0 0 200 200"><circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.5" /><circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="0.5" /></svg>
+  
+  const h = time.toLocaleTimeString([], { hour: '2-digit' });
+  const m = time.toLocaleTimeString([], { minute: '2-digit' });
+  const s = time.toLocaleTimeString([], { second: '2-digit' });
+  
+  return (
+    <div className="font-mono text-4xl sm:text-5xl font-medium tracking-widest mb-2 opacity-90 flex justify-center items-baseline">
+        <span style={{ color: settings.digitalColorH || (isDark ? '#e2e8f0' : '#1e293b') }}>{h}</span>
+        <span className="mx-1 opacity-50" style={{ color: settings.digitalColorM || (isDark ? '#e2e8f0' : '#1e293b') }}>:</span>
+        <span style={{ color: settings.digitalColorM || (isDark ? '#e2e8f0' : '#1e293b') }}>{m}</span>
+        <span className="mx-1 opacity-50" style={{ color: settings.digitalColorS || (isDark ? '#e2e8f0' : '#1e293b') }}>:</span>
+        <span style={{ color: settings.digitalColorS || (isDark ? '#e2e8f0' : '#1e293b') }}>{s}</span>
     </div>
-);
+  );
+};
 
 const Card = ({ children, className = "", onClick, theme }) => (
   <div onClick={onClick} className={`${theme.card} rounded-xl shadow-sm border ${theme.border} overflow-hidden ${className} ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}>{children}</div>
@@ -158,6 +227,7 @@ const DetailItem = ({ icon: Icon, label, value, theme }) => (
     </div>
 );
 
+// ... (Garde toutes les fenêtres modales et utilitaires comme FullScreenImageViewer, ExportView, FinanceDetailList, FinanceCardFull, ConfigModal inchangés jusqu'à SettingsModal)
 const FullScreenImageViewer = ({ src, onClose }) => {
     const [scale, setScale] = useState(1); const [position, setPosition] = useState({ x: 0, y: 0 }); const [isDragging, setIsDragging] = useState(false); const [dragStart, setDragStart] = useState({ x: 0, y: 0 }); const [pinchDist, setPinchDist] = useState(null); const [lastScale, setLastScale] = useState(1);
     const handleWheel = (e) => { const zoomSpeed = 0.1; let newScale = e.deltaY < 0 ? scale + zoomSpeed : scale - zoomSpeed; newScale = Math.min(Math.max(1, newScale), 5); if (newScale === 1) setPosition({ x: 0, y: 0 }); setScale(newScale); };
@@ -281,15 +351,218 @@ const ConfigModal = ({ onClose, currentError, t }) => {
     );
 };
 
-const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => (
-    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-        <div className={`${theme.card} rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border ${theme.border} max-h-[90vh] flex flex-col`}><div className={`p-4 border-b ${theme.border} ${theme.bgSecondary} flex justify-between items-center flex-shrink-0`}><h3 className={`font-bold ${theme.text} flex items-center gap-2`}><Settings size={18}/> {t('settings')}</h3><button onClick={onClose}><X size={20} className={theme.textSub}/></button></div><div className="p-6 space-y-6 overflow-y-auto"><div><label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('language')}</label><div className="grid grid-cols-2 gap-2"><button onClick={() => setSettings(s => ({...s, lang: 'fr'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'fr' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇫🇷</span> Français</button><button onClick={() => setSettings(s => ({...s, lang: 'en'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.lang === 'en' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><span className="text-lg">🇬🇧</span> English</button></div></div><div><label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>{t('theme')}</label><div className="grid grid-cols-2 gap-2"><button onClick={() => setSettings(s => ({...s, theme: 'light'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={18}/> {t('light')}</button><button onClick={() => setSettings(s => ({...s, theme: 'dark'}))} className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700 shadow-md' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={18}/> {t('dark')}</button></div></div></div></div>
-    </div>
-);
+const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => {
+    const [activeTab, setActiveTab] = useState('general');
+    
+    const update = (key, value) => {
+        setSettings(s => ({...s, [key]: value}));
+    };
 
+    return (
+    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className={`${theme.card} rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border ${theme.border} flex flex-col max-h-[90vh]`}>
+            
+            <div className={`p-4 border-b ${theme.border} ${theme.bgSecondary} flex justify-between items-center flex-shrink-0`}>
+                <h3 className={`font-bold ${theme.text} flex items-center gap-2`}><Settings size={18}/> Personnalisation</h3>
+                <button onClick={onClose}><X size={20} className={theme.textSub}/></button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar">
+                <button onClick={() => setActiveTab('general')} className={`flex-1 py-3 text-xs font-bold whitespace-nowrap px-4 border-b-2 transition-colors ${activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Général</button>
+                <button onClick={() => setActiveTab('digital')} className={`flex-1 py-3 text-xs font-bold whitespace-nowrap px-4 border-b-2 transition-colors ${activeTab === 'digital' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Digitale</button>
+                <button onClick={() => setActiveTab('analog')} className={`flex-1 py-3 text-xs font-bold whitespace-nowrap px-4 border-b-2 transition-colors ${activeTab === 'analog' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Aiguilles</button>
+                <button onClick={() => setActiveTab('box')} className={`flex-1 py-3 text-xs font-bold whitespace-nowrap px-4 border-b-2 transition-colors ${activeTab === 'box' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Boîte</button>
+            </div>
+
+            <div className="p-4 overflow-y-auto space-y-6 flex-1">
+                
+                {/* GÉNÉRAL */}
+                {activeTab === 'general' && (
+                    <div className="space-y-6 animate-in slide-in-from-right-4">
+                        <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Langue & Thème</label>
+                            <div className="grid grid-cols-2 gap-2 mb-2">
+                                <button onClick={() => update('lang', 'fr')} className={`py-2 rounded-xl border transition-all ${settings.lang === 'fr' ? 'bg-indigo-600 text-white border-indigo-600' : `${theme.bg} ${theme.text} ${theme.border}`}`}>🇫🇷 FR</button>
+                                <button onClick={() => update('lang', 'en')} className={`py-2 rounded-xl border transition-all ${settings.lang === 'en' ? 'bg-indigo-600 text-white border-indigo-600' : `${theme.bg} ${theme.text} ${theme.border}`}`}>🇬🇧 EN</button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button onClick={() => update('theme', 'light')} className={`flex items-center justify-center gap-2 py-2 rounded-xl border transition-all ${settings.theme === 'light' ? 'bg-amber-100 text-amber-900 border-amber-300' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Sun size={16}/> Clair</button>
+                                <button onClick={() => update('theme', 'dark')} className={`flex items-center justify-center gap-2 py-2 rounded-xl border transition-all ${settings.theme === 'dark' ? 'bg-slate-800 text-white border-slate-700' : `${theme.bg} ${theme.text} ${theme.border}`}`}><Moon size={16}/> Sombre</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Fond d'écran global</label>
+                            <div className="flex items-center gap-3">
+                                <input type="color" value={settings.bgColor || (settings.theme === 'dark' ? '#020617' : '#f8fafc')} onChange={(e) => update('bgColor', e.target.value)} className="w-12 h-12 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                <div className="flex-1">
+                                    <button onClick={() => {update('bgColor', undefined);}} className={`text-xs px-3 py-1.5 rounded-lg border ${theme.border} ${theme.textSub} hover:${theme.bg}`}>Réinitialiser le fond</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Police Globale</label>
+                            <select value={settings.fontFamily || 'system-ui'} onChange={e => update('fontFamily', e.target.value)} className={`w-full p-3 rounded-xl border ${theme.input}`}>
+                                <option value="system-ui">Moderne (Défaut)</option>
+                                <option value="serif">Classique (Serif)</option>
+                                <option value="monospace">Technique (Mono)</option>
+                                <option value="'Courier New', Courier, monospace">Machine à écrire</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Police "Mes Montres"</label>
+                            <select value={settings.titleFontFamily || 'serif'} onChange={e => update('titleFontFamily', e.target.value)} className={`w-full p-3 rounded-xl border ${theme.input}`}>
+                                <option value="serif">Élégante (Défaut)</option>
+                                <option value="system-ui">Minimaliste</option>
+                                <option value="monospace">Digital</option>
+                                <option value="'Brush Script MT', cursive">Manuscrite</option>
+                                <option value="Impact, sans-serif">Grasse (Impact)</option>
+                            </select>
+                        </div>
+                    </div>
+                )}
+
+                {/* HORLOGE DIGITALE */}
+                {activeTab === 'digital' && (
+                    <div className="space-y-6 animate-in slide-in-from-right-4">
+                        <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Couleurs (Heures, Min, Sec)</label>
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                                <div>
+                                    <input type="color" value={settings.digitalColorH || (settings.theme === 'dark' ? '#e2e8f0' : '#1e293b')} onChange={(e) => update('digitalColorH', e.target.value)} className="w-full h-12 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                    <div className={`text-[10px] mt-1 ${theme.textSub} uppercase`}>Heures</div>
+                                </div>
+                                <div>
+                                    <input type="color" value={settings.digitalColorM || (settings.theme === 'dark' ? '#e2e8f0' : '#1e293b')} onChange={(e) => update('digitalColorM', e.target.value)} className="w-full h-12 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                    <div className={`text-[10px] mt-1 ${theme.textSub} uppercase`}>Minutes</div>
+                                </div>
+                                <div>
+                                    <input type="color" value={settings.digitalColorS || (settings.theme === 'dark' ? '#e2e8f0' : '#1e293b')} onChange={(e) => update('digitalColorS', e.target.value)} className="w-full h-12 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                    <div className={`text-[10px] mt-1 ${theme.textSub} uppercase`}>Secondes</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={() => { update('digitalColorH', undefined); update('digitalColorM', undefined); update('digitalColorS', undefined); }} className={`w-full text-xs px-3 py-2 rounded-lg border ${theme.border} ${theme.textSub} hover:${theme.bg}`}>Réinitialiser les couleurs</button>
+                    </div>
+                )}
+
+                {/* HORLOGE ANALOGIQUE */}
+                {activeTab === 'analog' && (
+                    <div className="space-y-6 animate-in slide-in-from-right-4">
+                        <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Cadran & Index</label>
+                            <div className="grid grid-cols-3 gap-2 text-center mb-4">
+                                <div>
+                                    <input type="color" value={settings.clockFrameColor || (settings.theme === 'dark' ? '#475569' : '#1e293b')} onChange={(e) => update('clockFrameColor', e.target.value)} className="w-full h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                    <div className={`text-[9px] mt-1 ${theme.textSub} uppercase`}>Cadre</div>
+                                </div>
+                                <div>
+                                    <input type="color" value={settings.clockIndexMainColor || (settings.theme === 'dark' ? '#cbd5e1' : '#1e293b')} onChange={(e) => update('clockIndexMainColor', e.target.value)} className="w-full h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                    <div className={`text-[9px] mt-1 ${theme.textSub} uppercase`}>Gros index</div>
+                                </div>
+                                <div>
+                                    <input type="color" value={settings.clockIndexSmallColor || (settings.theme === 'dark' ? '#64748b' : '#94a3b8')} onChange={(e) => update('clockIndexSmallColor', e.target.value)} className="w-full h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                    <div className={`text-[9px] mt-1 ${theme.textSub} uppercase`}>Petits index</div>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <label className={`flex items-center gap-2 p-2 border ${theme.border} rounded-lg cursor-pointer hover:${theme.bg}`}>
+                                    <input type="checkbox" checked={settings.clockShowIndexes ?? true} onChange={(e) => update('clockShowIndexes', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" />
+                                    <span className={`text-xs ${theme.text}`}>Afficher Index</span>
+                                </label>
+                                <label className={`flex items-center gap-2 p-2 border ${theme.border} rounded-lg cursor-pointer hover:${theme.bg}`}>
+                                    <input type="checkbox" checked={settings.clockShowNumbers ?? false} onChange={(e) => update('clockShowNumbers', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" />
+                                    <span className={`text-xs ${theme.text}`}>Afficher Nombres</span>
+                                </label>
+                            </div>
+                            
+                            <label className={`block text-[10px] font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Style des index</label>
+                            <div className="flex gap-2">
+                                <button onClick={() => update('clockIndexStyle', 'line')} className={`flex-1 py-2 text-xs border rounded-lg flex justify-center ${settings.clockIndexStyle === 'line' || !settings.clockIndexStyle ? 'border-indigo-500 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : `${theme.border} ${theme.textSub}`}`}><Minus size={16}/></button>
+                                <button onClick={() => update('clockIndexStyle', 'rect')} className={`flex-1 py-2 text-xs border rounded-lg flex justify-center ${settings.clockIndexStyle === 'rect' ? 'border-indigo-500 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : `${theme.border} ${theme.textSub}`}`}><Square size={16}/></button>
+                                <button onClick={() => update('clockIndexStyle', 'dot')} className={`flex-1 py-2 text-xs border rounded-lg flex justify-center ${settings.clockIndexStyle === 'dot' ? 'border-indigo-500 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : `${theme.border} ${theme.textSub}`}`}><Circle size={16}/></button>
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Aiguilles</label>
+                            <div className="grid grid-cols-3 gap-2 text-center mb-4">
+                                <div>
+                                    <input type="color" value={settings.clockHandHColor || (settings.theme === 'dark' ? '#cbd5e1' : '#0f172a')} onChange={(e) => update('clockHandHColor', e.target.value)} className="w-full h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                    <div className={`text-[9px] mt-1 ${theme.textSub} uppercase`}>Heures</div>
+                                </div>
+                                <div>
+                                    <input type="color" value={settings.clockHandMColor || (settings.theme === 'dark' ? '#94a3b8' : '#475569')} onChange={(e) => update('clockHandMColor', e.target.value)} className="w-full h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                    <div className={`text-[9px] mt-1 ${theme.textSub} uppercase`}>Minutes</div>
+                                </div>
+                                <div>
+                                    <input type="color" value={settings.clockHandSColor || '#ef4444'} onChange={(e) => update('clockHandSColor', e.target.value)} className="w-full h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                    <div className={`text-[9px] mt-1 ${theme.textSub} uppercase`}>Secondes</div>
+                                </div>
+                            </div>
+                            
+                            <label className={`block text-[10px] font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Forme des aiguilles</label>
+                            <div className="flex gap-2">
+                                <button onClick={() => update('clockHandStyle', 'rect')} className={`flex-1 py-2 text-xs border rounded-lg ${settings.clockHandStyle === 'rect' || !settings.clockHandStyle ? 'border-indigo-500 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : `${theme.border} ${theme.textSub}`}`}>Rectangulaires</button>
+                                <button onClick={() => update('clockHandStyle', 'tapered')} className={`flex-1 py-2 text-xs border rounded-lg ${settings.clockHandStyle === 'tapered' ? 'border-indigo-500 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : `${theme.border} ${theme.textSub}`}`}>Affinées</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* BOITE */}
+                {activeTab === 'box' && (
+                    <div className="space-y-6 animate-in slide-in-from-right-4">
+                        <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Extérieur Boîte</label>
+                            <div className="flex items-center gap-3">
+                                <input type="color" value={settings.boxLeather || (settings.theme === 'dark' ? '#3E2723' : '#5D4037')} onChange={(e) => update('boxLeather', e.target.value)} className="w-12 h-12 rounded cursor-pointer border-0 p-0 bg-transparent" />
+                                <div className={`text-xs ${theme.textSub}`}>Choisis la couleur du cuir extérieur.</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Serrure & Charnières</label>
+                            <div className="grid grid-cols-3 gap-2">
+                                <button onClick={() => update('boxLock', 'gold')} className={`py-3 text-xs border rounded-lg font-bold flex flex-col items-center gap-1 ${settings.boxLock === 'gold' || !settings.boxLock ? 'border-yellow-500 text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20' : `${theme.border} ${theme.textSub}`}`}>
+                                    <div className="w-4 h-4 rounded-full bg-yellow-400"></div> Doré
+                                </button>
+                                <button onClick={() => update('boxLock', 'silver')} className={`py-3 text-xs border rounded-lg font-bold flex flex-col items-center gap-1 ${settings.boxLock === 'silver' ? 'border-slate-400 text-slate-600 bg-slate-50 dark:bg-slate-800' : `${theme.border} ${theme.textSub}`}`}>
+                                    <div className="w-4 h-4 rounded-full bg-slate-300"></div> Argent
+                                </button>
+                                <button onClick={() => update('boxLock', 'black')} className={`py-3 text-xs border rounded-lg font-bold flex flex-col items-center gap-1 ${settings.boxLock === 'black' ? 'border-gray-800 text-gray-800 bg-gray-200 dark:border-gray-600 dark:text-gray-300' : `${theme.border} ${theme.textSub}`}`}>
+                                    <div className="w-4 h-4 rounded-full bg-gray-800"></div> Noir
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.textSub}`}>Coussins intérieurs</label>
+                            <div className="grid grid-cols-3 gap-2">
+                                <button onClick={() => update('boxCushion', 'white')} className={`py-2 text-xs border rounded-lg ${settings.boxCushion === 'white' ? 'border-indigo-500 text-indigo-600' : `${theme.border} ${theme.textSub}`}`}>Blanc pur</button>
+                                <button onClick={() => update('boxCushion', 'beige')} className={`py-2 text-xs border rounded-lg ${settings.boxCushion === 'beige' || !settings.boxCushion ? 'border-indigo-500 text-indigo-600 bg-amber-50 dark:bg-amber-900/20' : `${theme.border} ${theme.textSub}`}`}>Beige classique</button>
+                                <button onClick={() => update('boxCushion', 'black')} className={`py-2 text-xs border rounded-lg ${settings.boxCushion === 'black' ? 'border-indigo-500 text-indigo-600 bg-slate-800 text-white' : `${theme.border} ${theme.textSub}`}`}>Noir sombre</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    </div>
+    );
+};
+
+// ... (Garde RulesHelpModal inchangé)
 const RulesHelpModal = ({ onClose, theme }) => (
     <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4"><div className={`${theme.card} rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden`}><div className={`${theme.bgSecondary} p-4 border-b ${theme.border} flex justify-between items-center`}><h3 className={`font-bold ${theme.text} flex items-center gap-2`}><ShieldCheck className="text-emerald-600"/> Permissions Cloud</h3><button onClick={onClose}><X size={20} className={theme.textSub}/></button></div><div className="p-6 space-y-4"><p className={`text-sm ${theme.text}`}>Le système de partage requiert des permissions spécifiques pour que vos amis puissent voir votre collection.</p><button onClick={onClose} className={`w-full py-3 ${theme.bg} border ${theme.border} ${theme.text} rounded-xl font-bold`}>J'ai compris</button></div></div></div>
 );
+
+// Petite icône d'utilitaire manquante
+const Minus = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 
 export default function App() {
   const [useLocalStorage, setUseLocalStorage] = useState(!firebaseReady);
@@ -301,7 +574,20 @@ export default function App() {
   useEffect(() => { localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings)); }, [settings]);
   const t = (key) => TRANSLATIONS[settings.lang][key] || key;
   const isDark = settings.theme === 'dark';
-  const theme = { bg: isDark ? 'bg-slate-950' : 'bg-slate-50', bgSecondary: isDark ? 'bg-slate-900' : 'bg-white', text: isDark ? 'text-slate-100' : 'text-slate-900', textSub: isDark ? 'text-slate-400' : 'text-slate-500', border: isDark ? 'border-slate-800' : 'border-slate-200', card: isDark ? 'bg-slate-900' : 'bg-white', input: isDark ? 'bg-slate-900 border-slate-700 text-white focus:ring-slate-500' : 'bg-white border-slate-200 text-slate-900 focus:ring-indigo-500', nav: isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200' };
+  
+  // Application de la couleur de fond personnalisée si elle existe
+  const customBgStyle = settings.bgColor ? { backgroundColor: settings.bgColor } : {};
+  
+  const theme = { 
+      bg: isDark ? (settings.bgColor ? '' : 'bg-slate-950') : (settings.bgColor ? '' : 'bg-slate-50'), 
+      bgSecondary: isDark ? 'bg-slate-900' : 'bg-white', 
+      text: isDark ? 'text-slate-100' : 'text-slate-900', 
+      textSub: isDark ? 'text-slate-400' : 'text-slate-500', 
+      border: isDark ? 'border-slate-800' : 'border-slate-200', 
+      card: isDark ? 'bg-slate-900' : 'bg-white', 
+      input: isDark ? 'bg-slate-900 border-slate-700 text-white focus:ring-slate-500' : 'bg-white border-slate-200 text-slate-900 focus:ring-indigo-500', 
+      nav: isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200' 
+  };
 
   const [watches, setWatches] = useState([]);
   const [bracelets, setBracelets] = useState([]);
@@ -516,6 +802,7 @@ export default function App() {
 
   useEffect(() => { if (useLocalStorage) { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(watches)); localStorage.setItem(LOCAL_STORAGE_BRACELETS_KEY, JSON.stringify(bracelets)); localStorage.setItem(LOCAL_STORAGE_CALENDAR_KEY, JSON.stringify(calendarEvents)); } }, [watches, bracelets, calendarEvents, useLocalStorage]);
 
+  // (Garde toutes les fonctions de handle (formulaire, export, etc...) inchangées jusqu'à renderBox)
   const handleImageUploadSlot = async (e, type, slotIndex = 0) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -895,9 +1182,11 @@ export default function App() {
 
   function renderBox() {
       const handleBoxClick = () => { setIsBoxOpening(true); setTimeout(() => { setFilter('collection'); setView('list'); setIsBoxOpening(false); }, 800); };
+      
+      const titleFont = settings.titleFontFamily || 'serif';
+      
       return (
-        <div className={`flex flex-col items-center justify-start h-full min-h-[80vh] px-8 relative overflow-hidden pt-28 ${theme.text}`}>
-          <GraphicBackground isDark={isDark} />
+        <div className={`flex flex-col items-center justify-start h-full min-h-[80vh] px-8 relative overflow-hidden pt-28 ${theme.text}`} style={customBgStyle}>
           
           <div className="absolute top-4 left-4 z-20">
             <button onClick={() => setView('friends')} className={`h-10 px-3 ${theme.bgSecondary} ${theme.text} rounded-full flex items-center justify-center gap-2 border ${theme.border} shadow-sm hover:opacity-80 transition-colors relative`}>
@@ -929,9 +1218,10 @@ export default function App() {
           )}
 
           <div className="z-10 mt-12 mb-1 text-center">
-              <h1 className={`font-serif text-3xl sm:text-4xl ${theme.text} tracking-[0.3em] uppercase font-light`}>{t('myWatches')}</h1>
+              <h1 className={`text-3xl sm:text-4xl ${theme.text} tracking-[0.3em] uppercase font-bold`} style={{ fontFamily: titleFont }}>{t('myWatches')}</h1>
               <div className={`w-16 h-0.5 ${isDark ? 'bg-slate-200' : 'bg-slate-900'} mx-auto mt-2 opacity-20`}></div>
           </div>
+          
           <div className="mb-8 text-center z-10 scale-90 opacity-90"><LiveClock isDark={isDark} settings={settings} /></div>
           <div className="z-10 mb-4"><AnalogClock isDark={isDark} settings={settings} /></div>
           
@@ -946,6 +1236,7 @@ export default function App() {
       );
   }
 
+  // (Garde le reste du code de rendu : renderHeader, renderList, renderWishlist, renderDetail, renderProfile, renderStats, renderFinance, renderFriends, renderSummary, renderNews inchangé)
   function renderHeader(title, withFilters = false) {
     return (
         <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border}`}>
@@ -1569,7 +1860,6 @@ export default function App() {
 
   const renderFriends = () => {
       const displayFriendWatches = friendWatches.filter(w => w.status === friendFilter);
-      // Sécurité : On ne sélectionne QUE les 5 premiers slots (index 0 à 4) pour exclure fermement la photo Boîte/Papiers (index 5)
       const friendDisplayImages = selectedFriendWatch?.images?.length > 0 
           ? selectedFriendWatch.images.slice(0, 5).filter(img => img !== null)
           : (selectedFriendWatch?.image ? [selectedFriendWatch.image] : []);
@@ -1760,15 +2050,9 @@ export default function App() {
   }
 
   function renderNews() {
-    // 1. Récupération des sources
     const sources = ['all', ...new Set(news.map(a => a.sourceName))];
-    
-    // 2. Filtre par source sélectionnée
-    let filteredNews = selectedNewsSource === 'all' 
-      ? news 
-      : news.filter(a => a.sourceName === selectedNewsSource);
+    let filteredNews = selectedNewsSource === 'all' ? news : news.filter(a => a.sourceName === selectedNewsSource);
 
-    // 3. Filtre par mot-clé (recherche)
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
       filteredNews = filteredNews.filter(a => 
@@ -1781,7 +2065,6 @@ export default function App() {
       <div className="pb-24 px-4">
         {renderHeader(t('news'))}
         
-        {/* Filtres par source */}
         {!isNewsLoading && news.length > 0 && (
           <div className="flex gap-2 overflow-x-auto no-scrollbar my-3 pb-1">
             {sources.map(source => (
@@ -1853,8 +2136,8 @@ export default function App() {
   if (loading) return <div className={`flex h-screen items-center justify-center ${theme.bgSecondary}`}><Loader2 className={`animate-spin ${theme.text}`}/></div>;
 
   return (
-    <div className={`${theme.bg} min-h-screen font-sans ${theme.text}`}>
-      <div className={`max-w-md mx-auto ${theme.bgSecondary} min-h-screen shadow-2xl relative`}>
+    <div className={`${theme.bg} min-h-screen font-sans ${theme.text}`} style={{ fontFamily: settings.fontFamily }}>
+      <div className={`max-w-md mx-auto ${theme.bgSecondary} min-h-screen shadow-2xl relative`} style={customBgStyle}>
         <div ref={scrollRef} className="h-full overflow-y-auto p-4 scrollbar-hide">
             {view === 'box' && renderBox()}
             {view === 'list' && renderList()}
