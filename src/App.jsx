@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Watch, Plus, TrendingUp, Trash2, Edit2, Camera, X, Search, AlertCircle, Package, DollarSign, FileText, Box, Loader2,
-  ChevronLeft, ChevronsLeft, ChevronsRight, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag, Euro, ChevronDown, Newspaper, Type, Circle, Square
+  ChevronLeft, ChevronsLeft, ChevronsRight, ClipboardList, WifiOff, Ruler, Calendar, LogIn, LogOut, User, AlertTriangle, MapPin, Droplets, ShieldCheck, Layers, Wrench, Activity, Heart, Download, ExternalLink, Settings, Grid, ArrowUpDown, Shuffle, Save, Palette, RefreshCw, Users, UserPlus, Share2, Filter, Eye, EyeOff, Bell, Check, Zap, Gem, Image as ImageIcon, ZoomIn, Battery, ShoppingCart, BookOpen, Gift, Star, Scale, Lock, ChevronRight, BarChart2, Coins, Moon, Sun, Globe, Clock, PieChart, Briefcase, Printer, Link as LinkIcon, History, Receipt, Tag, Euro, ChevronDown, Newspaper, Type, Circle, Square, Minus
 } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -85,19 +85,16 @@ const MovementIcon = ({ size = 24, className = "" }) => (
 
 const WatchBoxLogo = ({ isOpen, isDark, settings }) => {
   const leatherColor = settings.boxLeather || (isDark ? "#3E2723" : "#5D4037");
-  
   let cushionColor = settings.boxCushion || 'beige';
   let realCushion = isDark ? "#616161" : "#fdfbf7";
   if(cushionColor === 'white') realCushion = "#FFFFFF";
   if(cushionColor === 'black') realCushion = "#222222";
   if(cushionColor === 'beige') realCushion = "#F5F5DC";
-  
   let lockColor = settings.boxLock || 'gold';
   let gradStops = [];
   if(lockColor === 'gold') gradStops = [{offset:"0%", color:"#FFECB3"}, {offset:"50%", color:"#FFC107"}, {offset:"100%", color:"#FFB300"}];
   if(lockColor === 'silver') gradStops = [{offset:"0%", color:"#F8FAFC"}, {offset:"50%", color:"#CBD5E1"}, {offset:"100%", color:"#94A3B8"}];
   if(lockColor === 'black') gradStops = [{offset:"0%", color:"#334155"}, {offset:"50%", color:"#0F172A"}, {offset:"100%", color:"#020617"}];
-
   return (
   <div style={{ perspective: '1000px', width: '220px', height: '180px' }}>
     <svg viewBox="0 0 200 160" className="w-full h-full drop-shadow-2xl" xmlns="http://www.w3.org/2000/svg">
@@ -187,7 +184,6 @@ const AnalogClock = ({ isDark, settings }) => {
        <div className={`w-full h-full rounded-full shadow-inner flex items-center justify-center relative ${isDark ? 'bg-slate-800' : 'bg-white'}`} style={{ border: `4px solid ${frameColor}` }}>
          {renderIndexes()}
          {renderNumbers()}
-         
          <div className={handHClass} style={{ transform: `translateX(-50%) rotate(${hoursRatio * 360}deg)`, backgroundColor: hHandColor }}></div>
          <div className={handMClass} style={{ transform: `translateX(-50%) rotate(${minutesRatio * 360}deg)`, backgroundColor: mHandColor }}></div>
          <div className="absolute w-0.5 h-14 rounded-full origin-bottom left-1/2 bottom-1/2" style={{ transform: `translateX(-50%) rotate(${secondsRatio * 360}deg)`, backgroundColor: sHandColor }}></div>
@@ -201,9 +197,10 @@ const LiveClock = ({ isDark, settings }) => {
   const [time, setTime] = useState(new Date());
   useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
   
-  const h = time.toLocaleTimeString([], { hour: '2-digit' });
-  const m = time.toLocaleTimeString([], { minute: '2-digit' });
-  const s = time.toLocaleTimeString([], { second: '2-digit' });
+  // Remplacement de toLocaleTimeString pour éviter les formatages régionaux (ex: "02 h" ou "2h")
+  const h = String(time.getHours()).padStart(2, '0');
+  const m = String(time.getMinutes()).padStart(2, '0');
+  const s = String(time.getSeconds()).padStart(2, '0');
   
   return (
     <div className="font-mono text-4xl sm:text-5xl font-medium tracking-widest mb-2 opacity-90 flex justify-center items-baseline">
@@ -227,7 +224,6 @@ const DetailItem = ({ icon: Icon, label, value, theme }) => (
     </div>
 );
 
-// ... (Garde toutes les fenêtres modales et utilitaires comme FullScreenImageViewer, ExportView, FinanceDetailList, FinanceCardFull, ConfigModal inchangés jusqu'à SettingsModal)
 const FullScreenImageViewer = ({ src, onClose }) => {
     const [scale, setScale] = useState(1); const [position, setPosition] = useState({ x: 0, y: 0 }); const [isDragging, setIsDragging] = useState(false); const [dragStart, setDragStart] = useState({ x: 0, y: 0 }); const [pinchDist, setPinchDist] = useState(null); const [lastScale, setLastScale] = useState(1);
     const handleWheel = (e) => { const zoomSpeed = 0.1; let newScale = e.deltaY < 0 ? scale + zoomSpeed : scale - zoomSpeed; newScale = Math.min(Math.max(1, newScale), 5); if (newScale === 1) setPosition({ x: 0, y: 0 }); setScale(newScale); };
@@ -367,7 +363,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => {
                 <button onClick={onClose}><X size={20} className={theme.textSub}/></button>
             </div>
 
-            {/* Tabs */}
             <div className="flex border-b border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar">
                 <button onClick={() => setActiveTab('general')} className={`flex-1 py-3 text-xs font-bold whitespace-nowrap px-4 border-b-2 transition-colors ${activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Général</button>
                 <button onClick={() => setActiveTab('digital')} className={`flex-1 py-3 text-xs font-bold whitespace-nowrap px-4 border-b-2 transition-colors ${activeTab === 'digital' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Digitale</button>
@@ -377,7 +372,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => {
 
             <div className="p-4 overflow-y-auto space-y-6 flex-1">
                 
-                {/* GÉNÉRAL */}
                 {activeTab === 'general' && (
                     <div className="space-y-6 animate-in slide-in-from-right-4">
                         <div>
@@ -425,7 +419,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => {
                     </div>
                 )}
 
-                {/* HORLOGE DIGITALE */}
                 {activeTab === 'digital' && (
                     <div className="space-y-6 animate-in slide-in-from-right-4">
                         <div>
@@ -449,7 +442,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => {
                     </div>
                 )}
 
-                {/* HORLOGE ANALOGIQUE */}
                 {activeTab === 'analog' && (
                     <div className="space-y-6 animate-in slide-in-from-right-4">
                         <div>
@@ -514,7 +506,6 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => {
                     </div>
                 )}
 
-                {/* BOITE */}
                 {activeTab === 'box' && (
                     <div className="space-y-6 animate-in slide-in-from-right-4">
                         <div>
@@ -556,13 +547,9 @@ const SettingsModal = ({ onClose, settings, setSettings, t, theme }) => {
     );
 };
 
-// ... (Garde RulesHelpModal inchangé)
 const RulesHelpModal = ({ onClose, theme }) => (
     <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4"><div className={`${theme.card} rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden`}><div className={`${theme.bgSecondary} p-4 border-b ${theme.border} flex justify-between items-center`}><h3 className={`font-bold ${theme.text} flex items-center gap-2`}><ShieldCheck className="text-emerald-600"/> Permissions Cloud</h3><button onClick={onClose}><X size={20} className={theme.textSub}/></button></div><div className="p-6 space-y-4"><p className={`text-sm ${theme.text}`}>Le système de partage requiert des permissions spécifiques pour que vos amis puissent voir votre collection.</p><button onClick={onClose} className={`w-full py-3 ${theme.bg} border ${theme.border} ${theme.text} rounded-xl font-bold`}>J'ai compris</button></div></div></div>
 );
-
-// Petite icône d'utilitaire manquante
-const Minus = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 
 export default function App() {
   const [useLocalStorage, setUseLocalStorage] = useState(!firebaseReady);
@@ -575,7 +562,6 @@ export default function App() {
   const t = (key) => TRANSLATIONS[settings.lang][key] || key;
   const isDark = settings.theme === 'dark';
   
-  // Application de la couleur de fond personnalisée si elle existe
   const customBgStyle = settings.bgColor ? { backgroundColor: settings.bgColor } : {};
   
   const theme = { 
@@ -751,7 +737,6 @@ export default function App() {
 
   useEffect(() => {
     if (useLocalStorage && !firebaseReady) { setLoading(false); return; }
-
     const initAuth = async () => {
         if (!firebaseReady) return;
         try {
@@ -768,9 +753,7 @@ export default function App() {
             setUseLocalStorage(true);
         }
     };
-
     initAuth();
-
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
         if (currentUser) {
             setUser(currentUser);
@@ -802,7 +785,6 @@ export default function App() {
 
   useEffect(() => { if (useLocalStorage) { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(watches)); localStorage.setItem(LOCAL_STORAGE_BRACELETS_KEY, JSON.stringify(bracelets)); localStorage.setItem(LOCAL_STORAGE_CALENDAR_KEY, JSON.stringify(calendarEvents)); } }, [watches, bracelets, calendarEvents, useLocalStorage]);
 
-  // (Garde toutes les fonctions de handle (formulaire, export, etc...) inchangées jusqu'à renderBox)
   const handleImageUploadSlot = async (e, type, slotIndex = 0) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -810,7 +792,11 @@ export default function App() {
       if (type === 'watch') { 
           const base64 = await compressImage(file); 
           setWatchForm(prev => { 
-              const newImages = [...(prev.images || [])]; 
+              const newImages = prev.images ? [...prev.images] : []; 
+              // Fix pour les anciennes montres qui n'avaient pas encore la structure de tableau 'images'
+              if (prev.image && newImages.length === 0) {
+                  newImages[0] = prev.image;
+              }
               while (newImages.length < 6) newImages.push(null);
               newImages[slotIndex] = base64;
               return { ...prev, images: newImages, image: newImages.find(img => img !== null) || null }; 
@@ -918,7 +904,26 @@ export default function App() {
   
   const openAdd = () => { setEditingId(null); setSelectedWatch(null); setWatchForm({ ...DEFAULT_WATCH_STATE, status: filter === 'wishlist' ? 'wishlist' : 'collection', additionalCosts: [{label: '', price: ''}] }); setBraceletForm(DEFAULT_BRACELET_STATE); setEditingType(filter === 'bracelets' ? 'bracelet' : 'watch'); setView('add'); };
   
-  const handleEdit = (item, type) => { if (type === 'watch') { const costs = item.additionalCosts && item.additionalCosts.length > 0 ? [...item.additionalCosts] : []; costs.push({label: '', price: ''}); setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, additionalCosts: costs }); } else setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item }); setEditingType(type); setEditingId(item.id); setView('add'); };
+  const handleEdit = (item, type) => { 
+      if (type === 'watch') { 
+          const costs = item.additionalCosts && item.additionalCosts.length > 0 ? [...item.additionalCosts] : []; 
+          costs.push({label: '', price: ''}); 
+          
+          // Fix: S'assurer que les vieilles images uniques sont converties dans le tableau `images`
+          let newImages = item.images ? [...item.images] : [];
+          if (item.image && newImages.length === 0) {
+              newImages[0] = item.image;
+          }
+          while (newImages.length < 6) newImages.push(null);
+
+          setWatchForm({ ...DEFAULT_WATCH_STATE, ...item, additionalCosts: costs, images: newImages }); 
+      } else {
+          setBraceletForm({ ...DEFAULT_BRACELET_STATE, ...item }); 
+      }
+      setEditingType(type); 
+      setEditingId(item.id); 
+      setView('add'); 
+  };
   
   const handleCancelForm = () => { setEditingId(null); setWatchForm(DEFAULT_WATCH_STATE); setBraceletForm(DEFAULT_BRACELET_STATE); if (selectedWatch) { setView('detail'); } else { setView(viewBeforeDetail); } };
   
@@ -1006,7 +1011,7 @@ export default function App() {
                           <label key={slot.idx} className={`aspect-square rounded-xl border-2 border-dashed ${theme.border} flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors`}>
                              <Plus className={theme.textSub} size={20}/>
                              <span className={`text-[10px] ${theme.textSub} font-medium mt-1 text-center px-1`}>Ajouter<br/>({slot.label})</span>
-                             <input type="file" className="hidden" onChange={(e) => handleImageUploadSlot(e, isWatch ? 'watch' : 'bracelet', slot.idx)} accept="image/*"/>
+                             <input type="file" className="hidden" onChange={(e) => { handleImageUploadSlot(e, isWatch ? 'watch' : 'bracelet', slot.idx); e.target.value = ''; }} accept="image/*"/>
                           </label>
                       );
                   }
@@ -1161,7 +1166,7 @@ export default function App() {
                       <label className={`w-full py-6 border-2 border-dashed ${theme.border} rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors`}>
                           <Plus className={theme.textSub} size={24}/>
                           <span className={`text-[10px] font-bold uppercase tracking-wider ${theme.textSub} mt-2`}>Ajouter (Image ou PDF)</span>
-                          <input type="file" className="hidden" onChange={(e) => handleImageUploadSlot(e, 'invoice')} accept="image/*,application/pdf"/>
+                          <input type="file" className="hidden" onChange={(e) => { handleImageUploadSlot(e, 'invoice'); e.target.value = ''; }} accept="image/*,application/pdf"/>
                       </label>
                   )}
               </div>
@@ -1236,7 +1241,6 @@ export default function App() {
       );
   }
 
-  // (Garde le reste du code de rendu : renderHeader, renderList, renderWishlist, renderDetail, renderProfile, renderStats, renderFinance, renderFriends, renderSummary, renderNews inchangé)
   function renderHeader(title, withFilters = false) {
     return (
         <div className={`sticky top-0 ${theme.bgSecondary} z-10 pt-2 pb-2 px-1 shadow-sm border-b ${theme.border}`}>
