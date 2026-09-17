@@ -197,7 +197,6 @@ const LiveClock = ({ isDark, settings }) => {
   const [time, setTime] = useState(new Date());
   useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
   
-  // Remplacement de toLocaleTimeString pour éviter les formatages régionaux (ex: "02 h" ou "2h")
   const h = String(time.getHours()).padStart(2, '0');
   const m = String(time.getMinutes()).padStart(2, '0');
   const s = String(time.getSeconds()).padStart(2, '0');
@@ -793,7 +792,6 @@ export default function App() {
           const base64 = await compressImage(file); 
           setWatchForm(prev => { 
               const newImages = prev.images ? [...prev.images] : []; 
-              // Fix pour les anciennes montres qui n'avaient pas encore la structure de tableau 'images'
               if (prev.image && newImages.length === 0) {
                   newImages[0] = prev.image;
               }
@@ -909,7 +907,6 @@ export default function App() {
           const costs = item.additionalCosts && item.additionalCosts.length > 0 ? [...item.additionalCosts] : []; 
           costs.push({label: '', price: ''}); 
           
-          // Fix: S'assurer que les vieilles images uniques sont converties dans le tableau `images`
           let newImages = item.images ? [...item.images] : [];
           if (item.image && newImages.length === 0) {
               newImages[0] = item.image;
@@ -1058,9 +1055,16 @@ export default function App() {
                      <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: 5500" value={form.sellingPrice || ''} onChange={e => handleInput('sellingPrice', e.target.value)} />
                   </div>
                 </div>
-                <div>
-                    <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('min_price')}</label>
-                    <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: 4800 (Prix plancher privé)" value={form.minPrice || ''} onChange={e => handleInput('minPrice', e.target.value)} />
+                
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('min_price')}</label>
+                        <input type="number" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="Ex: 4800 (Prix plancher)" value={form.minPrice || ''} onChange={e => handleInput('minPrice', e.target.value)} />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-500 ml-1">{t('link_web')} (URL)</label>
+                        <input type="url" className={`w-full p-3 rounded-lg border ${theme.input}`} placeholder="https://..." value={form.link || ''} onChange={e => handleInput('link', e.target.value)} />
+                    </div>
                 </div>
                 
                 <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800 mt-2">
